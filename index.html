@@ -118,6 +118,18 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
 .dialog .content{padding:16px;display:grid;gap:12px}
 .dialog h3{margin:0}.dialog p{margin:0;color:var(--muted)}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px;border-top:1px solid var(--line)}
+.iab-notice{position:fixed;inset:0;z-index:90;display:none;background:#05080d;color:var(--text);padding:calc(18px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));overflow:auto}
+.iab-notice.show{display:block}
+.iab-card{min-height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;justify-content:center;gap:18px}
+.iab-mark{width:42px;height:42px;border-radius:8px;background:var(--gold);color:#141000;display:grid;place-items:center;font-weight:950}
+.iab-card h2{font-size:24px;line-height:1.18;margin:0;letter-spacing:0}
+.iab-card p{margin:0;color:var(--muted);font-size:14px}
+.iab-steps{display:grid;gap:8px;margin:2px 0;padding:0;list-style:none}
+.iab-steps li{display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:start;padding:10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel)}
+.iab-steps b{width:24px;height:24px;border-radius:6px;background:rgba(240,185,11,.13);color:var(--gold);display:grid;place-items:center;font-size:12px}
+.iab-actions{display:grid;gap:8px}
+.iab-actions .btn{width:100%}
+.iab-link{padding:11px;border:1px solid var(--line);border-radius:var(--radius);background:#0f1620;color:var(--muted);font-size:12px;word-break:break-all}
 @media(min-width:700px){
   body{background:radial-gradient(circle at 50% 0,#1a2634,#05080d 58%)}
   .app{min-height:100dvh}
@@ -132,6 +144,26 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
 </style>
 </head>
 <body>
+<div class="iab-notice" id="iabNotice" aria-live="polite">
+  <div class="iab-card">
+    <div class="iab-mark">KW</div>
+    <div>
+      <h2>카톡 안에서는 Google 로그인이 차단될 수 있어요.</h2>
+      <p><span id="iabName">인앱브라우저</span>에서는 Google 보안 정책 때문에 로그인 창이 멈추거나 “액세스 차단됨”이 나올 수 있습니다.</p>
+    </div>
+    <ul class="iab-steps">
+      <li><b>1</b><span>아래 버튼으로 Chrome 또는 기본 브라우저에서 다시 열어주세요.</span></li>
+      <li><b>2</b><span>브라우저에서 Google 로그인 후 앱으로 돌아오면 정상 참여할 수 있습니다.</span></li>
+      <li><b>3</b><span>버튼이 반응하지 않으면 링크 복사 후 Chrome 주소창에 붙여넣어 주세요.</span></li>
+    </ul>
+    <div class="iab-actions">
+      <button class="btn gold" id="openExternalBrowser">외부 브라우저로 열기</button>
+      <button class="btn" id="copyAppLink">링크 복사</button>
+      <button class="btn ghost" id="continueInApp">앱 화면만 보기</button>
+    </div>
+    <div class="iab-link">https://gaoryzet.github.io/coin-league/</div>
+  </div>
+</div>
 <div class="app">
   <header class="top">
     <div class="brand">
@@ -466,6 +498,50 @@ function goGoogleDirect(){
     return;
   }
   location.href = directGoogleOAuthUrl();
+}
+function inAppBrowserName(){
+  const ua = navigator.userAgent.toLowerCase();
+  if(ua.includes("kakaotalk")) return "카카오톡";
+  if(ua.includes("instagram")) return "인스타그램";
+  if(ua.includes("fbav") || ua.includes("fb_iab")) return "페이스북";
+  if(ua.includes("line/")) return "라인";
+  if(ua.includes("naver")) return "네이버 앱";
+  if(ua.includes("micromessenger")) return "위챗";
+  return "";
+}
+function externalBrowserUrl(){
+  const target = PROD_URL.replace(/^https?:\/\//,"");
+  return `intent://${target}#Intent;scheme=https;package=com.android.chrome;end`;
+}
+async function copyAppLink(){
+  try{
+    if(navigator.clipboard?.writeText){
+      await navigator.clipboard.writeText(PROD_URL);
+      toast("앱 링크를 복사했습니다.");
+      return;
+    }
+  }catch(e){
+    console.warn("clipboard failed", e);
+  }
+  window.prompt("아래 주소를 복사해서 Chrome에서 열어주세요.", PROD_URL);
+}
+function setupInAppBrowserNotice(){
+  const name = inAppBrowserName();
+  const notice = document.getElementById("iabNotice");
+  if(!name || !notice) return;
+  document.getElementById("iabName").textContent = name;
+  notice.classList.add("show");
+  document.getElementById("openExternalBrowser").onclick = ()=>{
+    if(/android/i.test(navigator.userAgent)){
+      location.href = externalBrowserUrl();
+      setTimeout(()=>{location.href = PROD_URL}, 900);
+      return;
+    }
+    copyAppLink();
+    toast("Safari 또는 Chrome에서 복사한 링크를 열어주세요.");
+  };
+  document.getElementById("copyAppLink").onclick = copyAppLink;
+  document.getElementById("continueInApp").onclick = ()=>notice.classList.remove("show");
 }
 async function initAuth(){
   const authBtn = document.getElementById("authBtn");
@@ -1061,6 +1137,7 @@ document.getElementById("okConfirm").addEventListener("click",()=>{const fn=pend
 document.getElementById("confirmModal").addEventListener("click",e=>{if(e.target.id==="confirmModal") closeConfirm()});
 setInterval(()=>tickMarket(.35),15000);
 render();
+setupInAppBrowserNotice();
 initAuth().catch(e=>console.warn("auth init failed", e));
 </script>
 </body>
