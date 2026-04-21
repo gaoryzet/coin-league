@@ -118,6 +118,11 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
 .seg button.on.short{border-color:var(--red);color:var(--red);background:rgba(240,82,103,.1)}
 .lev{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .lev button.on{border-color:var(--gold);color:var(--gold);background:rgba(240,185,11,.1)}
+.hint{font-size:11px;line-height:1.55;color:var(--muted);margin-top:-2px}
+.hint strong{font-weight:900}
+.hint.long strong{color:var(--green)}
+.hint.short strong{color:var(--red)}
+.hint.warn strong{color:var(--gold)}
 .positions{display:grid;gap:10px}
 .pos{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);overflow:hidden}
 .pos.toprisk{border-color:rgba(240,82,103,.72)}
@@ -287,7 +292,8 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
                   <button class="on long" id="dirLong">롱</button>
                   <button id="dirShort">숏</button>
                 </div>
-                <div class="field"><label>레버리지</label><div class="lev" id="levBox">
+                <div class="hint long" id="directionHint"><strong>상승에 투자합니다.</strong> 선택한 코인 가격이 오르면 수익, 내리면 손실입니다.</div>
+                <div class="field"><label>레버리지</label><div class="hint warn"><strong>수익과 손실을 함께 키웁니다.</strong> 처음이면 1x~3x부터 추천합니다.</div><div class="lev" id="levBox">
                   <button class="on" data-lev="1">1x</button><button data-lev="3">3x</button><button data-lev="5">5x</button><button data-lev="10">10x</button><button data-lev="25">25x</button>
                 </div></div>
                 <div class="field"><label>마진 (USDT)</label><input id="futMargin" type="number" min="0" step="0.01" placeholder="예: 500"></div>
@@ -1182,6 +1188,13 @@ function renderSpotPreview(){
 function renderFuturePreview(){
   const margin = Number(document.getElementById("futMargin").value);
   const prev = document.getElementById("futPreview");
+  const dirHint = document.getElementById("directionHint");
+  if(dirHint){
+    dirHint.className = `hint ${futDir}`;
+    dirHint.innerHTML = futDir === "long"
+      ? `<strong>상승에 투자합니다.</strong> 선택한 코인 가격이 오르면 수익, 내리면 손실입니다.`
+      : `<strong>하락에 투자합니다.</strong> 선택한 코인 가격이 내리면 수익, 오르면 손실입니다.`;
+  }
   const gate = requireTradable();
   if(gate || !state.league.allowFutures){
     prev.innerHTML = `<div class="danger">${gate || "이 리그는 선물 거래가 꺼져 있습니다."}</div>`;
