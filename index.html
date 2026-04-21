@@ -388,6 +388,7 @@ let pendingConfirm = null;
 let sb = null;
 let currentUser = null;
 let cloudAdmin = false;
+let cloudMode = false;
 let chartInterval = "1h";
 let chartKey = "";
 let chartSeq = 0;
@@ -460,6 +461,107 @@ function migrateState(s){
   });
   if(!s.activePlayerId || !s.players.find(p=>p.id===s.activePlayerId)) s.activePlayerId = s.players[0].id;
   return s;
+}
+function mapCloudLeague(row){
+  if(!row) return null;
+  return {
+    ...state.league,
+    id:row.id,
+    name:row.name || state.league.name,
+    status:row.status || "ACTIVE",
+    startDate:row.start_date || state.league.startDate,
+    endDate:row.end_date || state.league.endDate,
+    initialCash:Number(row.initial_cash) || state.league.initialCash || START_CASH,
+    inviteCode:row.ticket || row.invite_code || state.league.inviteCode,
+    rewardTitle:state.league.rewardTitle || "리그 참가 보상 도착",
+    rewardText:state.league.rewardText || "이번 리그 투자금이 준비됐어요.",
+    allowSpot:state.league.allowSpot !== false,
+    allowFutures:state.league.allowFutures !== false,
+    maxLeverage:state.league.maxLeverage || 25
+  };
+}
+function mergeCloudParticipants(rows=[]){
+  if(!Array.isArray(rows)) return;
+  const localById = new Map(state.players.map(p=>[p.id,p]));
+  const cloudPlayers = rows.map(row=>{
+    const local = localById.get(row.id) || {};
+    return {
+      id:row.id,
+      userId:row.user_id || local.userId,
+      name:row.nickname || local.name || "",
+      nicknameSet:!!(row.nickname || local.nicknameSet),
+      cash:Number(row.cash) || 0,
+      rewards:{[state.league.id]:!!row.reward_claimed || Number(row.cash) > 0},
+      holdings:local.holdings || {},
+      positions:local.positions || [],
+      history:local.history || []
+    };
+  });
+  const me = currentUser ? cloudPlayers.find(p=>p.userId === currentUser.id) : null;
+  if(me){
+    state.activePlayerId = me.id;
+  }else{
+    const localActive = active();
+    if(localActive && !cloudPlayers.find(p=>p.id === localActive.id)){
+      cloudPlayers.unshift({...localActive,rewards:{...localActive.rewards,[state.league.id]:!!localActive.rewards?.[state.league.id]}});
+    }
+  }
+  if(cloudPlayers.length) state.players = cloudPlayers;
+  if(!state.players.find(p=>p.id === state.activePlayerId)) state.activePlayerId = state.players[0]?.id;
+}
+async function loadCloudLeagueAndParticipants(){
+  if(!sb || !currentUser || isFileMode) return;
+  try{
+    let {data: leagues, error: leagueErr} = await sb.from("leagues")
+      .select("*")
+      .eq("status","ACTIVE")
+      .limit(1);
+    if(leagueErr) throw leagueErr;
+    if(!leagues?.length){
+      const res = await sb.from("leagues").select("*").limit(1);
+      if(res.error) throw res.error;
+      leagues = res.data;
+    }
+    const cloudLeague = mapCloudLeague(leagues?.[0]);
+    if(cloudLeague){
+      state.league = cloudLeague;
+      cloudMode = true;
+    }
+    const {data: participants, error: partErr} = await sb.from("participants")
+      .select("id, league_id, nickname, cash, user_id, reward_claimed, created_at")
+      .eq("league_id", state.league.id)
+      .order("created_at",{ascending:true});
+    if(partErr) throw partErr;
+    mergeCloudParticipants(participants || []);
+    save();
+  }catch(e){
+    console.warn("cloud league sync failed", e);
+    toast("공유 리그 동기화 실패: 로컬 데이터로 표시합니다.");
+  }
+}
+async function saveCloudParticipantProfile(p){
+  if(!sb || !currentUser || isFileMode || !p?.nicknameSet) return false;
+  const existing = await sb.from("participants")
+    .select("id, reward_claimed")
+    .eq("league_id", state.league.id)
+    .eq("user_id", currentUser.id)
+    .maybeSingle();
+  if(existing.error) throw existing.error;
+  if(existing.data?.reward_claimed) return true;
+  const payload = {
+    id:existing.data?.id || p.id || uid(),
+    league_id:state.league.id,
+    nickname:p.name,
+    cash:Number(p.cash) || 0,
+    user_id:currentUser.id,
+    reward_claimed:false
+  };
+  const write = existing.data?.id
+    ? await sb.from("participants").update({nickname:p.name}).eq("id", existing.data.id)
+    : await sb.from("participants").insert(payload);
+  if(write.error) throw write.error;
+  await loadCloudLeagueAndParticipants();
+  return true;
 }
 function save(){
   state.selected = selected;
@@ -535,7 +637,7 @@ function validateNickname(name, player=active()){
   if(taken) return {ok:false,msg:"이미 사용 중인 닉네임입니다."};
   return {ok:true,nick};
 }
-function saveNickname(){
+async function saveNickname(){
   const p = active();
   if(hasReward(p)) return toast("투자금 수령 후에는 닉네임을 변경할 수 없습니다.");
   const input = document.getElementById("leagueNickname") || document.getElementById("newName");
@@ -545,6 +647,17 @@ function saveNickname(){
   p.nicknameSet = true;
   if(currentUser?.id) p.userId = currentUser.id;
   save();
+  if(sb && currentUser && !isFileMode){
+    try{
+      await saveCloudParticipantProfile(p);
+      render();
+      toast("닉네임 설정 완료");
+      return;
+    }catch(e){
+      console.warn("cloud nickname save failed", e);
+      toast("닉네임은 저장됐지만 공유 동기화는 실패했습니다.");
+    }
+  }
   render();
   toast("닉네임 설정 완료");
 }
@@ -627,6 +740,7 @@ async function initAuth(){
     currentUser = user || null;
     cloudAdmin = false;
     if(currentUser && !isFileMode){
+      await loadCloudLeagueAndParticipants();
       const {data: appAdmin} = await sb.from("app_admins")
         .select("role")
         .eq("user_id", currentUser.id)
@@ -686,11 +800,54 @@ function requireTradable(){
   if(!hasReward()) return "리그 투자금을 먼저 받아야 거래할 수 있습니다.";
   return "";
 }
-function claimReward(){
+async function claimReward(){
   const p = active();
   if(leagueClosed()) return toast("종료된 리그에서는 지급받을 수 없습니다.");
   if(!p.nicknameSet || !p.name) return toast("먼저 리그에서 사용할 닉네임을 설정하세요.");
   if(hasReward(p)) return toast("이미 이번 리그 투자금을 받았습니다.");
+  if(sb && currentUser && !isFileMode){
+    try{
+      const rpc = await sb.rpc("claim_league_reward", {p_league_id:state.league.id, p_nickname:p.name});
+      if(rpc.error) throw rpc.error;
+      await loadCloudLeagueAndParticipants();
+      render();
+      toast(`${money(seedMoney())} USDT 지급 완료`);
+      return;
+    }catch(e){
+      console.warn("claim rpc failed, trying direct participant write", e);
+      const id = p.id || uid();
+      const payload = {
+        id,
+        league_id:state.league.id,
+        nickname:p.name,
+        cash:seedMoney(),
+        user_id:currentUser.id,
+        reward_claimed:true,
+        reward_claimed_at:new Date().toISOString()
+      };
+      const existing = await sb.from("participants")
+        .select("id")
+        .eq("league_id", state.league.id)
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+      const write = existing.data?.id
+        ? await sb.from("participants").update({
+            nickname:p.name,
+            cash:seedMoney(),
+            reward_claimed:true,
+            reward_claimed_at:new Date().toISOString()
+          }).eq("id", existing.data.id)
+        : await sb.from("participants").insert(payload);
+      if(write.error){
+        toast("공유 참가 등록 실패: Supabase 정책을 확인해야 합니다.");
+        return;
+      }
+      await loadCloudLeagueAndParticipants();
+      render();
+      toast(`${money(seedMoney())} USDT 지급 완료`);
+      return;
+    }
+  }
   if(currentUser?.id) p.userId = currentUser.id;
   p.cash += seedMoney();
   p.rewards[state.league.id] = true;
@@ -883,6 +1040,7 @@ function render(){
 function renderPlayers(){
   const sel = document.getElementById("playerSelect");
   sel.innerHTML = state.players.map(p=>`<option value="${p.id}" ${p.id===state.activePlayerId?"selected":""}>${escapeHtml(displayName(p))}</option>`).join("");
+  sel.disabled = !!currentUser && !cloudAdmin;
 }
 function renderMarket(){
   const q = document.getElementById("search").value.trim().toLowerCase();
@@ -1342,6 +1500,11 @@ document.getElementById("cancelConfirm").addEventListener("click",closeConfirm);
 document.getElementById("okConfirm").addEventListener("click",()=>{const fn=pendingConfirm; closeConfirm(); if(fn) fn()});
 document.getElementById("confirmModal").addEventListener("click",e=>{if(e.target.id==="confirmModal") closeConfirm()});
 setInterval(()=>tickMarket(.35),15000);
+setInterval(async()=>{
+  if(!currentUser || !sb || isFileMode) return;
+  await loadCloudLeagueAndParticipants();
+  render();
+},30000);
 render();
 setupInAppBrowserNotice();
 initAuth().catch(e=>console.warn("auth init failed", e));
