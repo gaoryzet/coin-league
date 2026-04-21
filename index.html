@@ -141,7 +141,7 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
     <div class="auth">
       <span class="admin-badge" id="adminBadge" style="display:none">ADMIN</span>
       <span class="who" id="authWho">로컬 모드</span>
-      <button id="authBtn">로그인 확인</button>
+      <button id="authBtn" onclick="manualGoogleLogin()">로그인 확인</button>
     </div>
   </header>
 
@@ -503,6 +503,33 @@ async function initAuth(){
     });
     if(error) toast("로그인 실패: "+error.message);
   };
+}
+async function manualGoogleLogin(){
+  if(isFileMode){
+    window.open(PROD_URL, "_blank");
+    return;
+  }
+  try{
+    if(!sb){
+      if(!window.supabase){
+        toast("Supabase SDK 로드 실패. 새로고침 후 다시 시도해주세요.");
+        return;
+      }
+      sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+    }
+    if(currentUser){
+      await sb.auth.signOut();
+      return;
+    }
+    const {error} = await sb.auth.signInWithOAuth({
+      provider:"google",
+      options:{redirectTo:authRedirectUrl()}
+    });
+    if(error) toast("로그인 실패: "+error.message);
+  }catch(e){
+    console.error(e);
+    toast("로그인 준비 중 오류: "+e.message);
+  }
 }
 function requireTradable(){
   if(leagueClosed()) return "종료된 리그에서는 거래할 수 없습니다.";
