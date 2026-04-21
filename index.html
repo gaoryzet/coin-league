@@ -48,7 +48,7 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
 .btn.red{background:var(--red);color:#fff;border-color:var(--red)}
 .btn.blue{background:var(--blue);color:#06101d;border-color:var(--blue)}
 .btn.ghost{background:transparent}
-.main{padding:94px 12px calc(84px + env(safe-area-inset-bottom));min-width:0}
+.main{padding:84px 12px calc(84px + env(safe-area-inset-bottom));min-width:0}
 .view{display:none}
 .view.on{display:block}
 .grid{display:grid;gap:12px}
@@ -78,6 +78,20 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
 .coin:hover{background:var(--panel2)}
 .ico{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:950;font-size:10px}
 .name{font-weight:950}.small{color:var(--muted);font-size:12px}.price{text-align:right;font-weight:950}
+.chart-panel{border-top:1px solid var(--line);background:#0f1620}
+.chart-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-bottom:1px solid rgba(39,50,65,.72)}
+.chart-title{font-weight:950;font-size:12px;white-space:nowrap}
+.chart-status{color:var(--muted);font-size:11px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chart-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:10px 12px 0}
+.chart-tabs button{height:30px;border-radius:6px;background:#111821;border:1px solid var(--line);color:var(--muted);font-size:11px;font-weight:900}
+.chart-tabs button.on{border-color:var(--gold);color:var(--gold);background:rgba(240,185,11,.1)}
+.chart-box{height:210px;padding:8px 10px 12px;display:grid;place-items:center}
+.chart-box svg{width:100%;height:100%;display:block}
+.chart-empty{color:var(--muted);font-size:12px;text-align:center;padding:24px}
+.chart-price-line{stroke:var(--gold);stroke-width:2.5;fill:none}
+.chart-grid{stroke:rgba(143,161,179,.16);stroke-width:1}
+.chart-area{fill:rgba(240,185,11,.08)}
+.chart-axis{fill:var(--muted);font-size:10px}
 .tabs{display:grid;grid-template-columns:repeat(2,1fr);background:#0e151e}
 .tab{height:46px;background:transparent;border-bottom:2px solid transparent;font-weight:950;color:var(--muted)}
 .tab.on.buy{color:var(--green);border-color:var(--green)}.tab.on.sell{color:var(--red);border-color:var(--red)}
@@ -230,6 +244,19 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
               <input id="search" placeholder="BTC, ETH, 솔라나 검색" style="max-width:220px">
             </div>
             <div class="market" id="market"></div>
+            <div class="chart-panel">
+              <div class="chart-toolbar">
+                <div class="chart-title" id="chartTitle">BTC/USDT 차트</div>
+                <div class="chart-status" id="chartStatus">API 대기</div>
+              </div>
+              <div class="chart-tabs" id="chartIntervals">
+                <button class="on" data-interval="1h">1H</button>
+                <button data-interval="4h">4H</button>
+                <button data-interval="1d">1D</button>
+                <button data-interval="1w">1W</button>
+              </div>
+              <div class="chart-box" id="chartBox"><div class="chart-empty">코인을 선택하면 차트를 불러옵니다.</div></div>
+            </div>
           </div>
 
           <div class="grid">
@@ -351,6 +378,10 @@ let pendingConfirm = null;
 let sb = null;
 let currentUser = null;
 let cloudAdmin = false;
+let chartInterval = "1h";
+let chartKey = "";
+let chartSeq = 0;
+const chartCache = {};
 const isFileMode = location.protocol === "file:";
 const authBtnInit = document.getElementById("authBtn");
 const authWhoInit = document.getElementById("authWho");
@@ -824,6 +855,106 @@ function renderMarket(){
     </button>
   `).join("");
   document.getElementById("spotTitle").textContent = `${coin().symbol}/USDT · ${price(coin().price)}`;
+  syncChart();
+}
+function binanceSymbol(sym){
+  const map = {TON:"TONUSDT"};
+  return map[sym] || `${sym}USDT`;
+}
+function fallbackCandles(sym, count=60){
+  const c = state.market.find(x=>x.symbol===sym) || coin();
+  const candles = [];
+  let base = c.price;
+  for(let i=count-1;i>=0;i--){
+    const wave = Math.sin(i * .42) * c.vol * 1.8;
+    const drift = (Math.random() - .5) * c.vol * .45;
+    const close = Math.max(.000001, base * (1 - wave + drift));
+    const open = Math.max(.000001, close * (1 + (Math.random() - .5) * c.vol));
+    const high = Math.max(open, close) * (1 + c.vol * .25);
+    const low = Math.min(open, close) * (1 - c.vol * .25);
+    candles.push({time:Date.now() - i * 3600000, open, high, low, close});
+  }
+  return candles;
+}
+async function fetchChartCandles(sym, interval){
+  const key = `${sym}:${interval}`;
+  const cached = chartCache[key];
+  if(cached && Date.now() - cached.at < 120000) return cached;
+  const url = `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol(sym)}&interval=${interval}&limit=72`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error(`HTTP ${res.status}`);
+  const rows = await res.json();
+  const candles = rows.map(r=>({time:r[0],open:Number(r[1]),high:Number(r[2]),low:Number(r[3]),close:Number(r[4])}));
+  const payload = {at:Date.now(),candles,source:"Binance"};
+  chartCache[key] = payload;
+  return payload;
+}
+function drawChart(sym, candles, source){
+  const title = document.getElementById("chartTitle");
+  const status = document.getElementById("chartStatus");
+  const box = document.getElementById("chartBox");
+  if(!candles?.length){
+    box.innerHTML = `<div class="chart-empty">차트 데이터가 없습니다.</div>`;
+    return;
+  }
+  const w = 320, h = 180, pad = 22;
+  const closes = candles.map(x=>x.close);
+  const highs = candles.map(x=>x.high);
+  const lows = candles.map(x=>x.low);
+  const min = Math.min(...lows), max = Math.max(...highs);
+  const span = Math.max(max - min, max * .001);
+  const x = i=>pad + (i / Math.max(1,candles.length-1)) * (w-pad*2);
+  const y = v=>h - pad - ((v - min) / span) * (h-pad*2);
+  const line = candles.map((d,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(d.close).toFixed(1)}`).join(" ");
+  const area = `${line} L${x(candles.length-1).toFixed(1)},${h-pad} L${pad},${h-pad} Z`;
+  const first = closes[0], last = closes[closes.length-1];
+  const change = first ? (last - first) / first * 100 : 0;
+  const selectedCoin = state.market.find(c=>c.symbol===sym);
+  if(selectedCoin && Number.isFinite(last)){
+    selectedCoin.prev = selectedCoin.price;
+    selectedCoin.price = last;
+    selectedCoin.change = change;
+  }
+  title.textContent = `${sym}/USDT 차트`;
+  status.innerHTML = `${source} · <span class="${change>=0?"g":"r"}">${pct(change)}</span>`;
+  box.innerHTML = `
+    <svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${sym} price chart">
+      <line class="chart-grid" x1="${pad}" y1="${pad}" x2="${w-pad}" y2="${pad}"></line>
+      <line class="chart-grid" x1="${pad}" y1="${h/2}" x2="${w-pad}" y2="${h/2}"></line>
+      <line class="chart-grid" x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}"></line>
+      <path class="chart-area" d="${area}"></path>
+      <path class="chart-price-line" style="stroke:${change>=0?"var(--green)":"var(--red)"}" d="${line}"></path>
+      <text class="chart-axis" x="${pad}" y="${pad-7}">${price(max)}</text>
+      <text class="chart-axis" x="${pad}" y="${h-pad+15}">${price(min)}</text>
+      <text class="chart-axis" text-anchor="end" x="${w-pad}" y="${pad-7}">${price(last)}</text>
+    </svg>`;
+}
+async function syncChart(force=false){
+  const c = coin();
+  const key = `${c.symbol}:${chartInterval}`;
+  document.getElementById("chartIntervals")?.querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.interval===chartInterval));
+  if(!force && chartKey === key) return;
+  chartKey = key;
+  const status = document.getElementById("chartStatus");
+  const title = document.getElementById("chartTitle");
+  if(!status || !title) return;
+  const seq = ++chartSeq;
+  title.textContent = `${c.symbol}/USDT 차트`;
+  status.textContent = "API 불러오는 중";
+  try{
+    const data = await fetchChartCandles(c.symbol, chartInterval);
+    if(seq !== chartSeq) return;
+    drawChart(c.symbol, data.candles, data.source);
+    renderDashboard();
+    renderSpotPreview();
+    renderFuturePreview();
+    renderPositions();
+  }catch(e){
+    if(seq !== chartSeq) return;
+    console.warn("chart api failed", e);
+    drawChart(c.symbol, fallbackCandles(c.symbol), "예비 차트");
+    status.innerHTML += ` · API 실패`;
+  }
 }
 function renderDashboard(){
   const p = active();
@@ -1091,6 +1222,12 @@ document.getElementById("market").addEventListener("click",e=>{
   selected = b.dataset.symbol; save(); render();
 });
 document.getElementById("search").addEventListener("input",renderMarket);
+document.getElementById("chartIntervals").addEventListener("click",e=>{
+  const b = e.target.closest("[data-interval]"); if(!b) return;
+  chartInterval = b.dataset.interval;
+  chartKey = "";
+  syncChart(true);
+});
 document.getElementById("tickMarket").addEventListener("click",()=>tickMarket(1.8));
 document.getElementById("checkLiq").addEventListener("click",()=>{const n=liquidateAll(); save(); render(); toast(n?`${n}개 포지션 청산`:"청산 대상 없음")});
 document.getElementById("claimRewardLeague").addEventListener("click",claimReward);
