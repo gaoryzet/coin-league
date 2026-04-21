@@ -24,10 +24,10 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
 .brand h1{font-size:15px;margin:0;font-weight:950;white-space:nowrap}
 .brand p{margin:1px 0 0;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px}
 .status{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px;white-space:nowrap}
-.auth{display:flex;align-items:center;gap:7px;min-width:0}
+.auth{display:flex;align-items:center;justify-content:flex-end;gap:6px;min-width:0;flex:0 1 auto;max-width:52%}
 .auth button,.auth a{height:32px;border-radius:var(--radius);padding:0 10px;background:#fff;color:#14181f;font-weight:900;border:0;font-size:11px;white-space:nowrap;display:inline-flex;align-items:center;text-decoration:none}
-.auth .who{max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:10px}
-.auth .admin-badge{height:20px;display:inline-flex;align-items:center;border-radius:4px;padding:0 6px;background:rgba(240,185,11,.12);color:var(--gold);font-size:10px;font-weight:900}
+.auth .who{max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:10px}
+.auth .admin-badge{width:22px;height:22px;flex:0 0 22px;display:inline-grid;place-items:center;border-radius:50%;padding:0;background:rgba(240,185,11,.16);border:1px solid rgba(240,185,11,.36);color:var(--gold);font-size:11px;font-weight:950;line-height:1}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(17,199,132,.12)}
 .shell{display:block;min-height:0}
 .side{position:fixed;left:50%;bottom:0;z-index:40;width:min(480px,100vw);transform:translateX(-50%);padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(13,19,27,.94);border-top:1px solid var(--line);backdrop-filter:blur(16px)}
@@ -155,6 +155,7 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
   .brand p{display:none}
   .status{font-size:10px}
   .auth .who{display:none}
+  .auth{max-width:45%}
   .metric .v{font-size:19px}
   .table th,.table td{padding-left:9px;padding-right:9px;font-size:12px}
 }
@@ -188,7 +189,7 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
       <div><h1>코인왕 투자리그</h1><p>현물·레버리지 가상 투자 시뮬레이터</p></div>
     </div>
     <div class="auth">
-      <span class="admin-badge" id="adminBadge" style="display:none">ADMIN</span>
+      <span class="admin-badge" id="adminBadge" title="관리자" aria-label="관리자" style="display:none">A</span>
       <span class="who" id="authWho">로컬 모드</span>
       <a id="authBtn" href="https://abwitqdxagdbcogsscsk.supabase.co/auth/v1/authorize?provider=google&redirect_to=https%3A%2F%2Fgaoryzet.github.io%2Fcoin-league%2F">로그인 확인</a>
     </div>
