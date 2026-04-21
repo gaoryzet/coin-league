@@ -674,53 +674,12 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   </div>
   <!-- LEAGUE -->
   <div class="view" id="v-league">
+    <!-- 동적으로 전체 렌더링 -->
+    <div id="leagueRoot" style="padding-bottom:20px"></div>
 
-    <!-- ① 리그 상태 카드 -->
-    <div id="lgStatusCard" style="margin:10px 12px 0"></div>
-
-    <!-- ② 참여자 목록 -->
-    <div class="spad" style="margin-top:10px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <span class="stitle" style="margin:0">참여자</span>
-        <span style="font-size:11px;color:var(--t2)" id="ptcCnt">0명</span>
-      </div>
-      <div style="font-size:11px;color:var(--t3);margin-bottom:8px" id="ptcLeagueName"></div>
-      <div id="ptcList" class="ptc-list"><div class="empty"><span class="ei">👥</span>참여자가 없습니다</div></div>
-    </div>
-
-    <!-- ③ 종료된 리그 대시보드 -->
-    <div id="closedDiv" style="margin:14px 12px 0"></div>
-
-    <!-- ④ 리그 관리 (맨 아래) -->
-    <div style="margin-top:12px">
-      <details class="admin">
-        <summary>⚙️ 리그 관리 <span style="font-size:11px;color:var(--t2);font-weight:400">─ 관리자 전용</span></summary>
-        <div class="admin-body">
-          <form id="lgForm">
-            <div class="field"><label>리그 이름</label><input class="inp" id="lgName" maxlength="20" value="니가가라 코인왕 리그"></div>
-            <div class="field"><label>종료일</label><input class="inp" id="lgEnd" type="date"></div>
-            <div class="field"><label>초기 자금 (USDT)</label><input class="inp" id="lgCash" type="number" value="10000" min="100" step="100"></div>
-            <button class="btn btn-ghost" type="submit" style="margin-top:4px">설정 저장</button>
-          </form>
-          <div class="divider"></div>
-          <div class="admin-actions">
-            <button class="btn btn-ghost btn-sm" id="btnNew">새 리그</button>
-            <button class="btn btn-ghost btn-sm" id="btnClose">리그 종료</button>
-            <button class="btn btn-danger btn-sm" id="btnDel">삭제</button>
-            <button class="btn btn-ghost btn-sm" id="btnExport">순위 복사</button>
-          </div>
-          <p class="warn-txt">⚠ 새 리그 시작 시 참여자·거래 기록이 초기화됩니다.</p>
-        </div>
-      </details>
-    </div>
-
-    <!-- 숨겨진 참여 폼 (joinLeague 함수가 사용) -->
-    <form id="joinForm" style="display:none">
-      <input id="joinNick" maxlength="12" autocomplete="off">
-      <input id="joinTicket" maxlength="32">
-    </form>
-
-    <div style="height:20px"></div>
+    <!-- 숨겨진 폼 (JS용) -->
+    <input id="joinTicket" type="hidden">
+    <input id="joinNick" type="hidden">
   </div>
   <!-- HISTORY -->
   <div class="view" id="v-hist">
@@ -1009,14 +968,16 @@ function getRanks(){
 
 /* ══ 비즈니스 로직 (모두 async) ══ */
 async function joinLeague(nick,ticket){
-  if(!ST.league) return toast('활성 리그가 없습니다. 관리자에게 문의하세요.');
+  if(!ST.league) return toast('활성 리그가 없습니다. 리그 탭에서 관리자가 시작해주세요.');
   if(isClosed()) return toast('종료된 리그에는 참여할 수 없습니다.');
   nick=nick.trim(); if(!nick) return toast('닉네임을 입력해주세요.');
+  // 티켓 검증: pendingTicket 또는 직접 전달된 ticket 사용
+  const pendingT = window._pendingTicket||'';
+  const useTicket = ticket||pendingT;
   const cur=ST.league.ticket;
-  if(ticket&&ticket!==cur) return toast('현재 리그의 티켓이 아닙니다.');
+  if(useTicket && useTicket!==cur) return toast('현재 리그의 티켓이 아닙니다.');
   const nk=nick.toLowerCase().replace(/\s/g,'');
   if(ST.participants.some(p=>p.nickname.toLowerCase().replace(/\s/g,'')==nk)) return toast('이미 참여 중인 닉네임입니다.');
-  // 중복 자금 수령 체크
   const {data:cl}=await sb.from('claimed').select('id').eq('league_id',ST.league.id).eq('nickname_key',nk);
   if(cl?.length) return toast('이 리그에서 이미 자금을 받은 닉네임입니다.');
   const id=uid(), cash=ST.league.initialCash||10000;
@@ -1128,7 +1089,6 @@ async function doDelete(){
   await sb.from('leagues').delete().eq('id',ST.league.id);
   saveLocal({participantId:null,activeUserId:null,leagueId:null});
   await fetchData();
-  if(!ST.league){ await createDefaultLeague(); await fetchData(); }
   renderAll(); toast('삭제 완료.');
 }
 
@@ -1452,119 +1412,266 @@ function makeMiniBar(pct){
   return `<svg viewBox="0 0 42 22" xmlns="http://www.w3.org/2000/svg">${rects}</svg>`;
 }
 function renderLeague(){
-  const myId=LOCAL.participantId;
-  const isJoined=!!(myId&&ST.participants.find(p=>p.id===myId));
+  const root = document.getElementById('leagueRoot');
+  if(!root) return;
+  const myId = LOCAL.participantId;
+  const isJoined = !!(myId && ST.participants.find(p=>p.id===myId));
+  const closed = isClosed();
+  const ranks = getRanks();
 
-  // ① 리그 상태 카드
-  const sc=document.getElementById('lgStatusCard');
+  let html = '';
+
+  /* ══ 상태 1: 리그 없음 ══ */
   if(!ST.league){
-    sc.innerHTML=`<div class="lg-status-card"><div style="text-align:center;color:var(--t3);font-size:13px;padding:8px 0">활성 리그가 없습니다</div></div>`;
-  } else {
-    const cl=isClosed();
-    const dday=!cl?(()=>{const d=dLeft(ST.league.endDate);const clr=d<=3?'var(--R)':d<=7?'var(--acc)':'var(--G)';return `<span style="color:${clr};font-weight:800">D-${d}</span> <span style="color:var(--t3);font-size:10px">· ${ST.league.endDate} 종료</span>`;})():`<span style="color:var(--R);font-weight:800">🏁 종료됨</span>`;
-    const t=ST.league.ticket;
-    const url=`${location.origin}${location.pathname}?t=${encodeURIComponent(t)}`;
-
-    if(isJoined){
-      const me=ST.participants.find(p=>p.id===myId);
-      const m=calcUser(me), ranks=getRanks(), myRank=ranks.findIndex(r=>r.id===myId)+1;
-      sc.innerHTML=`<div class="lg-status-card">
-<div class="lg-status-top">
-  <div class="lg-status-name">${ST.league.name}</div>
-  <span class="lg-join-badge lg-join-y">✅ 참여중</span>
-</div>
-<div style="font-size:11px;margin-bottom:10px">${dday}</div>
-<div class="lg-my-info">
-  <span style="font-size:18px">👤</span>
-  <div style="flex:1;min-width:0">
-    <div style="font-weight:800">${me.nickname}</div>
-    <div style="font-size:11px;color:var(--t2)">${fU(m.total)} USDT · ${myRank}위</div>
+    html = `
+<div style="padding:24px 16px">
+  <div style="text-align:center;padding:32px 0 20px">
+    <div style="font-size:40px;margin-bottom:12px">🏁</div>
+    <div style="font-size:17px;font-weight:900;margin-bottom:6px">진행 중인 리그가 없어요</div>
+    <div style="font-size:13px;color:var(--t2);margin-bottom:24px">관리자가 새 리그를 시작해주세요</div>
   </div>
-  <span class="${m.rate>=0?'g':'r'}">${fPct(m.rate)}</span>
-</div>
-<div style="margin-top:10px;display:flex;gap:7px">
-  <button class="btn btn-ghost btn-sm" style="flex:1" onclick="(()=>{navigator.clipboard?.writeText('${url}').catch(()=>{});toast('📋 초대 링크 복사됨!')})()">🔗 초대 링크 복사</button>
-  <button class="btn btn-ghost btn-sm" style="flex:1" onclick="document.getElementById('lgJoinExtra').style.display=document.getElementById('lgJoinExtra').style.display==='none'?'block':'none'">+ 다른 참여자 추가</button>
-</div>
-<div id="lgJoinExtra" style="display:none" class="lg-join-form">
-  <div class="field" style="margin-bottom:8px"><label>닉네임</label><input class="inp" id="joinNickExtra" maxlength="12" placeholder="예: 코인마스터" autocomplete="off"></div>
-  <button class="btn btn-acc" onclick="(async()=>{await joinLeague(document.getElementById('joinNickExtra').value,'');document.getElementById('joinNickExtra').value='';document.getElementById('lgJoinExtra').style.display='none';})()">참여하기 · 자금 수령</button>
-</div>
+  <div class="card" style="border-color:rgba(240,185,11,.3)">
+    <div class="stitle" style="color:var(--acc);margin-bottom:12px">🆕 새 리그 시작</div>
+    <div class="field"><label>리그 이름</label><input class="inp" id="newLgName" value="니가가라 코인왕 리그 1st" maxlength="24"></div>
+    <div class="field"><label>종료일</label><input class="inp" id="newLgEnd" type="date" value="${makeEnd(14)}"></div>
+    <div class="field"><label>초기 자금 (USDT)</label><input class="inp" id="newLgCash" type="number" value="100000" min="100" step="1000"></div>
+    <button class="btn btn-acc" style="margin-top:4px" onclick="doNewLeague()">🚀 리그 시작 &amp; 티켓 발행</button>
+  </div>
+  ${_renderClosedLeagues()}
 </div>`;
-    } else {
-      sc.innerHTML=`<div class="lg-status-card">
-<div class="lg-status-top">
-  <div class="lg-status-name">${ST.league.name}</div>
-  <span class="lg-join-badge lg-join-n">미참여</span>
-</div>
-<div style="font-size:11px;margin-bottom:12px">${dday}</div>
-<div class="lg-join-form" style="border-top:none;padding-top:0;margin-top:0">
-  <div class="field" style="margin-bottom:8px"><label>닉네임</label><input class="inp" id="joinNickInline" maxlength="12" placeholder="예: 코인마스터" autocomplete="off"></div>
-  <div class="field" style="margin-bottom:10px"><label>티켓 코드</label><input class="inp" id="joinTicketInline" maxlength="32" placeholder="TICKET-XXXXX" value="${document.getElementById('joinTicket')?.value||''}"></div>
-  <button class="btn btn-acc" onclick="(async()=>{await joinLeague(document.getElementById('joinNickInline').value,document.getElementById('joinTicketInline').value.trim());})()">참여하기 · 자금 수령</button>
-</div>
+
+  /* ══ 상태 2: 리그 종료됨 → 결과 화면 ══ */
+  } else if(closed){
+    const winner = ranks[0];
+    const wm = winner?._m;
+    html = `
+<div style="padding:12px 16px">
+  <!-- 종료 배너 -->
+  <div style="background:linear-gradient(135deg,#1a0505,#1a1000);border:1px solid rgba(246,70,93,.3);border-radius:var(--r);padding:18px;margin-bottom:14px;text-align:center">
+    <div style="font-size:28px;margin-bottom:6px">🏁</div>
+    <div style="font-size:16px;font-weight:900;color:var(--R);margin-bottom:4px">리그 종료</div>
+    <div style="font-size:14px;font-weight:800;color:var(--t1)">${ST.league.name}</div>
+    <div style="font-size:12px;color:var(--t2);margin-top:4px">${ST.league.endDate} 종료 · ${ST.participants.length}명 참여</div>
+  </div>
+
+  <!-- 우승자 -->
+  ${winner?`
+  <div style="background:linear-gradient(135deg,#1a1200,#1a0e00);border:1px solid rgba(240,185,11,.4);border-radius:var(--r);padding:18px;margin-bottom:14px;text-align:center">
+    <div style="font-size:32px">🥇</div>
+    <div style="font-size:18px;font-weight:900;color:var(--acc);margin-top:4px">${winner.nickname}</div>
+    <div style="font-size:24px;font-weight:900;color:var(--G);margin-top:4px">${fPct(wm.rate)}</div>
+    <div style="font-size:13px;color:var(--t2);margin-top:2px">최종 ${fU(wm.total)} USDT</div>
+    <div style="font-size:12px;color:var(--t3);margin-top:2px">초기 ${fU(ST.league.initialCash)} → +${fU(wm.profit)} USDT</div>
+  </div>`:''}
+
+  <!-- 최종 순위 -->
+  <div class="card">
+    <div class="stitle" style="margin-bottom:10px">📊 최종 순위</div>
+    <div style="display:grid;gap:6px">
+      ${ranks.map((r,i)=>{
+        const m=r._m, cl=m.rate>=0?'g':'r', isMe=myId===r.id;
+        const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:${isMe?'rgba(240,185,11,.08)':'var(--bg3)'};border-radius:8px;${isMe?'border:1px solid rgba(240,185,11,.2)':''}">
+<span style="font-size:16px;flex-shrink:0;min-width:24px;text-align:center">${med}</span>
+<span style="font-weight:800;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nickname}${isMe?'<span class="me-badge">나</span>':''}</span>
+<span style="font-size:12px;color:var(--t2);margin-right:8px;flex-shrink:0">${fU(m.total)} U</span>
+<span class="${cl}" style="font-size:13px;flex-shrink:0">${fPct(m.rate)}</span>
 </div>`;
-    }
+      }).join('')}
+    </div>
+    <button class="btn btn-ghost" style="margin-top:12px;font-size:12px" onclick="(()=>{const txt='🏆 ${ST.league.name} 최종결과\\n'+${JSON.stringify(ranks.map((r,i)=>`${i+1}위 ${r.nickname} ${fPct(r._m.rate)} (${fU(r._m.total)} USDT)`).join('\\n'))};navigator.clipboard?.writeText(txt);toast('📋 결과 복사됨!')})()">📋 결과 복사하기</button>
+  </div>
+
+  <!-- 새 리그 시작 -->
+  <div class="card" style="margin-top:4px;border-color:rgba(240,185,11,.25)">
+    <div class="stitle" style="color:var(--acc);margin-bottom:10px">🆕 새 리그 시작</div>
+    <div class="field"><label>리그 이름</label><input class="inp" id="newLgName" value="니가가라 코인왕 리그 2nd" maxlength="24"></div>
+    <div class="field"><label>종료일</label><input class="inp" id="newLgEnd" type="date" value="${makeEnd(14)}"></div>
+    <div class="field"><label>초기 자금 (USDT)</label><input class="inp" id="newLgCash" type="number" value="${ST.league.initialCash||100000}" min="100" step="1000"></div>
+    <button class="btn btn-acc" style="margin-top:4px" onclick="doNewLeague()">🚀 새 리그 시작 &amp; 티켓 발행</button>
+  </div>
+
+  ${_renderClosedLeagues()}
+</div>`;
+
+  /* ══ 상태 3: 리그 진행 중 ══ */
+  } else {
+    const me = ST.participants.find(p=>p.id===myId);
+    const mm = me?calcUser(me):null;
+    const myRank = me?ranks.findIndex(r=>r.id===myId)+1:0;
+    const d = dLeft(ST.league.endDate);
+    const dclr = d<=3?'var(--R)':d<=7?'var(--acc)':'var(--G)';
+    const ticketUrl = `${location.origin}${location.pathname}?t=${encodeURIComponent(ST.league.ticket)}`;
+
+    html = `
+<div style="padding:12px 16px">
+  <!-- 리그 상태 카드 -->
+  <div class="lg-status-card" style="margin-bottom:12px">
+    <div class="lg-status-top">
+      <div class="lg-status-name">${ST.league.name}</div>
+      <span class="lg-join-badge lg-join-y">진행 중</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;font-size:12px;margin-bottom:${isJoined?'10px':'14px'}">
+      <span style="color:${dclr};font-weight:800">D-${d}</span>
+      <span style="color:var(--t3)">·</span>
+      <span style="color:var(--t2)">${ST.league.endDate} 종료</span>
+      <span style="color:var(--t3)">·</span>
+      <span style="color:var(--t2)">${ST.participants.length}명 참여</span>
+    </div>
+    ${isJoined && mm ? `
+    <div class="lg-my-info" style="margin-bottom:10px">
+      <span style="font-size:18px">👤</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:800">${me.nickname}</div>
+        <div style="font-size:11px;color:var(--t2)">${fU(mm.total)} USDT · ${myRank}위</div>
+      </div>
+      <span class="${mm.rate>=0?'g':'r'}">${fPct(mm.rate)}</span>
+    </div>` : ''}
+    <!-- 초대 링크 -->
+    <div style="background:rgba(240,185,11,.06);border:1px dashed rgba(240,185,11,.3);border-radius:8px;padding:10px;margin-bottom:10px">
+      <div style="font-size:10px;font-weight:800;color:var(--acc);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">🎫 초대 티켓</div>
+      <div style="font-family:monospace;font-size:13px;font-weight:900;color:var(--acc);margin-bottom:6px;letter-spacing:1px">${ST.league.ticket}</div>
+      <div style="font-size:10px;color:var(--t3);word-break:break-all;margin-bottom:8px">${ticketUrl}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="(()=>{navigator.clipboard?.writeText('${ticketUrl}');toast('📋 초대 링크 복사됨!')})()" style="width:100%">🔗 링크 복사</button>
+        <button class="btn btn-ghost btn-sm" onclick="(()=>{navigator.clipboard?.writeText('${ST.league.ticket}');toast('📋 티켓 코드 복사됨!')})()" style="width:100%">🎫 코드 복사</button>
+      </div>
+    </div>
+    <!-- 참여 폼 -->
+    ${!isJoined?`
+    <div style="border-top:1px solid var(--bd);padding-top:12px">
+      <div style="font-size:12px;font-weight:800;color:var(--t2);margin-bottom:8px">리그 참여하기</div>
+      <div class="field" style="margin-bottom:7px"><label>닉네임</label><input class="inp" id="joinNickMain" maxlength="12" placeholder="예: 코인마스터" autocomplete="off"></div>
+      <button class="btn btn-acc" onclick="(async()=>{await joinLeague(document.getElementById('joinNickMain').value,'');})()">참여하기 · ${fU(ST.league.initialCash||100000)} USDT 받기</button>
+    </div>`:`
+    <button class="btn btn-ghost btn-sm" style="width:100%" onclick="document.getElementById('addMemberSection').style.display=document.getElementById('addMemberSection').style.display==='none'?'block':'none'">+ 다른 참여자 추가</button>
+    <div id="addMemberSection" style="display:none;margin-top:8px;border-top:1px solid var(--bd);padding-top:10px">
+      <div class="field" style="margin-bottom:7px"><label>닉네임</label><input class="inp" id="joinNickExtra2" maxlength="12" placeholder="예: 코인마스터" autocomplete="off"></div>
+      <button class="btn btn-acc" onclick="(async()=>{await joinLeague(document.getElementById('joinNickExtra2').value,'');document.getElementById('joinNickExtra2').value='';document.getElementById('addMemberSection').style.display='none';})()">참여하기 · 자금 수령</button>
+    </div>`}
+  </div>
+
+  <!-- 참여자 목록 -->
+  <div class="card" style="padding:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <span style="font-size:13px;font-weight:900">참여자 현황</span>
+      <span style="font-size:11px;color:var(--t2)">${ST.league.name} · ${ranks.length}명</span>
+    </div>
+    <div style="display:grid;gap:5px">
+      ${ranks.length?ranks.map((r,i)=>{
+        const m=r._m, cl=m.rate>=0?'g':'r', isMe2=myId===r.id;
+        const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+        return `<div class="ptc-row" style="${isMe2?'background:rgba(240,185,11,.08);border-color:rgba(240,185,11,.2)':''}">
+<div><div class="ptc-nick">${med} ${r.nickname}${isMe2?'<span class="me-badge">나</span>':''}</div><div class="ptc-sub">${fU(m.total)} USDT</div></div>
+<span class="${cl}">${fPct(m.rate)}</span>
+</div>`;
+      }).join(''):'<div class="empty" style="padding:16px"><span class="ei">👥</span>아직 참여자가 없어요</div>'}
+    </div>
+  </div>
+
+  <!-- 관리자 패널 -->
+  <details class="admin" style="margin-top:4px">
+    <summary>⚙️ 리그 관리 <span style="font-size:11px;color:var(--t2);font-weight:400">관리자 전용</span></summary>
+    <div class="admin-body">
+      <form id="lgForm">
+        <div class="field"><label>리그 이름</label><input class="inp" id="lgName" maxlength="24" value="${ST.league.name}"></div>
+        <div class="field"><label>종료일</label><input class="inp" id="lgEnd" type="date" value="${ST.league.endDate||''}"></div>
+        <div class="field"><label>초기 자금 (USDT)</label><input class="inp" id="lgCash" type="number" value="${ST.league.initialCash||100000}" min="100" step="1000"></div>
+        <button class="btn btn-ghost" type="submit" style="margin-top:4px">💾 설정 저장</button>
+      </form>
+      <div class="divider"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <button class="btn btn-ghost btn-sm" id="btnClose" style="height:36px">🏁 리그 종료</button>
+        <button class="btn btn-ghost btn-sm" id="btnExport" style="height:36px">📋 순위 복사</button>
+      </div>
+      <button class="btn btn-danger btn-sm" id="btnDel" style="width:100%;height:36px;margin-top:6px">🗑 리그 삭제</button>
+      <p class="warn-txt">⚠ 삭제하면 모든 거래 기록이 사라집니다.</p>
+    </div>
+  </details>
+
+  ${_renderClosedLeagues()}
+</div>`;
   }
 
-  // ② 참여자 목록
-  document.getElementById('ptcCnt').textContent=ST.participants.length+'명';
-  const ptcLeagueEl=document.getElementById('ptcLeagueName');
-  if(ptcLeagueEl) ptcLeagueEl.textContent=ST.league?`📌 ${ST.league.name}`:'';
-  const ranks=getRanks(), myId2=LOCAL.participantId;
-  document.getElementById('ptcList').innerHTML=!ranks.length
-    ?'<div class="empty"><span class="ei">👥</span>참여자가 없습니다</div>'
-    :ranks.map((u,i)=>{
-      const m=u._m, cl=m.rate>=0?'g':'r', med=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
-      const isMe=myId2===u.id;
-      return `<div class="ptc-row"><div><div class="ptc-nick">${med}${u.nickname}${isMe?'<span class="me-badge">나</span>':''}</div><div class="ptc-sub">${fU(m.total)} USDT</div></div><span class="${cl}">${fPct(m.rate)}</span></div>`;
-    }).join('');
+  root.innerHTML = html;
 
-  // ③ 리그 관리 폼 값 세팅
-  if(ST.league){
-    document.getElementById('lgName').value=ST.league.name;
-    document.getElementById('lgEnd').value=ST.league.endDate||'';
-    document.getElementById('lgCash').value=ST.league.initialCash||10000;
-  }
+  // 이벤트 바인딩
+  const lgForm = document.getElementById('lgForm');
+  if(lgForm) lgForm.onsubmit = async(e)=>{
+    e.preventDefault();
+    const name=document.getElementById('lgName')?.value.trim()||ST.league.name;
+    const end=document.getElementById('lgEnd')?.value||ST.league.endDate;
+    const cash=parseInt(document.getElementById('lgCash')?.value)||ST.league.initialCash;
+    const {error}=await sb.from('leagues').update({name,end_date:end,initial_cash:cash}).eq('id',ST.league.id);
+    if(error) return toast('저장 실패: '+error.message);
+    await fetchData(); renderAll(); toast('✅ 설정 저장됨');
+  };
+  const btnClose=document.getElementById('btnClose');
+  if(btnClose) btnClose.onclick=doClose;
+  const btnDel=document.getElementById('btnDel');
+  if(btnDel) btnDel.onclick=doDelete;
+  const btnExport=document.getElementById('btnExport');
+  if(btnExport) btnExport.onclick=()=>{
+    const txt='🏆 '+ST.league.name+'\n'+ranks.map((r,i)=>`${i+1}위 ${r.nickname} ${fPct(r._m.rate)} (${fU(r._m.total)} USDT)`).join('\n');
+    navigator.clipboard?.writeText(txt).catch(()=>{}); toast('📋 랭킹 복사됨!');
+  };
+}
 
-  // ④ 종료된 리그 대시보드
-  const cd=document.getElementById('closedDiv');
-  if(!ST.closedLeagues.length){cd.innerHTML='';return;}
-  cd.innerHTML=`<div class="closed-section-title">📁 종료된 리그 ${ST.closedLeagues.length}개</div>`+
-    ST.closedLeagues.map((l,li)=>{
-      const expanded=cd.querySelector(`[data-lgid="${l.id}"]`)?.classList.contains('open')||li===0;
-      const podium=l.ranked.slice(0,3).map((r,i)=>{
-        const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
-        const cl=r.rate>=0?'g':'r';
-        return `<div class="closed-podium-row">
-<span style="font-size:14px;flex-shrink:0">${med}</span>
+function _renderClosedLeagues(){
+  if(!ST.closedLeagues?.length) return '';
+  const items = ST.closedLeagues.map((l,li)=>{
+    const podium=l.ranked.slice(0,3).map((r,i)=>{
+      const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+      const cl=r.rate>=0?'g':'r';
+      return `<div class="closed-podium-row">
+<span style="font-size:14px;flex-shrink:0;min-width:24px">${med}</span>
 <span style="font-weight:800;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nickname}</span>
 <span style="font-size:12px;color:var(--t2);margin-right:8px">${fU(r.total)} U</span>
 <span class="${cl}" style="font-size:12px">${fPct(r.rate)}</span>
 </div>`;
-      }).join('');
-      return `<div class="closed-card">
-<div class="closed-card-head" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
-  <div>
-    <div class="closed-card-name">${l.name}</div>
-    <div style="font-size:11px;color:var(--t3);margin-top:2px">🏆 우승 ${l.winner} · ${l.participantCount}명 참여</div>
-  </div>
-  <div style="text-align:right;flex-shrink:0">
-    <div class="closed-card-date">${l.endedAt}</div>
-    <div style="font-size:10px;color:var(--t3);margin-top:2px">▼</div>
-  </div>
+    }).join('');
+    return `<div class="closed-card">
+<div class="closed-card-head" onclick="const b=this.nextElementSibling;b.style.display=b.style.display==='none'?'block':'none'">
+  <div><div class="closed-card-name">${l.name}</div><div style="font-size:11px;color:var(--t3);margin-top:2px">🏆 ${l.winner} · ${l.participantCount}명 · ${l.endedAt}</div></div>
+  <span style="font-size:11px;color:var(--t3)">▼</span>
 </div>
 <div class="closed-card-body" style="display:${li===0?'block':'none'}">
   <div class="closed-stat-grid">
     <div class="closed-stat"><div class="closed-stat-l">초기자금</div><div class="closed-stat-v">${fU(l.initialCash)}<small style="font-size:9px;color:var(--t2)"> U</small></div></div>
-    <div class="closed-stat"><div class="closed-stat-l">참여인원</div><div class="closed-stat-v">${l.participantCount}명</div></div>
-    <div class="closed-stat"><div class="closed-stat-l">우승자</div><div class="closed-stat-v" style="color:var(--acc);font-size:11px">${l.winner}</div></div>
+    <div class="closed-stat"><div class="closed-stat-l">참여</div><div class="closed-stat-v">${l.participantCount}명</div></div>
+    <div class="closed-stat"><div class="closed-stat-l">우승</div><div class="closed-stat-v" style="color:var(--acc);font-size:11px;overflow:hidden;text-overflow:ellipsis">${l.winner}</div></div>
   </div>
-  ${l.ranked.length?`<div style="font-size:11px;font-weight:800;color:var(--t2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">최종 순위</div><div class="closed-podium">${podium}</div>`:''}
+  ${l.ranked.length?`<div style="font-size:11px;font-weight:800;color:var(--t2);margin-bottom:6px">최종 순위</div><div class="closed-podium">${podium}</div>`:''}
 </div>
 </div>`;
-    }).join('');
+  }).join('');
+  return `<div style="margin-top:12px"><div class="closed-section-title" style="margin-bottom:8px">📁 종료된 리그 ${ST.closedLeagues.length}개</div>${items}</div>`;
 }
+
+async function doNewLeague(){
+  const name = document.getElementById('newLgName')?.value.trim();
+  const end  = document.getElementById('newLgEnd')?.value;
+  const cash = parseInt(document.getElementById('newLgCash')?.value)||100000;
+  if(!name) return toast('리그 이름을 입력해주세요');
+  if(!end)  return toast('종료일을 입력해주세요');
+  // 기존 리그 종료 처리
+  if(ST.league){
+    const winner = getRanks()[0]?.nickname||'-';
+    await sb.from('leagues').update({status:'CLOSED',winner_nickname:winner}).eq('id',ST.league.id);
+  }
+  const lg = {
+    id:uid(), name, ticket:ticketCode(),
+    initial_cash:cash, start_date:today(), end_date:end, status:'ACTIVE',
+  };
+  const {error} = await sb.from('leagues').insert(lg);
+  if(error) return toast('리그 시작 실패: '+error.message);
+  saveLocal({participantId:null, activeUserId:null, leagueId:lg.id});
+  await fetchData(); renderAll();
+  toast(`🎉 "${name}" 시작! 티켓: ${lg.ticket}`);
+}
+
+
+
 function renderTrade(){
   const aid=getActiveUserId();
   const u=getUser();
@@ -1749,28 +1856,11 @@ document.querySelectorAll('.bnav').forEach(b=>{
   });
 });
 // btnAddMember 이벤트 제거됨 (lgStatusCard 인라인 버튼으로 대체)
-document.getElementById('joinForm').addEventListener('submit',async e=>{ e.preventDefault(); });
 window.joinLeague=joinLeague;
-document.getElementById('lgForm').addEventListener('submit',async e=>{
-  e.preventDefault();
-  if(!ST.league) return toast('리그가 없습니다.');
-  const name=document.getElementById('lgName').value.trim()||'니가가라 코인왕 리그';
-  const end=document.getElementById('lgEnd').value||ST.league.endDate;
-  const cash=parseInt(document.getElementById('lgCash').value)||10000;
-  if(ST.participants.length&&!confirm('설정 변경 시 기록에 영향을 줄 수 있습니다. 계속할까요?')) return;
-  const updates={name,end_date:end,initial_cash:cash};
-  if(ST.league.status==='CLOSED'&&dLeft(end)>0) updates.status='ACTIVE';
-  const {error}=await sb.from('leagues').update(updates).eq('id',ST.league.id);
-  if(error) return toast('저장 실패: '+error.message);
-  await fetchData(); renderAll(); toast('✅ 설정 저장됨');
-});
-document.getElementById('btnNew').addEventListener('click',doNew);
-document.getElementById('btnClose').addEventListener('click',doClose);
-document.getElementById('btnDel').addEventListener('click',doDelete);
-document.getElementById('btnExport').addEventListener('click',()=>{
-  const txt='🏆 랭킹\n'+getRanks().map((u,i)=>`${i+1}위 ${u.nickname} ${fPct(u._m.rate)} (${fU(u._m.total)} USDT)`).join('\n');
-  navigator.clipboard?.writeText(txt).catch(()=>{}); toast('📋 랭킹 복사됨!');
-});
+window.doNewLeague=doNewLeague;
+window.doClose=doClose;
+window.doDelete=doDelete;
+// lgForm은 renderLeague에서 동적 바인딩
 document.getElementById('userSel').addEventListener('change',e=>{
   saveLocal({activeUserId:e.target.value}); selH=''; renderTrade();
 });
@@ -1894,7 +1984,19 @@ document.getElementById('btnFutRefresh').addEventListener('click',async()=>{
 });
 
 /* ══ URL 파라미터 (초대 링크) ══ */
-(()=>{ const t=new URLSearchParams(location.search).get('t'); if(t){document.getElementById('joinTicket').value=t; toast('🎫 초대 티켓 확인! 닉네임을 입력해 참여하세요.');} })();
+(()=>{
+  const t=new URLSearchParams(location.search).get('t');
+  if(t){
+    // 티켓을 LOCAL에 저장해두고 리그 탭으로 이동
+    window._pendingTicket=t;
+    // 리그 탭 자동 활성화
+    document.querySelectorAll('.bnav').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
+    const lb=document.querySelector('[data-tab="league"]');
+    if(lb){ lb.classList.add('on'); document.getElementById('v-league').classList.add('on'); }
+    toast('🎫 초대 티켓 확인! 닉네임을 입력해 참여하세요.');
+  }
+})();
 
 /* ══ 토스트 ══ */
 let _tt;
@@ -2041,7 +2143,6 @@ async function init(){
         hideLoginOverlay();
         await handleAuthUser(session.user);
         await fetchData();
-        if(!ST.league){ await createDefaultLeague(); await fetchData(); }
         setupRealtime();
         renderAll();
         selectCoin(ST.selSym);
@@ -2065,7 +2166,6 @@ async function init(){
     hideLoginOverlay();
     await handleAuthUser(session.user);
     await fetchData();
-    if(!ST.league){ await createDefaultLeague(); await fetchData(); }
     setupRealtime();
     renderAll();
     selectCoin(ST.selSym);
