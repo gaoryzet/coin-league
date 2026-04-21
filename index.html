@@ -980,13 +980,24 @@ async function joinLeague(nick,ticket){
   if(ST.participants.some(p=>p.nickname.toLowerCase().replace(/\s/g,'')==nk)) return toast('이미 참여 중인 닉네임입니다.');
   const {data:cl}=await sb.from('claimed').select('id').eq('league_id',ST.league.id).eq('nickname_key',nk);
   if(cl?.length) return toast('이 리그에서 이미 자금을 받은 닉네임입니다.');
-  const id=uid(), cash=ST.league.initialCash||10000;
-  const {error}=await sb.from('participants').insert({
-    id, league_id:ST.league.id, nickname:nick, cash,
-    user_id: CURRENT_USER?.id || null,
-  });
-  if(error) return toast('참여 실패: '+error.message);
-  await sb.from('claimed').insert({league_id:ST.league.id,nickname_key:nk});
+  const id=uid(), cash=ST.league.initialCash||100000;
+
+  // user_id 컬럼 유무에 관계없이 안전하게 insert
+  let insertError;
+  if(CURRENT_USER?.id){
+    const r1=await sb.from('participants').insert({id,league_id:ST.league.id,nickname:nick,cash,user_id:CURRENT_USER.id});
+    if(r1.error && (r1.error.message.includes('user_id')||r1.error.code==='42703')){
+      // user_id 컬럼 없음 → 없이 재시도
+      const r2=await sb.from('participants').insert({id,league_id:ST.league.id,nickname:nick,cash});
+      insertError=r2.error;
+    } else { insertError=r1.error; }
+  } else {
+    const r=await sb.from('participants').insert({id,league_id:ST.league.id,nickname:nick,cash});
+    insertError=r.error;
+  }
+  if(insertError) return toast('참여 실패: '+insertError.message);
+
+  await sb.from('claimed').insert({league_id:ST.league.id,nickname_key:nk}).catch(()=>{});
   saveLocal({participantId:id,activeUserId:id,leagueId:ST.league.id});
   await fetchData(); renderAll();
   toast(`🎉 ${nick}님, ${fU(cash)} USDT 지급 완료!`);
@@ -1348,23 +1359,38 @@ function renderAll(){
 }
 function renderHeader(){
   const ranks=getRanks(), u=getUser(), cl=isClosed();
-  // 리그 배지 (홈 랭킹 아래)
-  const bn=document.getElementById('leagueBadgeName'), bd=document.getElementById('leagueBadgeDday');
-  if(bn&&ST.league){ bn.textContent=ST.league.name; }
-  if(bd&&ST.league){
-    if(isClosed()){ bd.textContent='🏁 종료'; bd.style.color='var(--R)'; }
-    else{ const d=dLeft(ST.league.endDate); const clr=d<=3?'var(--R)':d<=7?'var(--acc)':'var(--t3)'; bd.textContent=`D-${d}`; bd.style.color=clr; }
+
+  // 상단 바 상태
+  const tbPill=document.getElementById('tbPill');
+  if(tbPill){
+    if(!ST.league){ tbPill.textContent='리그 없음'; tbPill.className='pill pill-off'; }
+    else { tbPill.textContent=cl?'종료됨':'진행 중'; tbPill.className='pill '+(cl?'pill-off':'pill-on'); }
   }
-  document.getElementById('tbPill').textContent=cl?'종료됨':'진행 중';
-  document.getElementById('tbPill').className='pill '+(cl?'pill-off':'pill-on');
-  const myR=u?ranks.findIndex(r=>r.id===u.id)+1:0;
+
+  // 홈 리그 배지
+  const lgBadge=document.getElementById('leagueBadge');
+  const bn=document.getElementById('leagueBadgeName');
+  const bd=document.getElementById('leagueBadgeDday');
+  if(lgBadge){
+    if(!ST.league){ lgBadge.style.display='none'; }
+    else {
+      lgBadge.style.display='flex';
+      if(bn) bn.textContent=ST.league.name;
+      if(bd){
+        if(cl){ bd.textContent='🏁 종료'; bd.style.color='var(--R)'; }
+        else{ const d=dLeft(ST.league.endDate); const clr=d<=3?'var(--R)':d<=7?'var(--acc)':'var(--G)'; bd.textContent='D-'+d; bd.style.color=clr; }
+      }
+    }
+  }
+
+  // 포트폴리오 히어로
   if(!u){
     ['hTotal','hPnl','hCash','hVal','hRank'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
-    document.getElementById('hPnl').style.color='var(--t2)';
+    const pnl=document.getElementById('hPnl'); if(pnl) pnl.style.color='var(--t2)';
   } else {
-    const m=calcUser(u);
-    document.getElementById('hTotal').innerHTML=`${fU(m.total)} <small>USDT</small>`;
-    document.getElementById('hPnl').textContent=`${m.profit>=0?'+':''}${fU(m.profit)} USDT (${fPct(m.rate)})`;
+    const m=calcUser(u), myR=ranks.findIndex(r=>r.id===u.id)+1;
+    document.getElementById('hTotal').innerHTML=fU(m.total)+' <small>USDT</small>';
+    document.getElementById('hPnl').textContent=(m.profit>=0?'+':'')+fU(m.profit)+' USDT ('+fPct(m.rate)+')';
     document.getElementById('hPnl').style.color=m.profit>=0?'var(--G)':'var(--R)';
     document.getElementById('hCash').textContent=fU(u.cash);
     document.getElementById('hVal').textContent=fU(m.val);
@@ -1374,18 +1400,27 @@ function renderHeader(){
 function renderHomeRank(){
   const list=document.getElementById('homeRankList'); if(!list) return;
   const ranks=getRanks(), myId=LOCAL.participantId;
-  if(!ranks.length){list.innerHTML='<div class="empty"><span class="ei">🏅</span>참여자를 등록하면<br>랭킹이 표시됩니다</div>';return;}
+  if(!ST.league){
+    list.innerHTML='<div class="empty"><span class="ei">🏛</span>리그 탭에서 새 리그를 시작해주세요</div>';
+    return;
+  }
+  if(!ranks.length){
+    list.innerHTML='<div class="empty"><span class="ei">👥</span><b style="color:var(--t2)">'+ST.league.name+'</b><br>아직 참여자가 없어요<br><small style="color:var(--t3)">리그 탭에서 참여하세요</small></div>';
+    return;
+  }
   list.innerHTML=ranks.map((r,i)=>{
     const m=r._m, cl=m.rate>=0?'g':'r', isMe=myId===r.id;
     const nc=i===0?'hn1':i===1?'hn2':i===2?'hn3':'hnn';
-    const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
-    return `<div class="hr-row${isMe?' me':''}">
-<div class="hr-num ${nc}">${med}</div>
-<div class="hr-mid"><div class="hr-nick">${r.nickname}${isMe?'<span class="me-badge">나</span>':''}</div><div class="hr-sub">현금 ${fU(r.cash)} · ${r.holdings.length}코인</div></div>
-<div class="hr-right"><div class="hr-asset">${fU(m.total)}<small style="font-size:9px;color:var(--t2)"> U</small></div><div class="hr-rate ${cl}">${fPct(m.rate)}</div></div>
-</div>`;
+    const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1);
+    return '<div class="hr-row'+(isMe?' me':'')+'">'+
+      '<div class="hr-num '+nc+'">'+med+'</div>'+
+      '<div class="hr-mid"><div class="hr-nick">'+r.nickname+(isMe?'<span class="me-badge">나</span>':'')+'</div>'+
+      '<div class="hr-sub">현금 '+fU(r.cash)+' · '+r.holdings.length+'코인</div></div>'+
+      '<div class="hr-right"><div class="hr-asset">'+fU(m.total)+'<small style="font-size:9px;color:var(--t2)"> U</small></div>'+
+      '<div class="hr-rate '+cl+'">'+fPct(m.rate)+'</div></div></div>';
   }).join('');
 }
+
 function renderHomeMarket(){
   const list=document.getElementById('homeMarket'); if(!list) return;
   const top=ALL_COINS.slice(0,10);
@@ -1542,7 +1577,11 @@ function renderLeague(){
     <div style="border-top:1px solid var(--bd);padding-top:12px">
       <div style="font-size:12px;font-weight:800;color:var(--t2);margin-bottom:8px">리그 참여하기</div>
       <div class="field" style="margin-bottom:7px"><label>닉네임</label><input class="inp" id="joinNickMain" maxlength="12" placeholder="예: 코인마스터" autocomplete="off"></div>
-      <button class="btn btn-acc" onclick="(async()=>{await joinLeague(document.getElementById('joinNickMain').value,'');})()">참여하기 · ${fU(ST.league.initialCash||100000)} USDT 받기</button>
+      <div class="field" style="margin-bottom:10px">
+        <label>티켓 코드 <span style="color:var(--t3);font-weight:400">(초대 링크로 오셨다면 자동 입력돼요)</span></label>
+        <input class="inp" id="joinTicketMain" maxlength="32" placeholder="TICKET-XXXXX" value="${window._pendingTicket||ST.league.ticket}">
+      </div>
+      <button class="btn btn-acc" id="btnJoinSubmit">참여하기 · ${fU(ST.league.initialCash||100000)} USDT 받기</button>
     </div>`:`
     <button class="btn btn-ghost btn-sm" style="width:100%" onclick="document.getElementById('addMemberSection').style.display=document.getElementById('addMemberSection').style.display==='none'?'block':'none'">+ 다른 참여자 추가</button>
     <div id="addMemberSection" style="display:none;margin-top:8px;border-top:1px solid var(--bd);padding-top:10px">
@@ -1596,6 +1635,12 @@ function renderLeague(){
   root.innerHTML = html;
 
   // 이벤트 바인딩
+  const btnJoin = document.getElementById('btnJoinSubmit');
+  if(btnJoin) btnJoin.onclick = async()=>{
+    const nick = document.getElementById('joinNickMain')?.value||'';
+    const ticket = document.getElementById('joinTicketMain')?.value.trim()||'';
+    await joinLeague(nick, ticket);
+  };
   const lgForm = document.getElementById('lgForm');
   if(lgForm) lgForm.onsubmit = async(e)=>{
     e.preventDefault();
