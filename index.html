@@ -1970,41 +1970,51 @@ document.getElementById('btnLogout').addEventListener('click', async()=>{
 });
 
 async function init(){
-  // Supabase 초기화
   sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
   setApiStatus('loading','DB 연결 중...');
 
-  // ── 인증 상태 변화 감지 (로그인/로그아웃 자동 처리)
+  // ── 인증 상태 변화 감지 (로그인 후 자동 처리)
   sb.auth.onAuthStateChange(async(event, session)=>{
-    if(event==='SIGNED_IN'||event==='TOKEN_REFRESHED'){
+    if(event==='SIGNED_IN'){
+      hideLoginOverlay();
       await handleAuthUser(session.user);
       await fetchData();
       if(!ST.league){ await createDefaultLeague(); await fetchData(); }
       setupRealtime();
       renderAll();
+      // Binance 시세
+      const all = await fetchAll24hr();
+      if(all){ parseTickers(all); renderCoinList(); renderHomeMarket(); }
+      selectCoin(ST.selSym);
     } else if(event==='SIGNED_OUT'){
+      setApiStatus('loading','로그인 필요');
       showLoginOverlay();
     }
   });
 
-  // ── 현재 세션 확인 (이미 로그인된 경우)
+  // ── 현재 세션 확인
   const {data:{session}} = await sb.auth.getSession();
-  if(session?.user){
-    await handleAuthUser(session.user);
-    await fetchData();
-    if(!ST.league){ await createDefaultLeague(); await fetchData(); }
-    setupRealtime();
-    renderAll();
-  } else {
+  if(!session?.user){
+    // 로그인 안 된 상태 → 로그인 화면 표시
+    setApiStatus('err','로그인 필요');
+    document.getElementById('sDot').className='status-dot s-err';
+    document.getElementById('sTxt').textContent='로그인 필요';
     showLoginOverlay();
     return;
   }
+
+  // ── 로그인된 상태
+  await handleAuthUser(session.user);
+  await fetchData();
+  if(!ST.league){ await createDefaultLeague(); await fetchData(); }
+  setupRealtime();
+  renderAll();
 
   // Binance 시세 로드
   setApiStatus('loading','시세 로딩 중...');
   const all = await fetchAll24hr();
   if(all){ parseTickers(all); renderCoinList(); renderHomeMarket(); }
-  else{ setApiStatus('err','Binance API 실패 - 브라우저에서 직접 열어주세요'); }
+  else{ setApiStatus('err','Binance 연결 실패'); }
 
   selectCoin(ST.selSym);
 }
