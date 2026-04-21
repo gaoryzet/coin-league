@@ -427,6 +427,22 @@ function defaultLeague(){
     inviteCode:"KING-"+Math.floor(1000+Math.random()*9000)
   };
 }
+function emptyLeague(){
+  return {
+    id:"",
+    name:"리그 없음",
+    status:"EMPTY",
+    startDate:new Date().toISOString().slice(0,10),
+    endDate:new Date().toISOString().slice(0,10),
+    initialCash:START_CASH,
+    rewardTitle:"리그가 아직 없습니다",
+    rewardText:"관리자가 새 리그를 생성하면 참가할 수 있습니다.",
+    allowSpot:false,
+    allowFutures:false,
+    maxLeverage:1,
+    inviteCode:"-"
+  };
+}
 function freshState(){
   const league = defaultLeague();
   const firstId = uid();
@@ -562,6 +578,14 @@ async function loadCloudLeagueAndParticipants(options={}){
       if(res.error) throw res.error;
       leagues = res.data;
     }
+    if(!leagues?.length){
+      state.league = emptyLeague();
+      state.players = state.players.map(p=>({...p,cash:0,rewards:{},holdings:{},positions:[],history:[]}));
+      cloudMode = true;
+      cloudSyncFailCount = 0;
+      save();
+      return;
+    }
     const cloudLeague = mapCloudLeague(leagues?.[0]);
     if(cloudLeague){
       state.league = cloudLeague;
@@ -645,7 +669,7 @@ function pct(n){return (n>=0?"+":"")+n.toFixed(2)+"%"}
 function coin(){return state.market.find(c=>c.symbol===selected) || state.market[0]}
 function active(){return state.players.find(p=>p.id===state.activePlayerId) || state.players[0]}
 function hasReward(p=active()){return !!p?.rewards?.[state.league.id]}
-function leagueClosed(){return state.league.status !== "ACTIVE" || new Date(state.league.endDate+"T23:59:59").getTime() < Date.now()}
+function leagueClosed(){return !hasActiveLeague() || new Date(state.league.endDate+"T23:59:59").getTime() < Date.now()}
 function dday(){
   if(leagueClosed()) return "종료";
   const left = Math.ceil((new Date(state.league.endDate+"T23:59:59").getTime()-Date.now())/86400000);
@@ -670,6 +694,7 @@ function positionValue(p){
 }
 function totalAssets(p){return p.cash + holdingValue(p) + positionValue(p)}
 function seedMoney(){return state.league?.initialCash || START_CASH}
+function hasActiveLeague(){return !!state.league?.id && state.league.status === "ACTIVE"}
 function profitRate(p){
   const seed = seedMoney();
   return seed > 0 ? (totalAssets(p)-seed)/seed*100 : 0;
@@ -863,12 +888,14 @@ async function manualGoogleLogin(){
   }
 }
 function requireTradable(){
+  if(!hasActiveLeague()) return "진행 중인 리그가 없습니다.";
   if(leagueClosed()) return "종료된 리그에서는 거래할 수 없습니다.";
   if(!hasReward()) return "리그 투자금을 먼저 받아야 거래할 수 있습니다.";
   return "";
 }
 async function claimReward(){
   const p = active();
+  if(!hasActiveLeague()) return toast("아직 진행 중인 리그가 없습니다.");
   if(leagueClosed()) return toast("종료된 리그에서는 지급받을 수 없습니다.");
   if(!p.nicknameSet || !p.name) return toast("먼저 리그에서 사용할 닉네임을 설정하세요.");
   if(hasReward(p)) return toast("이미 이번 리그 투자금을 받았습니다.");
@@ -1242,6 +1269,18 @@ async function syncChart(force=false){
 }
 function renderDashboard(){
   const p = active();
+  if(!hasActiveLeague()){
+    document.getElementById("mTotal").textContent = "0.00 U";
+    document.getElementById("mRate").innerHTML = `<span class="r">-</span> / 지급 대기`;
+    document.getElementById("mCash").textContent = "0.00 U";
+    document.getElementById("mRisk").textContent = "0.00 U";
+    document.getElementById("mRiskNote").textContent = "열린 포지션 없음";
+    document.getElementById("leagueStrip").innerHTML = `<div><b>진행 중인 리그 없음</b><span>관리자가 새 리그를 생성하면 참가할 수 있습니다.</span></div><strong class="y">-</strong>`;
+    document.getElementById("rewardBox").innerHTML = `<div class="reward claimed"><h2>리그 준비 중</h2><p>현재 Supabase에 활성 리그가 없습니다. 관리자 모드에서 새 리그를 생성하세요.</p></div>`;
+    document.getElementById("rankBox").innerHTML = `<div class="empty">아직 표시할 랭킹이 없습니다.</div>`;
+    document.getElementById("holdingBox").innerHTML = `<div class="empty">보유 현물이 없습니다.</div>`;
+    return;
+  }
   const total = totalAssets(p);
   const rate = profitRate(p);
   const open = p.positions.filter(x=>x.status==="OPEN");
@@ -1276,6 +1315,19 @@ function renderDashboard(){
 }
 function renderLeague(){
   const p = active();
+  if(!hasActiveLeague()){
+    document.getElementById("claimRewardLeague").style.display = "none";
+    document.getElementById("leagueInfo").innerHTML = `
+      <div class="nickname-card locked"><h2>진행 중인 리그 없음</h2><p>지금 Supabase에는 활성 리그가 없습니다. 관리자 모드에서 새 리그를 생성하면 참가자에게 공유됩니다.</p></div>
+      <div class="preview">
+        <div class="pline"><span>상태</span><b>리그 없음</b></div>
+        <div class="pline"><span>참가</span><b>대기 중</b></div>
+      </div>`;
+    document.getElementById("leagueRankMeta").textContent = "0명";
+    document.getElementById("leagueRankBox").innerHTML = `<div class="empty">새 리그 생성 후 랭킹이 표시됩니다.</div>`;
+    renderAdmin();
+    return;
+  }
   const canClaim = !hasReward(p) && !leagueClosed();
   document.getElementById("claimRewardLeague").style.display = canClaim ? "block" : "none";
   document.getElementById("leagueInfo").innerHTML = `
@@ -1341,8 +1393,8 @@ function renderAdmin(){
   document.getElementById("lgLev").value = String(state.league.maxLeverage);
   document.getElementById("saveLeague").addEventListener("click",saveLeagueSettings);
   document.getElementById("newLeague").addEventListener("click",createNewLeague);
-  document.getElementById("closeLeague").addEventListener("click",()=>{if(!requireAdminAction()) return; confirmAction({title:"리그 종료",text:"현재 리그를 종료하고 거래를 막습니다.",detail:"종료 후에는 랭킹과 기록만 확인할 수 있습니다.",action:()=>{if(!requireAdminAction()) return; state.league.status="CLOSED"; save(); render(); toast("리그 종료 완료")}})});
-  document.getElementById("deleteLeague").addEventListener("click",()=>{if(!requireAdminAction()) return; confirmAction({title:"리그 삭제 경고",text:"현재 리그의 참가자, 거래 기록, 지급 상태가 모두 초기화됩니다.",detail:"되돌릴 수 없습니다. 정말 삭제하시려면 실행을 누르세요.",action:()=>{if(!requireAdminAction()) return; state=freshState(); selected="BTC"; save(); render(); toast("리그 삭제 및 초기화 완료")}})});
+  document.getElementById("closeLeague").addEventListener("click",()=>{if(!requireAdminAction()) return; confirmAction({title:"리그 종료",text:"현재 리그를 종료하고 거래를 막습니다.",detail:"종료 후에는 랭킹과 기록만 확인할 수 있습니다.",action:closeLeague})});
+  document.getElementById("deleteLeague").addEventListener("click",()=>{if(!requireAdminAction()) return; confirmAction({title:"리그 삭제 경고",text:"현재 리그의 참가자, 거래 기록, 지급 상태가 모두 초기화됩니다.",detail:"되돌릴 수 없습니다. 정말 삭제하시려면 실행을 누르세요.",action:deleteLeague})});
 }
 function readLeagueForm(){
   return {
@@ -1362,14 +1414,69 @@ function requireAdminAction(){
   toast("관리자 권한이 필요합니다.");
   return false;
 }
-function saveLeagueSettings(){
+function leagueRowPayload(league){
+  return {
+    id:league.id,
+    name:league.name,
+    ticket:league.inviteCode,
+    initial_cash:league.initialCash,
+    start_date:league.startDate,
+    end_date:league.endDate,
+    status:league.status
+  };
+}
+async function saveLeagueSettings(){
   if(!requireAdminAction()) return;
   const next = readLeagueForm();
   if(new Date(next.endDate) < new Date(next.startDate)) return toast("종료일은 시작일 이후여야 합니다.");
   Object.assign(state.league,next);
+  if(sb && currentUser && !isFileMode && state.league.id){
+    const write = await sb.from("leagues").update(leagueRowPayload(state.league)).eq("id", state.league.id);
+    if(write.error) return toast("공유 리그 저장 실패: Supabase 권한을 확인하세요.");
+  }
   save();
   render();
   toast("리그 설정 저장 완료");
+}
+async function closeLeague(){
+  if(!requireAdminAction()) return;
+  state.league.status = "CLOSED";
+  if(sb && currentUser && !isFileMode && state.league.id){
+    const write = await sb.from("leagues").update({status:"CLOSED"}).eq("id", state.league.id);
+    if(write.error) return toast("공유 리그 종료 실패: Supabase 권한을 확인하세요.");
+  }
+  save();
+  render();
+  toast("리그 종료 완료");
+}
+async function deleteLeague(){
+  if(!requireAdminAction()) return;
+  const id = state.league.id;
+  if(sb && currentUser && !isFileMode && id){
+    const write = await sb.from("leagues").delete().eq("id", id);
+    if(write.error) return toast("공유 리그 삭제 실패: Supabase 권한을 확인하세요.");
+  }
+  state.league = emptyLeague();
+  state.players = state.players.map(p=>({...p,cash:0,rewards:{},holdings:{},positions:[],history:[]}));
+  selected="BTC";
+  save();
+  render();
+  toast("리그 삭제 완료");
+}
+function resetPlayersForLeague(league){
+  state.players = state.players.map(p=>({id:p.id,userId:p.userId,name:p.name,nicknameSet:p.nicknameSet,cash:0,rewards:{[league.id]:false},holdings:{},positions:[],history:[]}));
+  if(!state.players.length){
+    const id=uid();
+    state.players=[{id,name:"",nicknameSet:false,cash:0,rewards:{[league.id]:false},holdings:{},positions:[],history:[]}];
+    state.activePlayerId=id;
+  }
+}
+function applyNewLeague(league){
+  state.league = league;
+  resetPlayersForLeague(league);
+  selected="BTC";
+  save();
+  render();
 }
 function createNewLeague(){
   if(!requireAdminAction()) return;
@@ -1379,18 +1486,13 @@ function createNewLeague(){
     title:"새 리그 생성",
     text:"새 리그를 시작하면 참가자 자산과 거래 기록이 초기화됩니다.",
     detail:`${next.name} · ${money(next.initialCash)} USDT · ${next.startDate} ~ ${next.endDate}`,
-    action:()=>{
+    action:async()=>{
       const league = {...defaultLeague(),...next,id:uid(),status:"ACTIVE",inviteCode:"KING-"+Math.floor(1000+Math.random()*9000)};
-      state.league = league;
-      state.players = state.players.map(p=>({id:p.id,userId:p.userId,name:p.name,nicknameSet:p.nicknameSet,cash:0,rewards:{[league.id]:false},holdings:{},positions:[],history:[]}));
-      if(!state.players.length){
-        const id=uid();
-        state.players=[{id,name:"",nicknameSet:false,cash:0,rewards:{[league.id]:false},holdings:{},positions:[],history:[]}];
-        state.activePlayerId=id;
+      if(sb && currentUser && !isFileMode){
+        const write = await sb.from("leagues").insert(leagueRowPayload(league));
+        if(write.error) return toast("공유 리그 생성 실패: Supabase 권한을 확인하세요.");
       }
-      selected="BTC";
-      save();
-      render();
+      applyNewLeague(league);
       toast("새 리그 생성 완료");
     }
   });
