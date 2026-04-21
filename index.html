@@ -300,6 +300,51 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .pos-stat-l{font-size:10px;color:var(--t3);font-weight:700}
 .pos-stat-v{font-size:12px;font-weight:800;margin-top:2px}
 .liq-warn{font-size:11px;color:var(--R);margin-bottom:8px;padding:6px 8px;background:var(--Rbg);border-radius:4px}
+/* ── 로그인 오버레이 ── */
+.login-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:var(--bg0);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:32px 24px;
+  text-align:center;
+}
+.login-logo{font-size:15px;font-weight:900;color:var(--acc);letter-spacing:1px;font-family:monospace;margin-bottom:6px}
+.login-title{font-size:24px;font-weight:900;margin-bottom:8px;line-height:1.3}
+.login-desc{font-size:13px;color:var(--t2);margin-bottom:36px;line-height:1.8;max-width:300px}
+.btn-google{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;max-width:280px;height:48px;
+  background:#fff;color:#1f1f1f;
+  border-radius:8px;font-size:15px;font-weight:700;
+  border:none;cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.3);
+  transition:.15s;
+}
+.btn-google:active{transform:scale(.98)}
+.btn-google img{width:20px;height:20px}
+.login-note{font-size:11px;color:var(--t3);margin-top:20px;line-height:1.6}
+/* ── 유저 아바타 ── */
+.user-avatar{
+  width:28px;height:28px;border-radius:50%;
+  object-fit:cover;flex-shrink:0;
+  border:2px solid var(--acc);
+  cursor:pointer;
+}
+.user-avatar-placeholder{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--bg3);border:2px solid var(--bd);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;flex-shrink:0;cursor:pointer;
+}
+.logout-menu{
+  position:fixed;top:60px;right:12px;z-index:200;
+  background:var(--bg2);border:1px solid var(--bd);
+  border-radius:var(--r);padding:6px;
+  box-shadow:var(--sh);min-width:160px;
+  display:none;
+}
+.logout-menu.show{display:block}
 .liq-flash{position:fixed;inset:0;background:rgba(246,70,93,.18);z-index:100;pointer-events:none;opacity:0;transition:.3s}
 .liq-flash.show{opacity:1}
 .g{color:var(--G);font-weight:800}
@@ -328,6 +373,24 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 </style>
 </head>
 <body>
+<!-- 로그인 오버레이 -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-logo">NIGAGARA COINKING</div>
+  <h1 class="login-title">코인왕 리그에<br>오신 걸 환영해요! 🏆</h1>
+  <p class="login-desc">구글 계정으로 로그인하면<br>어떤 기기에서도 내 데이터가 유지돼요.</p>
+  <button class="btn-google" id="btnGoogleLogin">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+    Google로 시작하기
+  </button>
+  <p class="login-note">실제 돈은 필요 없어요 · 가상 모의투자 게임</p>
+</div>
+
+<!-- 로그아웃 메뉴 -->
+<div class="logout-menu" id="logoutMenu">
+  <div class="logout-menu-name" id="logoutMenuEmail"></div>
+  <button class="logout-btn" id="btnLogout">🚪 로그아웃</button>
+</div>
+
 <div class="app">
 <div class="topbar">
   <div class="tb-left">
@@ -335,10 +398,15 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 
   </div>
   <div class="tb-right">
-    <div class="pill pill-on" id="tbPill">진행 중</div>
-    <div class="api-status" id="apiStatus">
-      <div class="status-dot s-loading" id="sDot"></div>
-      <span id="sTxt">연결 중...</span>
+    <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
+      <div>
+        <div class="pill pill-on" id="tbPill">진행 중</div>
+        <div class="api-status" id="apiStatus">
+          <div class="status-dot s-loading" id="sDot"></div>
+          <span id="sTxt">연결 중...</span>
+        </div>
+      </div>
+      <div class="user-avatar-placeholder" id="userAvatarBtn" title="내 계정">👤</div>
     </div>
   </div>
 </div>
@@ -917,7 +985,10 @@ async function joinLeague(nick,ticket){
   const {data:cl}=await sb.from('claimed').select('id').eq('league_id',ST.league.id).eq('nickname_key',nk);
   if(cl?.length) return toast('이 리그에서 이미 자금을 받은 닉네임입니다.');
   const id=uid(), cash=ST.league.initialCash||10000;
-  const {error}=await sb.from('participants').insert({id,league_id:ST.league.id,nickname:nick,cash});
+  const {error}=await sb.from('participants').insert({
+    id, league_id:ST.league.id, nickname:nick, cash,
+    user_id: CURRENT_USER?.id || null,
+  });
   if(error) return toast('참여 실패: '+error.message);
   await sb.from('claimed').insert({league_id:ST.league.id,nickname_key:nk});
   saveLocal({participantId:id,activeUserId:id,leagueId:ST.league.id});
@@ -1812,28 +1883,98 @@ setInterval(async()=>{
 },30000);
 
 /* ══ 초기화 ══ */
+/* ══ 구글 로그인 ══ */
+let CURRENT_USER = null; // Supabase auth user
+
+function showLoginOverlay(){ document.getElementById('loginOverlay').style.display='flex'; }
+function hideLoginOverlay(){ document.getElementById('loginOverlay').style.display='none'; }
+
+function updateAvatarUI(user){
+  const btn = document.getElementById('userAvatarBtn');
+  if(!btn) return;
+  if(user?.user_metadata?.avatar_url){
+    btn.outerHTML = `<img class="user-avatar" id="userAvatarBtn" src="${user.user_metadata.avatar_url}" alt="프로필" title="${user.email}">`;
+  } else {
+    btn.textContent = user ? (user.email?.[0]?.toUpperCase()||'👤') : '👤';
+  }
+  const emailEl = document.getElementById('logoutMenuEmail');
+  if(emailEl) emailEl.textContent = user?.email || '';
+}
+
+async function handleAuthUser(user){
+  CURRENT_USER = user;
+  if(!user){ showLoginOverlay(); return; }
+  hideLoginOverlay();
+  updateAvatarUI(user);
+  // 이 유저의 participant 찾기
+  const {data:parts} = await sb.from('participants')
+    .select('id,league_id').eq('user_id', user.id).limit(1);
+  if(parts?.length){
+    const p = parts[0];
+    saveLocal({participantId: p.id, activeUserId: p.id, leagueId: p.league_id});
+  }
+}
+
+document.getElementById('btnGoogleLogin').addEventListener('click', async()=>{
+  const {error} = await sb.auth.signInWithOAuth({
+    provider:'google',
+    options:{ redirectTo: `${location.origin}${location.pathname}` }
+  });
+  if(error) toast('로그인 실패: '+error.message);
+});
+
+document.getElementById('userAvatarBtn')?.addEventListener('click', ()=>{
+  document.getElementById('logoutMenu').classList.toggle('show');
+});
+document.addEventListener('click', e=>{
+  if(!e.target.closest('#userAvatarBtn')&&!e.target.closest('#logoutMenu')){
+    document.getElementById('logoutMenu')?.classList.remove('show');
+  }
+});
+document.getElementById('btnLogout').addEventListener('click', async()=>{
+  await sb.auth.signOut();
+  saveLocal({participantId:null, activeUserId:null});
+  CURRENT_USER = null;
+  document.getElementById('logoutMenu').classList.remove('show');
+  updateAvatarUI(null);
+  showLoginOverlay();
+  toast('로그아웃 됐어요.');
+});
+
 async function init(){
   // Supabase 초기화
-  sb=window.supabase.createClient(SUPA_URL, SUPA_KEY);
+  sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
   setApiStatus('loading','DB 연결 중...');
-  renderAll();
 
-  // DB에서 데이터 로드
-  await fetchData();
+  // ── 인증 상태 변화 감지 (로그인/로그아웃 자동 처리)
+  sb.auth.onAuthStateChange(async(event, session)=>{
+    if(event==='SIGNED_IN'||event==='TOKEN_REFRESHED'){
+      await handleAuthUser(session.user);
+      await fetchData();
+      if(!ST.league){ await createDefaultLeague(); await fetchData(); }
+      setupRealtime();
+      renderAll();
+    } else if(event==='SIGNED_OUT'){
+      showLoginOverlay();
+    }
+  });
 
-  // 리그가 없으면 자동 생성
-  if(!ST.league){
-    await createDefaultLeague();
+  // ── 현재 세션 확인 (이미 로그인된 경우)
+  const {data:{session}} = await sb.auth.getSession();
+  if(session?.user){
+    await handleAuthUser(session.user);
     await fetchData();
+    if(!ST.league){ await createDefaultLeague(); await fetchData(); }
+    setupRealtime();
+    renderAll();
+  } else {
+    showLoginOverlay();
+    return;
   }
-
-  // 실시간 구독 시작
-  setupRealtime();
-  renderAll();
 
   // Binance 시세 로드
   setApiStatus('loading','시세 로딩 중...');
-  const all=await fetchAll24hr();
+  const all = await fetchAll24hr();
   if(all){ parseTickers(all); renderCoinList(); renderHomeMarket(); }
   else{ setApiStatus('err','Binance API 실패 - 브라우저에서 직접 열어주세요'); }
 
