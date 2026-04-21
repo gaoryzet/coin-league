@@ -958,9 +958,22 @@ function isClosed(){
 }
 function calcUser(u){
   const init=ST.league?.initialCash||10000;
-  const val=u.holdings.reduce((s,h)=>{ const c=getCoin(h.symbol); return s+(c?.price||h.avgPrice||0)*h.qty; },0);
-  const total=u.cash+val, profit=total-init, rate=init>0?(profit/init)*100:0;
-  return {val,total,profit,rate};
+  // 현물 평가액
+  const val=u.holdings.reduce((s,h)=>{
+    const c=getCoin(h.symbol);
+    return s+(c?.price||h.avgPrice||0)*h.qty;
+  },0);
+  // 선물 포지션 미실현 가치 (마진 + 미실현 PnL)
+  const posVal=(u.positions||[]).reduce((s,pos)=>{
+    const c=getCoin(pos.symbol);
+    if(!c?.price) return s+pos.margin; // 가격 없으면 마진만 포함
+    const {pnl}=calcPnL(pos,c.price);
+    return s+Math.max(0, pos.margin+pnl); // 최소 0 (강제청산 전)
+  },0);
+  const total=u.cash+val+posVal;
+  const profit=total-init;
+  const rate=init>0?(profit/init)*100:0;
+  return {val,total,profit,rate,posVal};
 }
 function getRanks(){
   return ST.participants.map(u=>({...u,_m:calcUser(u)})).sort((a,b)=>b._m.total-a._m.total||b._m.rate-a._m.rate);
@@ -1240,6 +1253,7 @@ function setDir(dir){
     dd.innerHTML='<b>숏 포지션</b> — 가격이 내리면 이익이에요.<br><span style="opacity:.8">진입가보다 낮을 때 청산하면 수익!</span>';
   }
   updateFutPrev();
+  updateOrder(); // 버튼 텍스트도 업데이트
 }
 window.setDir=setDir;
 
@@ -1287,14 +1301,22 @@ window.doClosePosition=async function(posId){
 
 async function checkLiquidations(){
   for(const u of ST.participants){
-    for(const pos of (u.positions||[]).filter(p=>p.status==='OPEN')){
+    // positions는 이미 OPEN만 로드됨
+    for(const pos of (u.positions||[])){
       const c=getCoin(pos.symbol); if(!c?.price) continue;
-      const liq=(pos.direction==='long'&&c.price<=pos.liq_price)||(pos.direction==='short'&&c.price>=pos.liq_price);
+      const liq=(pos.direction==='long'&&c.price<=pos.liq_price)
+               ||(pos.direction==='short'&&c.price>=pos.liq_price);
       if(!liq) continue;
-      await sb.from('positions').update({status:'LIQUIDATED',pnl:-pos.margin,pnl_rate:-100}).eq('id',pos.id);
+      // 강제청산: 마진 전액 손실 (cash는 open 시 이미 차감됨 → 추가 변경 불필요)
+      const {error}=await sb.from('positions')
+        .update({status:'LIQUIDATED', pnl:-pos.margin, pnl_rate:-100})
+        .eq('id',pos.id);
+      if(error) continue;
       const fl=document.getElementById('liqFlash');
-      if(fl){fl.classList.add('show');setTimeout(()=>fl.classList.remove('show'),600);}
-      if(u.id===LOCAL.participantId) toast(`💥 ${pos.base} ${pos.direction.toUpperCase()} 강제청산됨!`);
+      if(fl){fl.classList.add('show');setTimeout(()=>fl.classList.remove('show'),800);}
+      if(u.id===LOCAL.participantId){
+        toast(`💥 ${pos.base} ${pos.direction==='long'?'LONG':'SHORT'} 강제청산! 마진 ${fU(pos.margin)} USDT 손실`);
+      }
       await fetchData(); renderAll(); return;
     }
   }
@@ -1318,39 +1340,78 @@ function updateFutPrev(){
 
 function renderPositions(){
   const u=getUser(), list=document.getElementById('posList'); if(!list) return;
-  const positions=(u?.positions||[]).filter(p=>p.status==='OPEN');
+  const positions=(u?.positions||[]);
   const fbEl=document.getElementById('futBal');
-  if(fbEl) fbEl.textContent=u?`${fU(u.cash)} USDT`:'—';
-  if(!positions.length){list.innerHTML='<div class="empty"><span class="ei">📊</span>열린 포지션이 없습니다</div>';return;}
-  list.innerHTML=positions.map(pos=>{
+  if(fbEl) fbEl.textContent=u?fU(u.cash)+' USDT':'—';
+  if(!positions.length){
+    list.innerHTML='<div class="empty"><span class="ei">📊</span>열린 포지션이 없습니다</div>';
+    return;
+  }
+  const rows = positions.map((pos,i)=>{
     const c=getCoin(pos.symbol), cur=c?.price||pos.entry_price;
+    const hasLive=!!(c?.price);
     const {pnl,rate}=calcPnL(pos,cur);
     const cl=pnl>=0?'g':'r', isLong=pos.direction==='long';
     const liqDist=isLong?((cur-pos.liq_price)/cur*100):((pos.liq_price-cur)/cur*100);
-    const warn=liqDist<15&&liqDist>0;
-    return `<div class="pos-card">
-<div class="pos-head">
-  <span class="pos-dir ${isLong?'pos-long':'pos-short'}">${isLong?'LONG':'SHORT'}</span>
-  <span class="pos-lev">${pos.leverage}x</span>
-  <span class="pos-sym">${pos.base}/USDT</span>
-  <span class="pos-pnl ${cl}">${pnl>=0?'+':''}${fU(pnl)}<small style="font-size:10px"> U</small></span>
-</div>
-<div class="pos-body">
-  ${warn?`<div class="liq-warn">⚠️ 청산가까지 ${liqDist.toFixed(1)}% 남음 — 주의하세요!</div>`:''}
-  <div class="pos-grid">
-    <div class="pos-stat"><div class="pos-stat-l">마진</div><div class="pos-stat-v">${fU(pos.margin)} U</div></div>
-    <div class="pos-stat"><div class="pos-stat-l">포지션</div><div class="pos-stat-v">${fU(pos.size)} U</div></div>
-    <div class="pos-stat"><div class="pos-stat-l">진입가</div><div class="pos-stat-v">${fP(pos.entry_price)}</div></div>
-    <div class="pos-stat"><div class="pos-stat-l">청산가</div><div class="pos-stat-v" style="color:var(--R)">${fP(pos.liq_price)}</div></div>
-  </div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-    <span style="font-size:12px;color:var(--t2)">미실현 수익률</span>
-    <span class="${cl}" style="font-size:14px;font-weight:800">${rate>=0?'+':''}${rate.toFixed(2)}%</span>
-  </div>
-  <button class="btn btn-danger" style="height:36px;font-size:13px" onclick="doClosePosition('${pos.id}')">포지션 청산하기</button>
-</div>
-</div>`;
-  }).join('');
+    const warn=liqDist>0&&liqDist<20, danger=liqDist>0&&liqDist<5;
+    const priceChg=(cur-pos.entry_price)/pos.entry_price*100;
+    const borderStyle=danger?'border-color:var(--R)':'';
+    const warnHtml=danger
+      ?'<div class="liq-warn" style="display:block">🚨 청산가까지 '+liqDist.toFixed(1)+'% — 즉시 확인!</div>'
+      :warn?'<div class="liq-warn" style="display:block;background:rgba(240,185,11,.1);border-color:rgba(240,185,11,.3);color:var(--acc)">⚠️ 청산가까지 '+liqDist.toFixed(1)+'% 남음</div>':'';
+    return '<div class="pos-card" style="'+borderStyle+'">'
+      +'<div class="pos-head">'
+        +'<span class="pos-dir '+(isLong?'pos-long':'pos-short')+'">'+(isLong?'LONG':'SHORT')+'</span>'
+        +'<span class="pos-lev">'+pos.leverage+'x</span>'
+        +'<span class="pos-sym">'+pos.base+'/USDT</span>'
+        +'<span class="pos-pnl '+cl+'">'+(pnl>=0?'+':'')+fU(pnl)+'<small style="font-size:10px"> U</small></span>'
+      +'</div>'
+      +'<div class="pos-body">'
+        +warnHtml
+        +'<div class="pos-grid">'
+          +'<div class="pos-stat"><div class="pos-stat-l">마진</div><div class="pos-stat-v">'+fU(pos.margin)+' U</div></div>'
+          +'<div class="pos-stat"><div class="pos-stat-l">포지션</div><div class="pos-stat-v">'+fU(pos.size)+' U</div></div>'
+          +'<div class="pos-stat"><div class="pos-stat-l">진입가</div><div class="pos-stat-v">'+fP(pos.entry_price)+'</div></div>'
+          +'<div class="pos-stat"><div class="pos-stat-l">청산가</div><div class="pos-stat-v" style="color:var(--R)">'+fP(pos.liq_price)+'</div></div>'
+          +'<div class="pos-stat"><div class="pos-stat-l">현재가</div><div class="pos-stat-v '+(hasLive?'g':'')+'">'
+            +fP(cur)+(hasLive?'<span style="font-size:9px;color:var(--G)"> ●</span>':'')+'</div></div>'
+          +'<div class="pos-stat"><div class="pos-stat-l">가격변동</div><div class="pos-stat-v '+(priceChg>=0?'g':'r')+'">'
+            +(priceChg>=0?'+':'')+priceChg.toFixed(2)+'%</div></div>'
+        +'</div>'
+        +'<div style="background:var(--bg3);border-radius:8px;padding:10px 12px;margin-bottom:8px">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'
+            +'<span style="font-size:12px;color:var(--t2)">미실현 손익</span>'
+            +'<span class="'+cl+'" style="font-size:15px;font-weight:900">'+(pnl>=0?'+':'')+fU(pnl)+' USDT</span>'
+          +'</div>'
+          +'<div style="display:flex;justify-content:space-between;align-items:center">'
+            +'<span style="font-size:11px;color:var(--t3)">수익률 (레버리지 반영)</span>'
+            +'<span class="'+cl+'" style="font-size:13px;font-weight:800">'+(rate>=0?'+':'')+rate.toFixed(2)+'%</span>'
+          +'</div>'
+        +'</div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
+          +'<button class="btn btn-ghost" style="height:36px;font-size:12px" data-refresh-sym="'+pos.symbol+'">🔄 가격 갱신</button>'
+          +'<button class="btn btn-danger" style="height:36px;font-size:13px" data-close-pos="'+pos.id+'">청산하기</button>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+  });
+  list.innerHTML = rows.join('');
+
+  // 이벤트 위임 (따옴표 문제 없음)
+  list.onclick = async(e)=>{
+    const refreshBtn = e.target.closest('[data-refresh-sym]');
+    const closeBtn   = e.target.closest('[data-close-pos]');
+    if(refreshBtn){
+      const sym = refreshBtn.dataset.refreshSym;
+      const t = await fetchTicker(sym);
+      if(t){const c=getCoin(sym);if(c)c.price=+t.lastPrice;}
+      renderPositions();
+      toast('가격 갱신됨');
+    }
+    if(closeBtn){
+      await doClosePosition(closeBtn.dataset.closePos);
+    }
+  };
 }
 
 function renderAll(){
