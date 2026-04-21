@@ -25,7 +25,7 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
 .brand p{margin:1px 0 0;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px}
 .status{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px;white-space:nowrap}
 .auth{display:flex;align-items:center;gap:7px;min-width:0}
-.auth button{height:32px;border-radius:var(--radius);padding:0 10px;background:#fff;color:#14181f;font-weight:900;border:0;font-size:11px;white-space:nowrap}
+.auth button,.auth a{height:32px;border-radius:var(--radius);padding:0 10px;background:#fff;color:#14181f;font-weight:900;border:0;font-size:11px;white-space:nowrap;display:inline-flex;align-items:center;text-decoration:none}
 .auth .who{max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:10px}
 .auth .admin-badge{height:20px;display:inline-flex;align-items:center;border-radius:4px;padding:0 6px;background:rgba(240,185,11,.12);color:var(--gold);font-size:10px;font-weight:900}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(17,199,132,.12)}
@@ -141,7 +141,7 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
     <div class="auth">
       <span class="admin-badge" id="adminBadge" style="display:none">ADMIN</span>
       <span class="who" id="authWho">로컬 모드</span>
-      <button id="authBtn" onclick="manualGoogleLogin()">로그인 확인</button>
+      <a id="authBtn" href="https://abwitqdxagdbcogsscsk.supabase.co/auth/v1/authorize?provider=google&redirect_to=https%3A%2F%2Fgaoryzet.github.io%2Fcoin-league%2F">로그인 확인</a>
     </div>
   </header>
 
@@ -324,6 +324,7 @@ const authBtnInit = document.getElementById("authBtn");
 const authWhoInit = document.getElementById("authWho");
 if(isFileMode && authBtnInit){
   authBtnInit.textContent = "배포 열기";
+  authBtnInit.href = PROD_URL;
   authBtnInit.onclick = ()=>location.href = PROD_URL;
 }
 if(isFileMode && authWhoInit) authWhoInit.textContent = "로컬 미리보기";
@@ -472,6 +473,7 @@ async function initAuth(){
   if(!window.supabase){
     authWho.textContent = "로컬 모드";
     authBtn.textContent = "배포 열기";
+    authBtn.href = PROD_URL;
     authBtn.onclick = goGoogleDirect;
     return;
   }
@@ -489,6 +491,7 @@ async function initAuth(){
     }
     authWho.textContent = currentUser?.email || (isFileMode ? "로컬 모드" : "로그인 필요");
     authBtn.textContent = currentUser ? "로그아웃" : (isFileMode ? "배포 열기" : "Google");
+    authBtn.href = currentUser ? "#" : (isFileMode ? PROD_URL : directGoogleOAuthUrl());
     document.getElementById("adminBadge").style.display = cloudAdmin ? "inline-flex" : "none";
     if(!canManageLeague() && state.adminMode){
       state.adminMode = false;
@@ -499,7 +502,8 @@ async function initAuth(){
   sb.auth.onAuthStateChange(async(_,session)=>applyUser(session?.user || null));
   const {data:{session}} = await sb.auth.getSession();
   await applyUser(session?.user || null);
-  authBtn.onclick = async()=>{
+  authBtn.onclick = async(e)=>{
+    if(e) e.preventDefault();
     if(isFileMode){
       goGoogleDirect();
       return;
