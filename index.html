@@ -324,7 +324,7 @@ const authBtnInit = document.getElementById("authBtn");
 const authWhoInit = document.getElementById("authWho");
 if(isFileMode && authBtnInit){
   authBtnInit.textContent = "배포 열기";
-  authBtnInit.onclick = ()=>window.open(PROD_URL, "_blank");
+  authBtnInit.onclick = ()=>location.href = PROD_URL;
 }
 if(isFileMode && authWhoInit) authWhoInit.textContent = "로컬 미리보기";
 
@@ -455,13 +455,24 @@ function canManageLeague(){
 function authRedirectUrl(){
   return isFileMode ? PROD_URL : `${location.origin}${location.pathname}`;
 }
+function directGoogleOAuthUrl(){
+  const redirectTo = encodeURIComponent(authRedirectUrl());
+  return `${SUPA_URL}/auth/v1/authorize?provider=google&redirect_to=${redirectTo}`;
+}
+function goGoogleDirect(){
+  if(isFileMode){
+    location.href = PROD_URL;
+    return;
+  }
+  location.href = directGoogleOAuthUrl();
+}
 async function initAuth(){
   const authBtn = document.getElementById("authBtn");
   const authWho = document.getElementById("authWho");
   if(!window.supabase){
     authWho.textContent = "로컬 모드";
     authBtn.textContent = "배포 열기";
-    authBtn.onclick = ()=>window.open(PROD_URL, "_blank");
+    authBtn.onclick = goGoogleDirect;
     return;
   }
   sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
@@ -490,25 +501,18 @@ async function initAuth(){
   await applyUser(session?.user || null);
   authBtn.onclick = async()=>{
     if(isFileMode){
-      window.open(PROD_URL, "_blank");
+      goGoogleDirect();
       return;
     }
     if(currentUser){
       await sb.auth.signOut();
       return;
     }
-    const {error} = await sb.auth.signInWithOAuth({
-      provider:"google",
-      options:{redirectTo:authRedirectUrl()}
-    });
-    if(error) toast("로그인 실패: "+error.message);
+    goGoogleDirect();
   };
 }
 async function manualGoogleLogin(){
-  if(isFileMode){
-    window.open(PROD_URL, "_blank");
-    return;
-  }
+  if(isFileMode) return goGoogleDirect();
   try{
     if(!sb){
       if(!window.supabase){
@@ -521,14 +525,10 @@ async function manualGoogleLogin(){
       await sb.auth.signOut();
       return;
     }
-    const {error} = await sb.auth.signInWithOAuth({
-      provider:"google",
-      options:{redirectTo:authRedirectUrl()}
-    });
-    if(error) toast("로그인 실패: "+error.message);
+    goGoogleDirect();
   }catch(e){
-    console.error(e);
-    toast("로그인 준비 중 오류: "+e.message);
+    console.warn(e);
+    goGoogleDirect();
   }
 }
 function requireTradable(){
