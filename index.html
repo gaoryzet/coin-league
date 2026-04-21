@@ -141,7 +141,7 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
     <div class="auth">
       <span class="admin-badge" id="adminBadge" style="display:none">ADMIN</span>
       <span class="who" id="authWho">로컬 모드</span>
-      <button id="authBtn">Google</button>
+      <button id="authBtn">로그인 확인</button>
     </div>
   </header>
 
@@ -320,6 +320,13 @@ let sb = null;
 let currentUser = null;
 let cloudAdmin = false;
 const isFileMode = location.protocol === "file:";
+const authBtnInit = document.getElementById("authBtn");
+const authWhoInit = document.getElementById("authWho");
+if(isFileMode && authBtnInit){
+  authBtnInit.textContent = "배포 열기";
+  authBtnInit.onclick = ()=>window.open(PROD_URL, "_blank");
+}
+if(isFileMode && authWhoInit) authWhoInit.textContent = "로컬 미리보기";
 
 function addDays(n){
   const d = new Date();
@@ -454,7 +461,7 @@ async function initAuth(){
   if(!window.supabase){
     authWho.textContent = "로컬 모드";
     authBtn.textContent = "배포 열기";
-    authBtn.onclick = ()=>location.href = PROD_URL;
+    authBtn.onclick = ()=>window.open(PROD_URL, "_blank");
     return;
   }
   sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
@@ -483,7 +490,7 @@ async function initAuth(){
   await applyUser(session?.user || null);
   authBtn.onclick = async()=>{
     if(isFileMode){
-      location.href = PROD_URL;
+      window.open(PROD_URL, "_blank");
       return;
     }
     if(currentUser){
