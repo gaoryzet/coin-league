@@ -391,6 +391,7 @@ let cloudAdmin = false;
 let cloudMode = false;
 let cloudSyncFailCount = 0;
 let lastCloudSyncToastAt = 0;
+let cloudParticipantSchema = "unknown";
 let chartInterval = "1h";
 let chartKey = "";
 let chartSeq = 0;
@@ -485,6 +486,7 @@ function mapCloudLeague(row){
 function mergeCloudParticipants(rows=[]){
   if(!Array.isArray(rows)) return;
   const localById = new Map(state.players.map(p=>[p.id,p]));
+  const localActive = active();
   const cloudPlayers = rows.map(row=>{
     const local = localById.get(row.id) || {};
     return {
@@ -502,14 +504,19 @@ function mergeCloudParticipants(rows=[]){
   const me = currentUser ? cloudPlayers.find(p=>p.userId === currentUser.id) : null;
   if(me){
     state.activePlayerId = me.id;
+  }else if(localActive && cloudPlayers.find(p=>p.id === localActive.id)){
+    state.activePlayerId = localActive.id;
   }else{
-    const localActive = active();
     if(localActive && !cloudPlayers.find(p=>p.id === localActive.id)){
       cloudPlayers.unshift({...localActive,rewards:{...localActive.rewards,[state.league.id]:!!localActive.rewards?.[state.league.id]}});
     }
   }
   if(cloudPlayers.length) state.players = cloudPlayers;
   if(!state.players.find(p=>p.id === state.activePlayerId)) state.activePlayerId = state.players[0]?.id;
+}
+function isMissingParticipantColumn(e){
+  const msg = String(e?.message || e?.details || "");
+  return msg.includes("user_id") || msg.includes("reward_claimed") || msg.includes("reward_claimed_at");
 }
 function notifyCloudSyncFailure(e){
   const now = Date.now();
@@ -521,6 +528,25 @@ function notifyCloudSyncFailure(e){
   }else{
     toast("공유 동기화가 잠시 지연됐습니다. 자동으로 다시 시도합니다.");
   }
+}
+async function fetchCloudParticipants(){
+  const baseColumns = "id, league_id, nickname, cash, created_at";
+  const fullColumns = `${baseColumns}, user_id, reward_claimed`;
+  const columns = cloudParticipantSchema === "base" ? baseColumns : fullColumns;
+  let res = await sb.from("participants")
+    .select(columns)
+    .eq("league_id", state.league.id)
+    .order("created_at",{ascending:true});
+  if(res.error && cloudParticipantSchema !== "base" && isMissingParticipantColumn(res.error)){
+    cloudParticipantSchema = "base";
+    res = await sb.from("participants")
+      .select(baseColumns)
+      .eq("league_id", state.league.id)
+      .order("created_at",{ascending:true});
+  }else if(!res.error && cloudParticipantSchema === "unknown"){
+    cloudParticipantSchema = "full";
+  }
+  return res;
 }
 async function loadCloudLeagueAndParticipants(options={}){
   const notify = options.notify === true;
@@ -541,10 +567,7 @@ async function loadCloudLeagueAndParticipants(options={}){
       state.league = cloudLeague;
       cloudMode = true;
     }
-    const {data: participants, error: partErr} = await sb.from("participants")
-      .select("id, league_id, nickname, cash, user_id, reward_claimed, created_at")
-      .eq("league_id", state.league.id)
-      .order("created_at",{ascending:true});
+    const {data: participants, error: partErr} = await fetchCloudParticipants();
     if(partErr) throw partErr;
     mergeCloudParticipants(participants || []);
     cloudSyncFailCount = 0;
@@ -557,25 +580,53 @@ async function loadCloudLeagueAndParticipants(options={}){
 }
 async function saveCloudParticipantProfile(p){
   if(!sb || !currentUser || isFileMode || !p?.nicknameSet) return false;
-  const existing = await sb.from("participants")
-    .select("id, reward_claimed")
-    .eq("league_id", state.league.id)
-    .eq("user_id", currentUser.id)
-    .maybeSingle();
-  if(existing.error) throw existing.error;
-  if(existing.data?.reward_claimed) return true;
-  const payload = {
-    id:existing.data?.id || p.id || uid(),
-    league_id:state.league.id,
-    nickname:p.name,
-    cash:Number(p.cash) || 0,
-    user_id:currentUser.id,
-    reward_claimed:false
-  };
-  const write = existing.data?.id
-    ? await sb.from("participants").update({nickname:p.name}).eq("id", existing.data.id)
-    : await sb.from("participants").insert(payload);
-  if(write.error) throw write.error;
+  let useBaseSchema = cloudParticipantSchema === "base";
+  let existing = null;
+  if(!useBaseSchema){
+    const res = await sb.from("participants")
+      .select("id, reward_claimed")
+      .eq("league_id", state.league.id)
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+    if(res.error && isMissingParticipantColumn(res.error)){
+      cloudParticipantSchema = "base";
+      useBaseSchema = true;
+    }else if(res.error){
+      throw res.error;
+    }else{
+      existing = res.data;
+      cloudParticipantSchema = "full";
+    }
+  }
+  if(existing?.reward_claimed) return true;
+  if(useBaseSchema){
+    const id = p.id || uid();
+    p.id = id;
+    const byId = await sb.from("participants").select("id").eq("id", id).maybeSingle();
+    if(byId.error) throw byId.error;
+    const basePayload = {id, league_id:state.league.id, nickname:p.name, cash:Number(p.cash) || 0};
+    const write = byId.data?.id
+      ? await sb.from("participants").update({nickname:p.name}).eq("id", id)
+      : await sb.from("participants").insert(basePayload);
+    if(write.error) throw write.error;
+  }else{
+    const payload = {
+      id:existing?.id || p.id || uid(),
+      league_id:state.league.id,
+      nickname:p.name,
+      cash:Number(p.cash) || 0,
+      user_id:currentUser.id,
+      reward_claimed:false
+    };
+    const write = existing?.id
+      ? await sb.from("participants").update({nickname:p.name}).eq("id", existing.id)
+      : await sb.from("participants").insert(payload);
+    if(write.error && isMissingParticipantColumn(write.error)){
+      cloudParticipantSchema = "base";
+      return saveCloudParticipantProfile(p);
+    }
+    if(write.error) throw write.error;
+  }
   await loadCloudLeagueAndParticipants();
   return true;
 }
@@ -832,28 +883,47 @@ async function claimReward(){
     }catch(e){
       console.warn("claim rpc failed, trying direct participant write", e);
       const id = p.id || uid();
-      const payload = {
-        id,
-        league_id:state.league.id,
-        nickname:p.name,
-        cash:seedMoney(),
-        user_id:currentUser.id,
-        reward_claimed:true,
-        reward_claimed_at:new Date().toISOString()
-      };
-      const existing = await sb.from("participants")
-        .select("id")
-        .eq("league_id", state.league.id)
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
-      const write = existing.data?.id
-        ? await sb.from("participants").update({
-            nickname:p.name,
-            cash:seedMoney(),
-            reward_claimed:true,
-            reward_claimed_at:new Date().toISOString()
-          }).eq("id", existing.data.id)
-        : await sb.from("participants").insert(payload);
+      p.id = id;
+      let write = null;
+      if(cloudParticipantSchema !== "base"){
+        const payload = {
+          id,
+          league_id:state.league.id,
+          nickname:p.name,
+          cash:seedMoney(),
+          user_id:currentUser.id,
+          reward_claimed:true,
+          reward_claimed_at:new Date().toISOString()
+        };
+        const existing = await sb.from("participants")
+          .select("id")
+          .eq("league_id", state.league.id)
+          .eq("user_id", currentUser.id)
+          .maybeSingle();
+        if(existing.error && isMissingParticipantColumn(existing.error)){
+          cloudParticipantSchema = "base";
+        }else if(existing.error){
+          write = {error:existing.error};
+        }else{
+          write = existing.data?.id
+            ? await sb.from("participants").update({
+                nickname:p.name,
+                cash:seedMoney(),
+                reward_claimed:true,
+                reward_claimed_at:new Date().toISOString()
+              }).eq("id", existing.data.id)
+            : await sb.from("participants").insert(payload);
+          if(write.error && isMissingParticipantColumn(write.error)){
+            cloudParticipantSchema = "base";
+          }
+        }
+      }
+      if(cloudParticipantSchema === "base"){
+        const byId = await sb.from("participants").select("id").eq("id", id).maybeSingle();
+        write = byId.error ? {error:byId.error} : byId.data?.id
+          ? await sb.from("participants").update({nickname:p.name,cash:seedMoney()}).eq("id", id)
+          : await sb.from("participants").insert({id, league_id:state.league.id, nickname:p.name, cash:seedMoney()});
+      }
       if(write.error){
         toast("공유 참가 등록 실패: Supabase 정책을 확인해야 합니다.");
         return;
@@ -1056,7 +1126,7 @@ function render(){
 function renderPlayers(){
   const sel = document.getElementById("playerSelect");
   sel.innerHTML = state.players.map(p=>`<option value="${p.id}" ${p.id===state.activePlayerId?"selected":""}>${escapeHtml(displayName(p))}</option>`).join("");
-  sel.disabled = !!currentUser && !cloudAdmin;
+  sel.disabled = !!currentUser && !cloudAdmin && cloudParticipantSchema !== "base";
 }
 function renderMarket(){
   const q = document.getElementById("search").value.trim().toLowerCase();
