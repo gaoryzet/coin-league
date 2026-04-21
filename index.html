@@ -66,6 +66,9 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
 .reward{display:grid;gap:10px;padding:14px;border:1px solid rgba(240,185,11,.35);background:linear-gradient(135deg,rgba(240,185,11,.18),rgba(85,167,255,.08));border-radius:var(--radius)}
 .reward.claimed{border-color:rgba(17,199,132,.26);background:rgba(17,199,132,.08)}
 .reward h2{font-size:15px;margin:0}.reward p{margin:0;color:var(--muted);font-size:12px}
+.nickname-card{display:grid;gap:10px;padding:14px;border:1px solid rgba(85,167,255,.28);background:rgba(85,167,255,.08);border-radius:var(--radius)}
+.nickname-card.locked{border-color:rgba(17,199,132,.24);background:rgba(17,199,132,.07)}
+.nickname-card h2{font-size:15px;margin:0}.nickname-card p{margin:0;color:var(--muted);font-size:12px}
 .league-strip{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
 .league-strip b{display:block}.league-strip span{color:var(--muted);font-size:12px}
 .admin-grid{display:grid;gap:10px}
@@ -421,7 +424,7 @@ function freshState(){
     league,
     adminMode:false,
     market: coinsSeed.map(([symbol,name,price,vol,color],i)=>({symbol,name,price,prev:price,vol,color,change:0,rank:i+1})),
-    players:[{id:firstId,name:"나",cash:0,rewards:{[league.id]:false},holdings:{},positions:[],history:[]}],
+    players:[{id:firstId,name:"",nicknameSet:false,cash:0,rewards:{[league.id]:false},holdings:{},positions:[],history:[]}],
     activePlayerId:firstId,
     createdAt:Date.now()
   };
@@ -438,6 +441,8 @@ function migrateState(s){
   if(!s.league) s.league = defaultLeague();
   s.adminMode = false;
   s.players.forEach(p=>{
+    if(typeof p.nicknameSet !== "boolean") p.nicknameSet = !!p.name && p.name !== "나";
+    if(p.name === "나" && !p.nicknameSet) p.name = "";
     if(!p.rewards) p.rewards = {};
     if(typeof p.rewards[s.league.id] !== "boolean"){
       p.rewards[s.league.id] = p.cash > 0 || Object.keys(p.holdings||{}).length > 0 || (p.positions||[]).length > 0;
@@ -510,6 +515,32 @@ function toast(msg){
   toast._t = setTimeout(()=>el.classList.remove("show"),2400);
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function displayName(p=active()){return p?.nicknameSet && p.name ? p.name : "닉네임 미설정"}
+function cleanNickname(v){
+  return String(v || "").replace(/\s+/g," ").trim();
+}
+function validateNickname(name, player=active()){
+  const nick = cleanNickname(name);
+  if(nick.length < 2) return {ok:false,msg:"닉네임은 2자 이상 입력하세요."};
+  if(nick.length > 12) return {ok:false,msg:"닉네임은 12자 이하로 입력하세요."};
+  if(!/^[가-힣a-zA-Z0-9 _.-]+$/.test(nick)) return {ok:false,msg:"닉네임에는 한글, 영문, 숫자, 공백, _.- 만 사용할 수 있습니다."};
+  const taken = state.players.some(p=>p.id !== player.id && p.name.trim().toLowerCase() === nick.toLowerCase());
+  if(taken) return {ok:false,msg:"이미 사용 중인 닉네임입니다."};
+  return {ok:true,nick};
+}
+function saveNickname(){
+  const p = active();
+  if(hasReward(p)) return toast("투자금 수령 후에는 닉네임을 변경할 수 없습니다.");
+  const input = document.getElementById("leagueNickname") || document.getElementById("newName");
+  const valid = validateNickname(input?.value, p);
+  if(!valid.ok) return toast(valid.msg);
+  p.name = valid.nick;
+  p.nicknameSet = true;
+  if(currentUser?.id) p.userId = currentUser.id;
+  save();
+  render();
+  toast("닉네임 설정 완료");
+}
 function hasAdminAuthority(){
   return isFileMode || cloudAdmin === true;
 }
@@ -651,7 +682,9 @@ function requireTradable(){
 function claimReward(){
   const p = active();
   if(leagueClosed()) return toast("종료된 리그에서는 지급받을 수 없습니다.");
+  if(!p.nicknameSet || !p.name) return toast("먼저 리그에서 사용할 닉네임을 설정하세요.");
   if(hasReward(p)) return toast("이미 이번 리그 투자금을 받았습니다.");
+  if(currentUser?.id) p.userId = currentUser.id;
   p.cash += seedMoney();
   p.rewards[state.league.id] = true;
   log(p,"현금 지급",{amount:seedMoney(),note:state.league.name});
@@ -842,7 +875,7 @@ function render(){
 }
 function renderPlayers(){
   const sel = document.getElementById("playerSelect");
-  sel.innerHTML = state.players.map(p=>`<option value="${p.id}" ${p.id===state.activePlayerId?"selected":""}>${escapeHtml(p.name)}</option>`).join("");
+  sel.innerHTML = state.players.map(p=>`<option value="${p.id}" ${p.id===state.activePlayerId?"selected":""}>${escapeHtml(displayName(p))}</option>`).join("");
 }
 function renderMarket(){
   const q = document.getElementById("search").value.trim().toLowerCase();
@@ -979,7 +1012,7 @@ function renderDashboard(){
   document.getElementById("rankBox").innerHTML = `<table class="table"><thead><tr><th>순위</th><th>참가자</th><th>수익률</th></tr></thead><tbody>`+
     ranks.map((r,i)=>{
       const t = totalAssets(r), rr = profitRate(r);
-      return `<tr><td>${i+1}</td><td>${escapeHtml(r.name)}<div class="small">${money(t)} U</div></td><td><span class="${rr>=0?"g":"r"}">${pct(rr)}</span></td></tr>`;
+      return `<tr><td>${i+1}</td><td>${escapeHtml(displayName(r))}<div class="small">${money(t)} U</div></td><td><span class="${rr>=0?"g":"r"}">${pct(rr)}</span></td></tr>`;
     }).join("")+"</tbody></table>";
 
   const rows = Object.entries(p.holdings);
@@ -995,7 +1028,9 @@ function renderLeague(){
   const canClaim = !hasReward(p) && !leagueClosed();
   document.getElementById("claimRewardLeague").style.display = canClaim ? "block" : "none";
   document.getElementById("leagueInfo").innerHTML = `
+    ${renderNicknameCard(p)}
     <div class="preview">
+      <div class="pline"><span>내 닉네임</span><b>${escapeHtml(displayName(p))}</b></div>
       <div class="pline"><span>리그명</span><b>${escapeHtml(state.league.name)}</b></div>
       <div class="pline"><span>상태</span><b>${state.league.status==="ACTIVE"?"진행 중":"종료"}</b></div>
       <div class="pline"><span>기간</span><b>${state.league.startDate} ~ ${state.league.endDate}</b></div>
@@ -1008,9 +1043,21 @@ function renderLeague(){
   const ranks = [...state.players].sort((a,b)=>profitRate(b)-profitRate(a));
   document.getElementById("leagueRankMeta").textContent = `${ranks.length}명`;
   document.getElementById("leagueRankBox").innerHTML = `<table class="table"><thead><tr><th>순위</th><th>참가자</th><th>자산</th></tr></thead><tbody>`+
-    ranks.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(r.name)}<div class="small">${hasReward(r)?"지급 완료":"미수령"}</div></td><td>${money(totalAssets(r))} U<br><span class="${profitRate(r)>=0?"g":"r"}">${pct(profitRate(r))}</span></td></tr>`).join("")+
+    ranks.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(displayName(r))}<div class="small">${hasReward(r)?"지급 완료":"미수령"}</div></td><td>${money(totalAssets(r))} U<br><span class="${profitRate(r)>=0?"g":"r"}">${pct(profitRate(r))}</span></td></tr>`).join("")+
     `</tbody></table>`;
+  document.getElementById("saveNickname")?.addEventListener("click",saveNickname);
+  document.getElementById("leagueNickname")?.addEventListener("keydown",e=>{if(e.key==="Enter") saveNickname()});
   renderAdmin();
+}
+function renderNicknameCard(p){
+  if(hasReward(p)){
+    return `<div class="nickname-card locked"><h2>내 리그 닉네임</h2><p><b>${escapeHtml(displayName(p))}</b> · 투자금 수령 후에는 랭킹 혼동을 막기 위해 닉네임이 잠깁니다.</p></div>`;
+  }
+  return `<div class="nickname-card">
+    <h2>리그에서 사용할 닉네임</h2>
+    <p>랭킹에 표시될 이름입니다. 2~12자, 중복 불가. 투자금을 받으면 변경할 수 없습니다.</p>
+    <div class="row"><input class="grow" id="leagueNickname" maxlength="12" value="${escapeHtml(p.name || "")}" placeholder="예: 코인왕철수"><button class="btn gold" id="saveNickname">저장</button></div>
+  </div>`;
 }
 function renderAdmin(){
   const btn = document.getElementById("toggleAdmin");
@@ -1084,10 +1131,10 @@ function createNewLeague(){
     action:()=>{
       const league = {...defaultLeague(),...next,id:uid(),status:"ACTIVE",inviteCode:"KING-"+Math.floor(1000+Math.random()*9000)};
       state.league = league;
-      state.players = state.players.map(p=>({id:p.id,name:p.name,cash:0,rewards:{[league.id]:false},holdings:{},positions:[],history:[]}));
+      state.players = state.players.map(p=>({id:p.id,userId:p.userId,name:p.name,nicknameSet:p.nicknameSet,cash:0,rewards:{[league.id]:false},holdings:{},positions:[],history:[]}));
       if(!state.players.length){
         const id=uid();
-        state.players=[{id,name:"나",cash:0,rewards:{[league.id]:false},holdings:{},positions:[],history:[]}];
+        state.players=[{id,name:"",nicknameSet:false,cash:0,rewards:{[league.id]:false},holdings:{},positions:[],history:[]}];
         state.activePlayerId=id;
       }
       selected="BTC";
@@ -1206,9 +1253,9 @@ document.getElementById("nav").addEventListener("click",e=>{
 document.getElementById("playerSelect").addEventListener("change",e=>{state.activePlayerId=e.target.value; save(); render()});
 document.getElementById("addPlayer").addEventListener("click",()=>{
   const input = document.getElementById("newName");
-  const name = input.value.trim();
-  if(name.length < 2) return toast("참가자 이름을 2자 이상 입력하세요.");
-  const p = {id:uid(),name,cash:0,rewards:{[state.league.id]:false},holdings:{},positions:[],history:[]};
+  const valid = validateNickname(input.value, {id:"new"});
+  if(!valid.ok) return toast(valid.msg);
+  const p = {id:uid(),name:valid.nick,nicknameSet:true,cash:0,rewards:{[state.league.id]:false},holdings:{},positions:[],history:[]};
   state.players.push(p); state.activePlayerId = p.id; input.value = ""; save(); render(); toast("참가자 추가 완료");
 });
 document.getElementById("resetGame").addEventListener("click",()=>confirmAction({
