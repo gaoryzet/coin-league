@@ -389,6 +389,8 @@ let sb = null;
 let currentUser = null;
 let cloudAdmin = false;
 let cloudMode = false;
+let cloudSyncFailCount = 0;
+let lastCloudSyncToastAt = 0;
 let chartInterval = "1h";
 let chartKey = "";
 let chartSeq = 0;
@@ -509,7 +511,19 @@ function mergeCloudParticipants(rows=[]){
   if(cloudPlayers.length) state.players = cloudPlayers;
   if(!state.players.find(p=>p.id === state.activePlayerId)) state.activePlayerId = state.players[0]?.id;
 }
-async function loadCloudLeagueAndParticipants(){
+function notifyCloudSyncFailure(e){
+  const now = Date.now();
+  if(now - lastCloudSyncToastAt < 60000) return;
+  lastCloudSyncToastAt = now;
+  const msg = String(e?.message || "");
+  if(msg.includes("reward_claimed") || msg.includes("user_id")){
+    toast("공유 DB 설정을 확인해야 합니다. Supabase 컬럼/RLS가 맞지 않습니다.");
+  }else{
+    toast("공유 동기화가 잠시 지연됐습니다. 자동으로 다시 시도합니다.");
+  }
+}
+async function loadCloudLeagueAndParticipants(options={}){
+  const notify = options.notify === true;
   if(!sb || !currentUser || isFileMode) return;
   try{
     let {data: leagues, error: leagueErr} = await sb.from("leagues")
@@ -533,10 +547,12 @@ async function loadCloudLeagueAndParticipants(){
       .order("created_at",{ascending:true});
     if(partErr) throw partErr;
     mergeCloudParticipants(participants || []);
+    cloudSyncFailCount = 0;
     save();
   }catch(e){
+    cloudSyncFailCount += 1;
     console.warn("cloud league sync failed", e);
-    toast("공유 리그 동기화 실패: 로컬 데이터로 표시합니다.");
+    if(notify) notifyCloudSyncFailure(e);
   }
 }
 async function saveCloudParticipantProfile(p){
