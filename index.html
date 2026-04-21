@@ -392,6 +392,7 @@ let cloudMode = false;
 let cloudSyncFailCount = 0;
 let lastCloudSyncToastAt = 0;
 let cloudParticipantSchema = "unknown";
+let cloudTradingReady = false;
 let chartInterval = "1h";
 let chartKey = "";
 let chartSeq = 0;
@@ -532,6 +533,58 @@ function mergeCloudParticipants(rows=[]){
   if(cloudPlayers.length) state.players = cloudPlayers;
   if(!state.players.find(p=>p.id === state.activePlayerId)) state.activePlayerId = state.players[0]?.id;
 }
+function mergeCloudPortfolio({holdings=[],positions=[],history=[]}={}){
+  const byId = new Map(state.players.map(p=>[p.id,p]));
+  state.players.forEach(p=>{
+    p.holdings = {};
+    p.positions = [];
+    p.history = [];
+  });
+  (holdings || []).forEach(row=>{
+    const p = byId.get(row.participant_id);
+    if(!p || !row.symbol) return;
+    p.holdings[row.symbol] = {
+      qty:Number(row.qty) || 0,
+      avg:Number(row.avg_price ?? row.avg) || 0,
+      name:row.name || row.symbol
+    };
+  });
+  (positions || []).forEach(row=>{
+    const p = byId.get(row.participant_id);
+    if(!p) return;
+    p.positions.push({
+      id:row.id,
+      symbol:row.symbol,
+      name:row.name || row.symbol,
+      dir:row.dir,
+      lev:Number(row.lev) || 1,
+      margin:Number(row.margin) || 0,
+      size:Number(row.size) || 0,
+      entry:Number(row.entry_price ?? row.entry) || 0,
+      liq:Number(row.liq_price ?? row.liq) || 0,
+      status:row.status || "OPEN",
+      exit:Number(row.exit_price ?? row.exit) || 0,
+      pnl:Number(row.pnl) || 0,
+      rate:Number(row.rate) || 0,
+      openedAt:row.opened_at ? new Date(row.opened_at).getTime() : Date.now(),
+      closedAt:row.closed_at ? new Date(row.closed_at).getTime() : null
+    });
+  });
+  const activePlayer = active();
+  if(activePlayer){
+    activePlayer.history = (history || []).map(row=>({
+      id:row.id,
+      time:row.date_str || (row.created_at ? new Date(row.created_at).toLocaleString("ko-KR",{month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}) : ""),
+      type:row.type,
+      symbol:row.symbol,
+      qty:Number(row.qty) || 0,
+      price:Number(row.price) || 0,
+      amount:Number(row.amount) || 0,
+      pnl:row.pnl === null || row.pnl === undefined ? undefined : Number(row.pnl),
+      note:row.note || ""
+    }));
+  }
+}
 function isMissingParticipantColumn(e){
   const msg = String(e?.message || e?.details || "");
   return msg.includes("user_id") || msg.includes("reward_claimed") || msg.includes("reward_claimed_at");
@@ -566,6 +619,24 @@ async function fetchCloudParticipants(){
   }
   return res;
 }
+async function loadCloudPortfolio(){
+  if(!hasActiveLeague()) return;
+  const participantIds = state.players.map(p=>p.id).filter(Boolean);
+  if(!participantIds.length) return;
+  const [holdRes,posRes,histRes] = await Promise.all([
+    sb.from("holdings").select("*").eq("league_id", state.league.id),
+    sb.from("positions").select("*").eq("league_id", state.league.id),
+    active()?.id
+      ? sb.from("trade_history").select("*").eq("participant_id", active().id).order("created_at",{ascending:true}).limit(100)
+      : Promise.resolve({data:[],error:null})
+  ]);
+  if(holdRes.error || posRes.error || histRes.error){
+    cloudTradingReady = false;
+    throw holdRes.error || posRes.error || histRes.error;
+  }
+  cloudTradingReady = true;
+  mergeCloudPortfolio({holdings:holdRes.data || [], positions:posRes.data || [], history:histRes.data || []});
+}
 async function loadCloudLeagueAndParticipants(options={}){
   const notify = options.notify === true;
   if(!sb || !currentUser || isFileMode) return;
@@ -596,6 +667,7 @@ async function loadCloudLeagueAndParticipants(options={}){
     const {data: participants, error: partErr} = await fetchCloudParticipants();
     if(partErr) throw partErr;
     mergeCloudParticipants(participants || []);
+    await loadCloudPortfolio();
     cloudSyncFailCount = 0;
     save();
   }catch(e){
@@ -915,56 +987,8 @@ async function claimReward(){
       toast(`${money(seedMoney())} USDT 지급 완료`);
       return;
     }catch(e){
-      console.warn("claim rpc failed, trying direct participant write", e);
-      const id = p.id || uid();
-      p.id = id;
-      let write = null;
-      if(cloudParticipantSchema !== "base"){
-        const payload = {
-          id,
-          league_id:state.league.id,
-          nickname:p.name,
-          cash:seedMoney(),
-          user_id:currentUser.id,
-          reward_claimed:true,
-          reward_claimed_at:new Date().toISOString()
-        };
-        const existing = await sb.from("participants")
-          .select("id")
-          .eq("league_id", state.league.id)
-          .eq("user_id", currentUser.id)
-          .maybeSingle();
-        if(existing.error && isMissingParticipantColumn(existing.error)){
-          cloudParticipantSchema = "base";
-        }else if(existing.error){
-          write = {error:existing.error};
-        }else{
-          write = existing.data?.id
-            ? await sb.from("participants").update({
-                nickname:p.name,
-                cash:seedMoney(),
-                reward_claimed:true,
-                reward_claimed_at:new Date().toISOString()
-              }).eq("id", existing.data.id)
-            : await sb.from("participants").insert(payload);
-          if(write.error && isMissingParticipantColumn(write.error)){
-            cloudParticipantSchema = "base";
-          }
-        }
-      }
-      if(cloudParticipantSchema === "base"){
-        const byId = await sb.from("participants").select("id").eq("id", id).maybeSingle();
-        write = byId.error ? {error:byId.error} : byId.data?.id
-          ? await sb.from("participants").update({nickname:p.name,cash:seedMoney()}).eq("id", id)
-          : await sb.from("participants").insert({id, league_id:state.league.id, nickname:p.name, cash:seedMoney()});
-      }
-      if(write.error){
-        toast("공유 참가 등록 실패: Supabase 정책을 확인해야 합니다.");
-        return;
-      }
-      await loadCloudLeagueAndParticipants();
-      render();
-      toast(`${money(seedMoney())} USDT 지급 완료`);
+      console.warn("claim rpc failed", e);
+      toast("서버 지급 설정이 필요합니다. Supabase 거래 SQL을 먼저 실행하세요.");
       return;
     }
   }
@@ -984,6 +1008,10 @@ function tickMarket(force=1){
     c.price = Math.max(.000001, c.price * (1 + drift));
     c.change = (c.price - c.prev) / c.prev * 100;
   });
+  if(sb && currentUser && !isFileMode){
+    render();
+    return;
+  }
   const liquidated = liquidateAll();
   save();
   render();
@@ -1025,38 +1053,41 @@ function validateSpot(amount){
   }
   return {ok:true};
 }
-function executeSpot(amount){
+function requireCloudTrading(){
+  if(!sb || !currentUser || isFileMode) return false;
+  if(cloudParticipantSchema !== "full" || !cloudTradingReady){
+    toast("서버 거래 설정이 필요합니다. Supabase 거래 SQL을 먼저 실행하세요.");
+    return false;
+  }
+  return true;
+}
+async function refreshCloudAfterTrade(){
+  await loadCloudLeagueAndParticipants({notify:true});
+  render();
+}
+async function executeSpot(amount){
   if(orderBusy) return;
   const valid = validateSpot(amount);
   if(!valid.ok) return toast(valid.msg);
+  if(!requireCloudTrading()) return;
   orderBusy = true;
   try{
     const p = active(), c = coin();
-    if(side === "buy"){
-      const qty = amount / c.price;
-      const h = p.holdings[c.symbol] || {qty:0,avg:0,name:c.name};
-      const nextQty = h.qty + qty;
-      h.avg = (h.qty * h.avg + qty * c.price) / nextQty;
-      h.qty = nextQty;
-      h.name = c.name;
-      p.holdings[c.symbol] = h;
-      p.cash -= amount;
-      log(p,"매수",{symbol:c.symbol,qty,price:c.price,amount});
-      toast(`${c.symbol} 매수 체결`);
-    }else{
-      const h = p.holdings[c.symbol];
-      const qty = amount / c.price;
-      const invested = qty * h.avg;
-      const pnl = amount - invested;
-      h.qty -= qty;
-      if(h.qty <= 1e-10) delete p.holdings[c.symbol];
-      p.cash += amount;
-      log(p,"매도",{symbol:c.symbol,qty,price:c.price,amount,pnl});
-      toast(`${c.symbol} 매도 체결 · ${pnl>=0?"+":""}${money(pnl)} USDT`);
-    }
+    const res = await sb.rpc("place_spot_order", {
+      p_participant_id:p.id,
+      p_side:side,
+      p_symbol:c.symbol,
+      p_name:c.name,
+      p_price:c.price,
+      p_amount:amount
+    });
+    if(res.error) throw res.error;
     document.getElementById("spotAmount").value = "";
-    save();
-    render();
+    await refreshCloudAfterTrade();
+    toast(`${c.symbol} ${side === "buy" ? "매수" : "매도"} 체결`);
+  } catch(e){
+    console.warn("spot order failed", e);
+    toast(e?.message || "주문 처리 실패");
   } finally {
     orderBusy = false;
   }
@@ -1089,53 +1120,52 @@ function requestFuture(){
     action:()=>executeFuture(margin, valid)
   });
 }
-function executeFuture(margin, valid){
+async function executeFuture(margin, valid){
   if(orderBusy) return;
+  if(!requireCloudTrading()) return;
   orderBusy = true;
   try{
     const p = active(), c = coin();
-    p.cash -= margin;
-    const pos = {
-      id:uid(), symbol:c.symbol, name:c.name, dir:futDir, lev:leverage,
-      margin, size:valid.size, entry:c.price, liq:valid.liq, status:"OPEN", openedAt:Date.now()
-    };
-    p.positions.push(pos);
-    log(p,"포지션 오픈",{symbol:c.symbol,amount:margin,price:c.price,note:`${leverage}x ${futDir.toUpperCase()}`});
+    const res = await sb.rpc("open_future_position", {
+      p_participant_id:p.id,
+      p_symbol:c.symbol,
+      p_name:c.name,
+      p_dir:futDir,
+      p_lev:leverage,
+      p_margin:margin,
+      p_entry:c.price,
+      p_liq:valid.liq
+    });
+    if(res.error) throw res.error;
     document.getElementById("futMargin").value = "";
-    save();
-    render();
+    await refreshCloudAfterTrade();
     toast(`${c.symbol} ${leverage}x 포지션 오픈`);
+  } catch(e){
+    console.warn("future open failed", e);
+    toast(e?.message || "포지션 오픈 실패");
   } finally {
     orderBusy = false;
   }
 }
-function closePosition(id){
+async function closePosition(id){
   const p = active();
   const pos = p.positions.find(x=>x.id===id && x.status==="OPEN");
   if(!pos) return;
+  if(!requireCloudTrading()) return;
   const c = state.market.find(x=>x.symbol===pos.symbol);
-  const hit = pos.dir === "long" ? c.price <= pos.liq : c.price >= pos.liq;
-  if(hit){
-    pos.status = "LIQUIDATED";
-    pos.exit = c.price;
-    pos.pnl = -pos.margin;
-    pos.closedAt = Date.now();
-    log(p,"강제청산",{symbol:pos.symbol,amount:pos.margin,pnl:-pos.margin,note:`${pos.lev}x ${pos.dir.toUpperCase()}`});
-    save(); render(); toast("청산가 통과로 강제청산 처리");
-    return;
+  try{
+    const res = await sb.rpc("close_future_position", {
+      p_position_id:id,
+      p_exit:c.price
+    });
+    if(res.error) throw res.error;
+    await refreshCloudAfterTrade();
+    const pnl = Number(res.data || 0);
+    toast(`포지션 청산 · ${pnl>=0?"+":""}${money(pnl)} USDT`);
+  }catch(e){
+    console.warn("future close failed", e);
+    toast(e?.message || "포지션 청산 실패");
   }
-  const {pnl,rate} = calcPnL(pos, c.price);
-  const returned = Math.max(0, pos.margin + pnl);
-  pos.status = "CLOSED";
-  pos.exit = c.price;
-  pos.pnl = pnl;
-  pos.rate = rate;
-  pos.closedAt = Date.now();
-  p.cash += returned;
-  log(p,"포지션 청산",{symbol:pos.symbol,amount:returned,price:c.price,pnl,note:`${pos.lev}x ${pos.dir.toUpperCase()}`});
-  save();
-  render();
-  toast(`포지션 청산 · ${pnl>=0?"+":""}${money(pnl)} USDT`);
 }
 
 function confirmAction(cfg){
@@ -1648,7 +1678,14 @@ document.getElementById("chartIntervals").addEventListener("click",e=>{
   syncChart(true);
 });
 document.getElementById("tickMarket").addEventListener("click",()=>tickMarket(1.8));
-document.getElementById("checkLiq").addEventListener("click",()=>{const n=liquidateAll(); save(); render(); toast(n?`${n}개 포지션 청산`:"청산 대상 없음")});
+document.getElementById("checkLiq").addEventListener("click",async()=>{
+  if(sb && currentUser && !isFileMode){
+    await refreshCloudAfterTrade();
+    toast("서버 포지션을 새로고침했습니다.");
+    return;
+  }
+  const n=liquidateAll(); save(); render(); toast(n?`${n}개 포지션 청산`:"청산 대상 없음");
+});
 document.getElementById("claimRewardLeague").addEventListener("click",claimReward);
 document.getElementById("toggleAdmin").addEventListener("click",()=>{
   if(isFileMode){
