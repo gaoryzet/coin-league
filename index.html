@@ -1,2288 +1,1036 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>NIGAGARA COIN LEAGUE</title>
+<title>코인왕 투자리그</title>
 <style>
 :root{
-  --bg0:#0B0E11;--bg1:#161A1E;--bg2:#1E2026;--bg3:#2B2F36;
-  --bd:#2B2F36;
-  --t1:#EAECEF;--t2:#848E9C;--t3:#474D57;
-  --acc:#F0B90B;--acc2:#d4a000;
-  --G:#0ECB81;--R:#F6465D;
-  --Gbg:rgba(14,203,129,.1);--Rbg:rgba(246,70,93,.1);
-  --r:6px;--sh:0 4px 24px rgba(0,0,0,.45);
+  --bg:#0b0f14;--panel:#111821;--panel2:#17212d;--line:#273241;
+  --text:#eef3f8;--muted:#8fa1b3;--quiet:#5e6d7d;--gold:#f0b90b;
+  --green:#11c784;--red:#f05267;--blue:#55a7ff;--shadow:0 10px 30px rgba(0,0,0,.26);
+  --radius:8px;
 }
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{overflow-x:hidden}
-html,body{height:100%;background:var(--bg0);color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;overscroll-behavior:none;overflow-x:hidden;}
-input,select,button,textarea{font:inherit;border:none;outline:none;background:none;color:inherit}
-button{cursor:pointer}
-input[type=number]{-moz-appearance:textfield}
-input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
-::-webkit-scrollbar{width:3px;height:3px}
-::-webkit-scrollbar-track{background:var(--bg1)}
-::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:2px}
-.app{display:flex;flex-direction:column;height:100dvh;height:100svh;max-width:480px;margin:0 auto;background:var(--bg0);overflow:hidden;position:relative;}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;background:var(--bg1);border-bottom:1px solid var(--bd);flex-shrink:0;z-index:30;min-width:0;}
-.tb-left{min-width:0;flex:1;display:flex;flex-direction:row;align-items:center;gap:8px;}
-.header-logo-text{font-size:13px;font-weight:900;color:var(--acc);letter-spacing:.5px;line-height:1.25;flex-shrink:0;white-space:nowrap;}
-.tb-mid{font-size:11px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
-.pill{padding:3px 8px;border-radius:99px;font-size:10px;font-weight:800;white-space:nowrap}
-.pill-on{background:var(--Gbg);color:var(--G);border:1px solid rgba(14,203,129,.25)}
-.pill-off{background:var(--Rbg);color:var(--R);border:1px solid rgba(246,70,93,.25)}
-.tb-right{text-align:right;flex-shrink:0}
-.api-status{font-size:10px;margin-top:2px;display:flex;align-items:center;gap:3px;justify-content:flex-end}
-.status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.s-ok{background:var(--G)}.s-err{background:var(--R)}.s-loading{background:var(--acc);animation:blink 1s infinite}
-#sTxt{color:var(--t3);font-size:10px}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.main{flex:1;overflow-y:auto;overflow-x:hidden;min-width:0}
-.bottomnav{display:grid;grid-template-columns:repeat(4,1fr);background:var(--bg1);border-top:1px solid var(--bd);flex-shrink:0}
-.bnav{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px 6px;gap:3px;color:var(--t3);font-size:10px;font-weight:700;transition:.12s}
-.bnav .ico{font-size:20px;line-height:1}
-.bnav.on{color:var(--acc)}
-.view{display:none;min-width:0;width:100%}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#05080d;color:var(--text);font:14px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overscroll-behavior:none}
+button,input,select{font:inherit;color:inherit}
+button{border:0;cursor:pointer}
+input,select{width:100%;border:1px solid var(--line);background:#0f1620;border-radius:var(--radius);height:44px;padding:0 12px;outline:none}
+input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,185,11,.14)}
+.app{min-height:100dvh;max-width:480px;margin:0 auto;display:grid;grid-template-rows:auto 1fr;background:linear-gradient(180deg,#0d141d,#0b0f14);box-shadow:0 0 0 1px rgba(255,255,255,.04)}
+.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:rgba(11,15,20,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);min-height:58px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{width:32px;height:32px;border-radius:8px;background:var(--gold);color:#141000;display:grid;place-items:center;font-weight:950;font-size:12px;flex:0 0 auto}
+.brand h1{font-size:15px;margin:0;font-weight:950;white-space:nowrap}
+.brand p{margin:1px 0 0;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px}
+.status{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px;white-space:nowrap}
+.auth{display:flex;align-items:center;gap:7px;min-width:0}
+.auth button{height:32px;border-radius:var(--radius);padding:0 10px;background:#fff;color:#14181f;font-weight:900;border:0;font-size:11px;white-space:nowrap}
+.auth .who{max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:10px}
+.auth .admin-badge{height:20px;display:inline-flex;align-items:center;border-radius:4px;padding:0 6px;background:rgba(240,185,11,.12);color:var(--gold);font-size:10px;font-weight:900}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(17,199,132,.12)}
+.shell{display:block;min-height:0}
+.side{position:fixed;left:50%;bottom:0;z-index:40;width:min(480px,100vw);transform:translateX(-50%);padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(13,19,27,.94);border-top:1px solid var(--line);backdrop-filter:blur(16px)}
+.nav{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.nav button{height:48px;border-radius:var(--radius);background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:0;padding:0 2px;font-size:11px;font-weight:900;text-align:center}
+.nav button.on{background:var(--panel2);color:var(--text);box-shadow:inset 0 3px 0 var(--gold)}
+.userbox{position:fixed;left:50%;top:58px;z-index:25;width:min(480px,100vw);transform:translateX(-50%);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;padding:9px 12px;border-bottom:1px solid var(--line);background:rgba(11,15,20,.92);backdrop-filter:blur(14px)}
+.userbox label,.field label{display:block;color:var(--muted);font-size:11px;font-weight:850;text-transform:uppercase;margin-bottom:5px}
+.userbox > button{display:none}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{min-width:0}
+.grow{flex:1}
+.btn{height:44px;border-radius:var(--radius);font-weight:900;padding:0 13px;background:var(--panel2);color:var(--text);border:1px solid var(--line);white-space:nowrap}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.btn.gold{background:var(--gold);color:#0b0f14;border-color:var(--gold)}
+.btn.green{background:var(--green);color:#001910;border-color:var(--green)}
+.btn.red{background:var(--red);color:#fff;border-color:var(--red)}
+.btn.blue{background:var(--blue);color:#06101d;border-color:var(--blue)}
+.btn.ghost{background:transparent}
+.main{padding:94px 12px calc(84px + env(safe-area-inset-bottom));min-width:0}
+.view{display:none}
 .view.on{display:block}
-.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);margin:10px 12px;padding:14px}
-.stitle{font-size:11px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
-.hero{background:linear-gradient(145deg,#1a1f2a,#181c23);border-color:rgba(240,185,11,.12)}
-.h-label{font-size:11px;color:var(--t2);margin-bottom:5px}
-.h-total{font-size:clamp(20px,6vw,28px);font-weight:900;color:var(--t1);letter-spacing:-1px;word-break:break-all;}
-.h-total small{font-size:15px;color:var(--t2);font-weight:400;margin-left:3px}
-.h-pnl{font-size:13px;font-weight:800;margin-top:4px;word-break:break-all}
-.h-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}
-.hgbox{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:var(--r);padding:9px;min-width:0}
-.hgl{font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-.hgv{font-size:13px;font-weight:800;margin-top:4px;word-break:break-all}
-.ticket{background:linear-gradient(135deg,#1a1500,#1a0e00);border-color:rgba(240,185,11,.22)}
-.t-label{font-size:10px;font-weight:800;color:var(--acc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-.t-code{font-size:clamp(16px,5vw,22px);font-weight:900;letter-spacing:2px;color:var(--acc);font-family:monospace;text-align:center;padding:10px;border:2px dashed rgba(240,185,11,.3);border-radius:var(--r);margin-bottom:8px;word-break:break-all;}
-.t-link{display:block;padding:8px 10px;background:rgba(255,255,255,.05);border-radius:var(--r);font-size:11px;color:var(--t2);word-break:break-all;cursor:pointer;border:1px solid var(--bd);overflow-wrap:anywhere;}
-.t-hint{font-size:11px;color:var(--t3);margin-top:6px;line-height:1.5}
-.field{margin-bottom:8px}
-.field label{display:block;font-size:11px;font-weight:700;color:var(--t2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
-.inp{width:100%;height:42px;padding:0 12px;background:var(--bg3);border:1.5px solid var(--bd);border-radius:var(--r);color:var(--t1);font-size:14px;transition:.15s;-webkit-appearance:none;appearance:none;}
-.inp:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(240,185,11,.12)}
-.inp::placeholder{color:var(--t3)}
-.btn{width:100%;height:42px;border-radius:var(--r);font-weight:800;font-size:14px;cursor:pointer;transition:.12s;letter-spacing:.1px}
-.btn-acc{background:var(--acc);color:#000}
-.btn-acc:active{background:var(--acc2)}
-.btn-acc:disabled{opacity:.4;cursor:not-allowed}
-.btn-ghost{background:var(--bg3);color:var(--t1);border:1px solid var(--bd)}
-.btn-buy{background:var(--G);color:#000}
-.btn-sell{background:var(--R);color:#fff}
-.btn-sm{width:auto;height:30px;padding:0 11px;font-size:12px;flex-shrink:0}
-.btn-danger{background:var(--Rbg);color:var(--R);border:1px solid rgba(246,70,93,.25)}
-.ptc-list{display:grid;gap:6px}
-.ptc-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--bd)}
-.ptc-nick{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ptc-sub{font-size:11px;color:var(--t2);margin-top:1px}
-.admin{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);margin:0 12px 12px;overflow:hidden}
-.admin summary{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;cursor:pointer;list-style:none;font-weight:800;min-width:0}
-.admin summary::-webkit-details-marker{display:none}
-.admin-body{padding:14px;border-top:1px solid var(--bd)}
-.admin-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
-.warn-txt{font-size:11px;color:var(--R);margin-top:8px;line-height:1.5}
-.divider{height:1px;background:var(--bd);margin:10px 0}
-.closed-list{display:grid;gap:5px}
-.citem{padding:9px 12px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--bd)}
-.cn{font-weight:800;font-size:13px}.cm{font-size:11px;color:var(--t2);margin-top:1px}
-.trade-top{display:flex;align-items:center;gap:8px;padding:8px 12px 4px;min-width:0}
-.trade-top label{font-size:11px;color:var(--t2);font-weight:700;flex-shrink:0;white-space:nowrap}
-.usr-sel{flex:1;min-width:0;height:32px;padding:0 6px;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;}
-.cash-lbl{font-size:10px;color:var(--t2);text-align:right;flex-shrink:0;white-space:nowrap}
-.cash-val{font-size:12px;font-weight:800;color:var(--t1);white-space:nowrap;flex-shrink:0}
-.search-row{position:relative;padding:7px 12px 5px}
-.s-ico{position:absolute;left:22px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:14px;pointer-events:none}
-.s-inp{width:100%;height:36px;padding:0 10px 0 32px;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);color:var(--t1);font-size:13px;-webkit-appearance:none;appearance:none;}
-.s-inp:focus{border-color:var(--acc)}
-.s-inp::placeholder{color:var(--t3)}
-.s-meta{font-size:10px;color:var(--t3);padding:2px 14px 4px;text-align:right;word-break:break-all}
-.coin-list{border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);overflow-y:auto;overflow-x:hidden;max-height:240px;}
-.coin-item{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;transition:.1s;position:relative;border-bottom:1px solid rgba(43,47,54,.6);min-width:0;}
-.coin-item:last-child{border-bottom:none}
-.coin-item:active,.coin-item.on{background:var(--bg3)}
-.coin-item.on::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--acc);border-radius:0 2px 2px 0}
-.c-ico{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;flex-shrink:0;letter-spacing:-.3px}
-.c-mid{flex:1;min-width:0}
-.c-base{font-weight:800;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.c-name{font-size:11px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.c-right{text-align:right;flex-shrink:0;min-width:70px;max-width:90px}
-.c-price{font-weight:800;font-size:13px;white-space:nowrap}
-.c-chg{font-size:11px;font-weight:700;margin-top:1px;white-space:nowrap}
-.c-vol{font-size:10px;color:var(--t3);margin-top:1px;white-space:nowrap}
-.chart-wrap{background:var(--bg1)}
-.ct-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:10px 12px 0;min-width:0;}
-.ct-head > div{min-width:0}
-.ct-sym{font-size:15px;font-weight:900;white-space:nowrap}
-.ct-price-big{font-size:clamp(18px,5vw,23px);font-weight:900;margin-top:2px;line-height:1;word-break:break-all;}
-.ct-chg-big{font-size:11px;font-weight:700;margin-top:2px;white-space:nowrap}
-.ct-stats{display:flex;gap:8px;padding:5px 12px;font-size:11px;flex-wrap:wrap;}
-.cstat{color:var(--t2);white-space:nowrap} .cstat b{color:var(--t1);font-weight:700}
-.ct-controls{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 12px 6px;overflow:hidden;}
-.intervals{display:flex;gap:1px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex:1;min-width:0;}
-.intervals::-webkit-scrollbar{display:none}
-.ivl{padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;color:var(--t2);white-space:nowrap;transition:.1s;flex-shrink:0}
-.ivl.on{background:var(--bg3);color:var(--acc)}
-.ctype-wrap{display:flex;gap:3px;flex-shrink:0}
-.ctype{padding:3px 7px;border-radius:4px;font-size:11px;font-weight:700;color:var(--t2);white-space:nowrap}
-.ctype.on{background:var(--bg3);color:var(--t1)}
-.chart-box{position:relative;width:100%;height:195px;background:var(--bg0);overflow:hidden}
-.chart-box svg{display:block;width:100%;height:100%}
-.chart-tip{position:absolute;top:6px;left:8px;background:rgba(22,26,30,.95);border:1px solid var(--bd);padding:5px 8px;border-radius:var(--r);font-size:11px;pointer-events:none;display:none;z-index:5;white-space:nowrap;backdrop-filter:blur(4px);max-width:calc(100% - 16px);}
-.ct-time{color:var(--t2);margin-bottom:2px}
-.ct-o,.ct-h,.ct-l,.ct-cv{display:flex;gap:5px;line-height:1.6}
-.ct-h{color:var(--G)} .ct-l{color:var(--R)} .ct-cv{color:var(--t1);font-weight:800}
-.chart-loading{display:flex;align-items:center;justify-content:center;height:195px;color:var(--t2);font-size:13px;gap:8px;flex-direction:column;text-align:center;padding:0 12px}
-.chart-foot{padding:3px 12px 6px;font-size:10px;color:var(--t3);display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.order-tabs{display:grid;grid-template-columns:1fr 1fr}
-.otab{padding:10px;font-weight:800;font-size:14px;text-align:center;color:var(--t2);border-bottom:2px solid transparent;transition:.12s;background:var(--bg2)}
-.otab.buy.on{color:var(--G);border-color:var(--G)}
-.otab.sell.on{color:var(--R);border-color:var(--R)}
-.obody{padding:12px;background:var(--bg2);border-bottom:1px solid var(--bd)}
-.bal-row{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px;font-size:12px;flex-wrap:wrap}
-.bal-row .lbl{color:var(--t2)} .bal-row .val{font-weight:700;word-break:break-all}
-.amt-wrap{position:relative;margin-bottom:7px}
-.amt-inp{width:100%;height:44px;padding:0 52px 0 12px;background:var(--bg3);border:1.5px solid var(--bd);border-radius:var(--r);font-size:16px;font-weight:700;color:var(--t1);transition:.12s;-webkit-appearance:none;appearance:none;}
-.amt-inp:focus{border-color:var(--acc)}
-.amt-cur{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--t2);font-size:12px;font-weight:700;pointer-events:none;white-space:nowrap}
-.pct-row{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px}
-.pct{padding:5px 2px;border-radius:var(--r);font-size:12px;font-weight:800;background:var(--bg3);color:var(--t2);border:1px solid var(--bd);transition:.1s;text-align:center}
-.pct:active{background:rgba(240,185,11,.12);color:var(--acc);border-color:var(--acc)}
-.preview{background:var(--bg3);border-radius:var(--r);padding:9px 11px;margin-bottom:8px;font-size:12px}
-.prev-row{display:flex;justify-content:space-between;gap:8px;margin-bottom:3px}
-.prev-row:last-child{margin:0}
-.prev-lbl{color:var(--t2);flex-shrink:0}
-.prev-val{font-weight:700;text-align:right;word-break:break-all;min-width:0}
-.h-list{border-top:1px solid var(--bd)}
-.h-row{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;transition:.1s;border-bottom:1px solid var(--bd);min-width:0}
-.h-row:last-child{border-bottom:none}
-.h-row:active{background:var(--bg3)}
-.h-row.sel{background:rgba(240,185,11,.06);border-left:3px solid var(--acc)}
-.h-ico{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;flex-shrink:0}
-.h-mid{flex:1;min-width:0}
-.h-base{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.h-qty{font-size:11px;color:var(--t2);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.h-right{text-align:right;flex-shrink:0;max-width:100px;min-width:70px}
-.h-val{font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.h-pct{font-size:12px;font-weight:700;margin-top:1px;white-space:nowrap}
-.sell-panel{background:rgba(240,185,11,.05);border:1px solid rgba(240,185,11,.2);border-radius:var(--r);padding:12px;margin:8px 12px}
-.sp-title{font-weight:800;font-size:14px;margin-bottom:2px;word-break:break-all}
-.sp-meta{font-size:12px;color:var(--t2);margin-bottom:9px;word-break:break-all}
-.exec{display:none;margin:8px 12px}
-.exec-inner{padding:12px;border-radius:var(--r);border:1px solid}
-.exec-buy{background:var(--Gbg);border-color:rgba(14,203,129,.2)}
-.exec-sell{background:var(--Rbg);border-color:rgba(246,70,93,.2)}
-.exec-head{display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap}
-.etype{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:800;flex-shrink:0}
-.et-buy{background:var(--Gbg);color:var(--G)} .et-sell{background:var(--Rbg);color:var(--R)}
-.ename{font-weight:800;font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.edetail{font-size:12px;color:var(--t2);word-break:break-all}
-.eprofit{font-size:13px;font-weight:800;margin-top:3px}
-.r-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px 8px}
-.r-list{border-top:1px solid var(--bd)}
-.r-row{display:flex;align-items:center;gap:8px;padding:11px 12px;border-bottom:1px solid var(--bd);min-width:0}
-.r-row.me{background:rgba(240,185,11,.06)}
-.r-badge{width:32px;height:32px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0}
-.rb1{background:linear-gradient(135deg,#ffd700,#ffa000);color:#5a3800}
-.rb2{background:linear-gradient(135deg,#c8d6e5,#7f9ab5);color:#1a2a3a}
-.rb3{background:linear-gradient(135deg,#e97b3a,#b84200);color:#fff}
-.rbn{background:var(--bg3);color:var(--t2)}
-.r-mid{flex:1;min-width:0}
-.r-nick{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.r-sub{font-size:11px;color:var(--t2);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.r-right{text-align:right;flex-shrink:0;max-width:110px}
-.r-asset{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.r-rate{font-size:12px;font-weight:800;margin-top:1px;white-space:nowrap}
-.me-badge{display:inline-block;padding:1px 5px;border-radius:99px;font-size:9px;background:rgba(240,185,11,.18);color:var(--acc);font-weight:800;margin-left:3px;flex-shrink:0}
-.hi-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px 8px}
-.hi-list{border-top:1px solid var(--bd)}
-.hi-row{padding:10px 12px;border-bottom:1px solid var(--bd)}
-.hi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:6px;flex-wrap:wrap}
-.hi-type{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:800;flex-shrink:0}
-.ht-buy{background:var(--Gbg);color:var(--G)} .ht-sell{background:var(--Rbg);color:var(--R)}
-.hi-name{font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hi-date{font-size:11px;color:var(--t2);flex-shrink:0;white-space:nowrap}
-.hi-detail{font-size:12px;color:var(--t2);word-break:break-all}
-.hi-profit{font-size:13px;font-weight:800;margin-top:3px}
-.section-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 6px;}
-.sec-title{font-size:13px;font-weight:900;color:var(--t1)}
-.btn-link{background:none;border:none;font-size:11px;color:var(--t2);font-weight:700;padding:2px 4px;cursor:pointer}
-.btn-link:active{color:var(--acc)}
-.home-rank-list{margin:0 12px;border-radius:var(--r);overflow:hidden;border:1px solid var(--bd)}
-.hr-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg2);border-bottom:1px solid var(--bd);min-width:0}
-.hr-row:last-child{border-bottom:none}
-.hr-row.me{background:rgba(240,185,11,.07)}
-.hr-num{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;flex-shrink:0}
-.hn1{background:linear-gradient(135deg,#ffd700,#ffa000);color:#5a3800}
-.hn2{background:linear-gradient(135deg,#c8d6e5,#7f9ab5);color:#1a2a3a}
-.hn3{background:linear-gradient(135deg,#e97b3a,#b84200);color:#fff}
-.hnn{background:var(--bg3);color:var(--t2)}
-.hr-mid{flex:1;min-width:0}
-.hr-nick{font-weight:800;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hr-sub{font-size:10px;color:var(--t2);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hr-right{text-align:right;flex-shrink:0}
-.hr-asset{font-size:13px;font-weight:800}
-.hr-rate{font-size:12px;font-weight:800;margin-top:1px}
-.home-market-list{margin:0 12px;border-radius:var(--r);overflow:hidden;border:1px solid var(--bd)}
-.hm-row{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--bg2);border-bottom:1px solid var(--bd);cursor:pointer;transition:.1s;min-width:0}
-.hm-row:last-child{border-bottom:none}
-.hm-row:active{background:var(--bg3)}
-.hm-ico{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;flex-shrink:0;letter-spacing:-.3px}
-.hm-mid{flex:1;min-width:0}
-.hm-base{font-weight:800;font-size:13px}
-.hm-name{font-size:10px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hm-right{text-align:right;flex-shrink:0;min-width:80px}
-.hm-price{font-size:13px;font-weight:800;white-space:nowrap}
-.hm-chg{font-size:11px;font-weight:700;margin-top:1px;white-space:nowrap}
-.hm-bar{width:40px;flex-shrink:0}
-.hm-bar svg{display:block;width:100%;height:24px}
-/* ── 리그 상태 카드 ── */
-.lg-status-card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:14px}
-.lg-status-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-.lg-status-name{font-size:14px;font-weight:900;color:var(--t1);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lg-join-badge{padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800;white-space:nowrap;flex-shrink:0}
-.lg-join-y{background:var(--Gbg);color:var(--G);border:1px solid rgba(14,203,129,.25)}
-.lg-join-n{background:rgba(240,185,11,.1);color:var(--acc);border:1px solid rgba(240,185,11,.25)}
-.lg-join-form{border-top:1px solid var(--bd);padding-top:12px;margin-top:2px}
-.lg-my-info{display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:var(--r);padding:9px 12px;font-size:13px}
-/* ── 종료된 리그 대시보드 ── */
-.closed-section-title{font-size:11px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-.closed-card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:8px;overflow:hidden}
-.closed-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 14px;cursor:pointer}
-.closed-card-name{font-size:13px;font-weight:900;color:var(--t1)}
-.closed-card-date{font-size:11px;color:var(--t3);flex-shrink:0}
-.closed-card-body{border-top:1px solid var(--bd);padding:12px 14px}
-.closed-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
-.closed-stat{background:var(--bg3);border-radius:var(--r);padding:8px;text-align:center}
-.closed-stat-l{font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.closed-stat-v{font-size:13px;font-weight:800;margin-top:3px;word-break:break-all}
-.closed-podium{display:grid;gap:5px}
-.closed-podium-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg3);border-radius:var(--r)}
-/* ── 거래 모드 탭 (현물/선물) ── */
-.trade-mode-tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg1);border-bottom:1px solid var(--bd)}
-.tmode{padding:9px;font-weight:800;font-size:13px;text-align:center;color:var(--t3);border-bottom:2px solid transparent;transition:.12s}
-.tmode.on{color:var(--t1);border-color:var(--acc)}
-.fut-guide{margin:10px 12px 0;border-radius:var(--r);overflow:hidden;border:1px solid rgba(240,185,11,.2);background:rgba(240,185,11,.04)}
-.fut-guide-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer}
-.fut-guide-title{font-size:12px;font-weight:800;color:var(--acc)}
-.fut-guide-body{padding:0 12px 12px;display:grid;gap:8px}
-.fut-concept{background:var(--bg2);border-radius:var(--r);padding:10px 12px;border:1px solid var(--bd)}
-.fut-concept-head{display:flex;align-items:center;gap:7px;margin-bottom:5px}
-.fut-concept-icon{font-size:18px}
-.fut-concept-label{font-size:12px;font-weight:900}
-.fut-concept-desc{font-size:11px;color:var(--t2);line-height:1.6}
-.fut-concept-ex{font-size:10px;color:var(--t3);margin-top:4px;padding:6px 8px;background:var(--bg3);border-radius:4px;line-height:1.6}
-.dir-wrap{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
-.dir-btn{padding:10px 6px;border-radius:var(--r);font-weight:800;font-size:14px;text-align:center;border:2px solid var(--bd);background:var(--bg3);color:var(--t2);transition:.15s;cursor:pointer}
-.dir-btn.long.on{border-color:var(--G);background:var(--Gbg);color:var(--G)}
-.dir-btn.short.on{border-color:var(--R);background:var(--Rbg);color:var(--R)}
-.dir-desc{border-radius:var(--r);padding:9px 12px;margin-bottom:10px;font-size:12px;line-height:1.6}
-.dir-desc.long{background:var(--Gbg);border:1px solid rgba(14,203,129,.2);color:var(--G)}
-.dir-desc.short{background:var(--Rbg);border:1px solid rgba(246,70,93,.2);color:var(--R)}
-.lev-wrap{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
-.lev-btn{padding:5px 10px;border-radius:var(--r);font-size:12px;font-weight:800;background:var(--bg3);color:var(--t2);border:1px solid var(--bd);cursor:pointer;transition:.1s;flex-shrink:0}
-.lev-btn.on{background:rgba(240,185,11,.12);color:var(--acc);border-color:var(--acc)}
-.pos-list{border-top:1px solid var(--bd)}
-.pos-card{margin:8px 12px;border-radius:var(--r);overflow:hidden;border:1px solid var(--bd)}
-.pos-head{display:flex;align-items:center;gap:8px;padding:10px 12px}
-.pos-dir{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:800;flex-shrink:0}
-.pos-long{background:var(--Gbg);color:var(--G)}
-.pos-short{background:var(--Rbg);color:var(--R)}
-.pos-lev{font-size:11px;color:var(--acc);font-weight:800;background:rgba(240,185,11,.1);padding:2px 6px;border-radius:4px;flex-shrink:0}
-.pos-sym{font-weight:800;font-size:14px;flex:1;min-width:0}
-.pos-pnl{font-size:13px;font-weight:800;text-align:right;flex-shrink:0}
-.pos-body{padding:0 12px 12px;border-top:1px solid var(--bd)}
-.pos-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
-.pos-stat{background:var(--bg3);border-radius:4px;padding:7px 9px}
-.pos-stat-l{font-size:10px;color:var(--t3);font-weight:700}
-.pos-stat-v{font-size:12px;font-weight:800;margin-top:2px}
-.liq-warn{font-size:11px;color:var(--R);margin-bottom:8px;padding:6px 8px;background:var(--Rbg);border-radius:4px}
-/* ── 로그인 오버레이 ── */
-.login-overlay{
-  position:fixed;inset:0;z-index:500;
-  background:var(--bg0);
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  padding:32px 24px;
-  text-align:center;
+.grid{display:grid;gap:12px}
+.grid.two,.grid.three{grid-template-columns:1fr}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.card.pad{padding:16px}
+.head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;border-bottom:1px solid var(--line)}
+.head h2{margin:0;font-size:14px;white-space:nowrap}
+.sub{color:var(--muted);font-size:12px}
+.metric{padding:14px;background:linear-gradient(180deg,#121d28,#101721);border:1px solid var(--line);border-radius:var(--radius)}
+.metric .k{color:var(--muted);font-size:11px;font-weight:850;text-transform:uppercase}
+.metric .v{font-size:21px;font-weight:950;margin-top:4px;word-break:break-word}
+.metric .s{font-size:12px;margin-top:2px;color:var(--muted)}
+.g{color:var(--green)}.r{color:var(--red)}.b{color:var(--blue)}.y{color:var(--gold)}
+.reward{display:grid;gap:10px;padding:14px;border:1px solid rgba(240,185,11,.35);background:linear-gradient(135deg,rgba(240,185,11,.18),rgba(85,167,255,.08));border-radius:var(--radius)}
+.reward.claimed{border-color:rgba(17,199,132,.26);background:rgba(17,199,132,.08)}
+.reward h2{font-size:15px;margin:0}.reward p{margin:0;color:var(--muted);font-size:12px}
+.league-strip{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+.league-strip b{display:block}.league-strip span{color:var(--muted);font-size:12px}
+.admin-grid{display:grid;gap:10px}
+.form2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius);background:#0f1620}
+.switch input{width:auto;height:auto}
+.market{display:grid;max-height:360px;overflow:auto;-webkit-overflow-scrolling:touch}
+.coin{display:grid;grid-template-columns:38px 1fr auto;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid rgba(39,50,65,.72);background:transparent;text-align:left;min-height:62px}
+.coin.on{background:rgba(240,185,11,.08);box-shadow:inset 3px 0 0 var(--gold)}
+.coin:hover{background:var(--panel2)}
+.ico{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:950;font-size:10px}
+.name{font-weight:950}.small{color:var(--muted);font-size:12px}.price{text-align:right;font-weight:950}
+.tabs{display:grid;grid-template-columns:repeat(2,1fr);background:#0e151e}
+.tab{height:46px;background:transparent;border-bottom:2px solid transparent;font-weight:950;color:var(--muted)}
+.tab.on.buy{color:var(--green);border-color:var(--green)}.tab.on.sell{color:var(--red);border-color:var(--red)}
+.body{padding:13px;display:grid;gap:10px}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.quick button{height:36px;border-radius:var(--radius);background:#0f1620;border:1px solid var(--line);color:var(--muted);font-weight:850}
+.preview{display:grid;gap:6px;background:#0f1620;border:1px solid var(--line);border-radius:var(--radius);padding:11px}
+.pline{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:12px}
+.pline b{color:var(--text);text-align:right}
+.warn{padding:10px 11px;border-radius:var(--radius);background:rgba(240,185,11,.1);border:1px solid rgba(240,185,11,.28);color:#ffd76c;font-size:12px}
+.danger{padding:10px 11px;border-radius:var(--radius);background:rgba(240,82,103,.12);border:1px solid rgba(240,82,103,.3);color:#ff9fac;font-size:12px}
+.ok{padding:10px 11px;border-radius:var(--radius);background:rgba(17,199,132,.1);border:1px solid rgba(17,199,132,.25);color:#8df1c7;font-size:12px}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.table th{color:var(--muted);font-size:11px;text-transform:uppercase}
+.table td:last-child,.table th:last-child{text-align:right}
+.empty{padding:32px 16px;text-align:center;color:var(--muted)}
+.seg{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.seg button,.lev button{height:38px;border-radius:var(--radius);border:1px solid var(--line);background:#0f1620;color:var(--muted);font-weight:950}
+.seg button.on.long{border-color:var(--green);color:var(--green);background:rgba(17,199,132,.1)}
+.seg button.on.short{border-color:var(--red);color:var(--red);background:rgba(240,82,103,.1)}
+.lev{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.lev button.on{border-color:var(--gold);color:var(--gold);background:rgba(240,185,11,.1)}
+.positions{display:grid;gap:10px}
+.pos{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);overflow:hidden}
+.pos.toprisk{border-color:rgba(240,82,103,.72)}
+.poshead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.badge{display:inline-flex;align-items:center;height:24px;border-radius:5px;padding:0 8px;font-size:11px;font-weight:950}
+.badge.long{background:rgba(17,199,132,.12);color:var(--green)}.badge.short{background:rgba(240,82,103,.12);color:var(--red)}
+.posgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:12px 14px}
+.mini{background:#0f1620;border:1px solid var(--line);border-radius:6px;padding:8px}
+.mini span{display:block;color:var(--muted);font-size:11px}.mini b{display:block;margin-top:2px}
+.toast{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom));transform:translate(-50%,18px);opacity:0;pointer-events:none;background:#17212d;border:1px solid var(--line);box-shadow:var(--shadow);border-radius:var(--radius);padding:12px 16px;max-width:min(420px,calc(100vw - 28px));transition:.18s;z-index:50}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.58);display:none;place-items:center;padding:20px;z-index:60}
+.modal.show{display:grid}
+.dialog{width:min(430px,100%);background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.dialog .content{padding:16px;display:grid;gap:12px}
+.dialog h3{margin:0}.dialog p{margin:0;color:var(--muted)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px;border-top:1px solid var(--line)}
+@media(min-width:700px){
+  body{background:radial-gradient(circle at 50% 0,#1a2634,#05080d 58%)}
+  .app{min-height:100dvh}
 }
-.login-logo{font-size:15px;font-weight:900;color:var(--acc);letter-spacing:1px;font-family:monospace;margin-bottom:6px}
-.login-title{font-size:24px;font-weight:900;margin-bottom:8px;line-height:1.3}
-.login-desc{font-size:13px;color:var(--t2);margin-bottom:36px;line-height:1.8;max-width:300px}
-.btn-google{
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  width:100%;max-width:280px;height:48px;
-  background:#fff;color:#1f1f1f;
-  border-radius:8px;font-size:15px;font-weight:700;
-  border:none;cursor:pointer;
-  box-shadow:0 2px 8px rgba(0,0,0,.3);
-  transition:.15s;
-}
-.btn-google:active{transform:scale(.98)}
-.btn-google img{width:20px;height:20px}
-.login-note{font-size:11px;color:var(--t3);margin-top:20px;line-height:1.6}
-/* ── 유저 아바타 ── */
-.user-avatar{
-  width:28px;height:28px;border-radius:50%;
-  object-fit:cover;flex-shrink:0;
-  border:2px solid var(--acc);
-  cursor:pointer;
-}
-.user-avatar-placeholder{
-  width:28px;height:28px;border-radius:50%;
-  background:var(--bg3);border:2px solid var(--bd);
-  display:flex;align-items:center;justify-content:center;
-  font-size:12px;flex-shrink:0;cursor:pointer;
-}
-.logout-menu{
-  position:fixed;top:60px;right:12px;z-index:200;
-  background:var(--bg2);border:1px solid var(--bd);
-  border-radius:var(--r);padding:6px;
-  box-shadow:var(--sh);min-width:160px;
-  display:none;
-}
-.logout-menu.show{display:block}
-.liq-flash{position:fixed;inset:0;background:rgba(246,70,93,.18);z-index:100;pointer-events:none;opacity:0;transition:.3s}
-.liq-flash.show{opacity:1}
-.g{color:var(--G);font-weight:800}
-.r{color:var(--R);font-weight:800}
-.empty{text-align:center;padding:24px;color:var(--t3);font-size:13px}
-.empty .ei{font-size:24px;display:block;margin-bottom:7px;opacity:.4}
-.spad{padding:10px 12px 0}
-.toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--bg3);color:var(--t1);border:1px solid var(--bd);padding:10px 16px;border-radius:var(--r);font-size:13px;font-weight:600;text-align:center;transition:.22s cubic-bezier(.34,1.56,.64,1);z-index:200;pointer-events:none;max-width:min(300px, calc(100vw - 32px));box-shadow:var(--sh);word-break:break-word;}
-.toast.show{transform:translateX(-50%) translateY(0)}
-.spin{animation:spinA 1s linear infinite;display:inline-block}
-@keyframes spinA{to{transform:rotate(360deg)}}
-.ws-live{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--G);flex-shrink:0}
-.ws-dot{width:5px;height:5px;border-radius:50%;background:var(--G);animation:blink 1.4s infinite}
-@media(max-width:360px){
-  .card{margin:8px 8px;padding:12px}
-  .topbar{padding:8px 10px}
-  .t-code{font-size:15px;letter-spacing:1px}
-  .coin-item{padding:9px 10px;gap:7px}
-  .c-right{min-width:65px}
-  .ct-head{padding:8px 10px 0}
-  .obody{padding:10px}
-  .r-row{padding:10px}
-  .h-row{padding:9px 10px}
-  .admin{margin:0 8px 10px}
+@media(max-width:370px){
+  .brand p{display:none}
+  .status{font-size:10px}
+  .auth .who{display:none}
+  .metric .v{font-size:19px}
+  .table th,.table td{padding-left:9px;padding-right:9px;font-size:12px}
 }
 </style>
 </head>
 <body>
-<!-- 로그인 오버레이 -->
-<div class="login-overlay" id="loginOverlay">
-  <div class="login-logo">NIGAGARA COINKING</div>
-  <h1 class="login-title">코인왕 리그에<br>오신 걸 환영해요! 🏆</h1>
-  <p class="login-desc">구글 계정으로 로그인하면<br>어떤 기기에서도 내 데이터가 유지돼요.</p>
-
-  <!-- 인앱 브라우저 경고 (기본 숨김) -->
-  <div id="inappWarning" style="display:none;width:100%;max-width:320px;border-radius:10px;padding:16px;margin-bottom:20px;text-align:left">
-    <!-- Android용 -->
-    <div id="inappAndroid" style="display:none;background:rgba(246,70,93,.1);border:1px solid rgba(246,70,93,.3);border-radius:10px;padding:14px">
-      <div style="font-size:14px;font-weight:900;color:#F6465D;margin-bottom:8px">⚠️ 카카오톡 브라우저 감지됨</div>
-      <div style="font-size:13px;color:#848E9C;line-height:1.8">
-        Google 로그인은 카카오톡 내부에서 작동하지 않아요.<br><br>
-        <b style="color:#EAECEF">① 우측 하단 점 3개(⋮) 탭</b><br>
-        <b style="color:#EAECEF">② 다른 브라우저로 열기</b> 선택
-      </div>
-      <button onclick="openExternal()" style="margin-top:12px;width:100%;height:40px;background:#F0B90B;color:#000;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer">
-        🌐 크롬으로 열기
-      </button>
-    </div>
-    <!-- iOS용 -->
-    <div id="inappIOS" style="display:none;background:rgba(246,70,93,.1);border:1px solid rgba(246,70,93,.3);border-radius:10px;padding:14px">
-      <div style="font-size:14px;font-weight:900;color:#F6465D;margin-bottom:8px">⚠️ 카카오톡 브라우저 감지됨</div>
-      <div style="font-size:13px;color:#848E9C;line-height:1.8">
-        카카오톡 내부 브라우저에서는<br>Google 로그인이 안 돼요.<br><br>
-        <b style="color:#EAECEF">아래 링크를 복사해서<br>Safari에서 열어주세요 👇</b>
-      </div>
-      <div id="iosUrlBox" style="margin-top:10px;background:rgba(255,255,255,.08);border-radius:6px;padding:8px 10px;font-size:11px;color:#F0B90B;word-break:break-all;font-family:monospace"></div>
-      <button onclick="copyUrl()" style="margin-top:10px;width:100%;height:40px;background:#F0B90B;color:#000;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer" id="copyUrlBtn">
-        📋 링크 복사하기
-      </button>
-      <div style="font-size:11px;color:#474D57;margin-top:8px;text-align:center">복사 후 Safari 주소창에 붙여넣기</div>
-    </div>
-  </div>
-
-  <button class="btn-google" id="btnGoogleLogin">
-    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
-    Google로 시작하기
-  </button>
-  <p class="login-note">실제 돈은 필요 없어요 · 가상 모의투자 게임</p>
-</div>
-
-<!-- 로그아웃 메뉴 -->
-<div class="logout-menu" id="logoutMenu">
-  <div class="logout-menu-name" id="logoutMenuEmail"></div>
-  <button class="logout-btn" id="btnLogout">🚪 로그아웃</button>
-</div>
-
 <div class="app">
-<div class="topbar">
-  <div class="tb-left">
-    <span class="header-logo-text">NIGAGARA<br>COINKING</span>
+  <header class="top">
+    <div class="brand">
+      <div class="mark">KW</div>
+      <div><h1>코인왕 투자리그</h1><p>현물·레버리지 가상 투자 시뮬레이터</p></div>
+    </div>
+    <div class="auth">
+      <span class="admin-badge" id="adminBadge" style="display:none">ADMIN</span>
+      <span class="who" id="authWho">로컬 모드</span>
+      <button id="authBtn">Google</button>
+    </div>
+  </header>
 
-  </div>
-  <div class="tb-right">
-    <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
-      <div>
-        <div class="pill pill-on" id="tbPill">진행 중</div>
-        <div class="api-status" id="apiStatus">
-          <div class="status-dot s-loading" id="sDot"></div>
-          <span id="sTxt">연결 중...</span>
-        </div>
+  <div class="shell">
+    <aside class="side">
+      <div class="nav" id="nav">
+        <button class="on" data-view="dash">대시보드</button>
+        <button data-view="trade">거래</button>
+        <button data-view="risk">포지션</button>
+        <button data-view="league">리그</button>
+        <button data-view="history">기록</button>
       </div>
-      <div class="user-avatar-placeholder" id="userAvatarBtn" title="내 계정">👤</div>
+      <div class="userbox">
+        <div>
+          <label>참가자</label>
+          <select id="playerSelect"></select>
+        </div>
+        <div class="row">
+          <input class="grow" id="newName" placeholder="새 참가자">
+          <button class="btn gold" id="addPlayer">추가</button>
+        </div>
+        <button class="btn ghost" id="resetGame">리그 초기화</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="view on" id="view-dash">
+        <div class="grid">
+          <div class="league-strip" id="leagueStrip"></div>
+          <div id="rewardBox"></div>
+          <div class="grid three">
+            <div class="metric"><div class="k">총 자산</div><div class="v" id="mTotal">-</div><div class="s" id="mRate">-</div></div>
+            <div class="metric"><div class="k">현금</div><div class="v" id="mCash">-</div><div class="s">주문 가능 금액</div></div>
+            <div class="metric"><div class="k">위험 노출</div><div class="v" id="mRisk">-</div><div class="s" id="mRiskNote">-</div></div>
+          </div>
+          <div class="grid two">
+            <div class="card">
+              <div class="head"><h2>리그 랭킹</h2><button class="btn" id="tickMarket">가격 변동</button></div>
+              <div id="rankBox"></div>
+            </div>
+            <div class="card">
+              <div class="head"><h2>보유 현물</h2><span class="sub">현재가 기준 평가</span></div>
+              <div id="holdingBox"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-trade">
+        <div class="grid two">
+          <div class="card">
+            <div class="head">
+              <h2>시장</h2>
+              <input id="search" placeholder="BTC, ETH, 솔라나 검색" style="max-width:220px">
+            </div>
+            <div class="market" id="market"></div>
+          </div>
+
+          <div class="grid">
+            <div class="card">
+              <div class="tabs">
+                <button class="tab buy on" id="tabBuy">현물 매수</button>
+                <button class="tab sell" id="tabSell">현물 매도</button>
+              </div>
+              <div class="body">
+                <div class="sub" id="spotTitle">BTC/USDT</div>
+                <div class="field"><label>주문 금액 (USDT)</label><input id="spotAmount" type="number" min="0" step="0.01" placeholder="예: 1000"></div>
+                <div class="quick" id="spotQuick">
+                  <button data-pct="25">25%</button><button data-pct="50">50%</button><button data-pct="75">75%</button><button data-pct="100">100%</button>
+                </div>
+                <div id="spotPreview"></div>
+                <button class="btn green" id="spotSubmit">시장가 매수</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="head"><h2>선물 포지션 열기</h2><span class="sub">격리 마진 방식</span></div>
+              <div class="body">
+                <div class="seg">
+                  <button class="on long" id="dirLong">롱</button>
+                  <button id="dirShort">숏</button>
+                </div>
+                <div class="field"><label>레버리지</label><div class="lev" id="levBox">
+                  <button class="on" data-lev="1">1x</button><button data-lev="3">3x</button><button data-lev="5">5x</button><button data-lev="10">10x</button><button data-lev="25">25x</button>
+                </div></div>
+                <div class="field"><label>마진 (USDT)</label><input id="futMargin" type="number" min="0" step="0.01" placeholder="예: 500"></div>
+                <div class="quick" id="futQuick">
+                  <button data-pct="10">10%</button><button data-pct="25">25%</button><button data-pct="50">50%</button><button data-pct="100">100%</button>
+                </div>
+                <div id="futPreview"></div>
+                <button class="btn blue" id="futSubmit">포지션 열기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-risk">
+        <div class="card">
+          <div class="head"><h2>열린 포지션</h2><button class="btn" id="checkLiq">청산 검사</button></div>
+          <div class="body"><div class="positions" id="positionBox"></div></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-history">
+        <div class="card">
+          <div class="head"><h2>거래 기록</h2><span class="sub" id="historyCount"></span></div>
+          <div id="historyBox"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-league">
+        <div class="grid">
+          <div class="card">
+            <div class="head"><h2>리그 정보</h2><button class="btn gold" id="claimRewardLeague">현금 받기</button></div>
+            <div class="body" id="leagueInfo"></div>
+          </div>
+
+          <div class="card">
+            <div class="head"><h2>참가자 랭킹</h2><span class="sub" id="leagueRankMeta"></span></div>
+            <div id="leagueRankBox"></div>
+          </div>
+
+          <div class="card">
+            <div class="head">
+              <h2>관리자 모드</h2>
+              <button class="btn" id="toggleAdmin">관리자 켜기</button>
+            </div>
+            <div class="body" id="adminPanel"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="modal" id="confirmModal">
+  <div class="dialog">
+    <div class="content">
+      <h3 id="confirmTitle">확인</h3>
+      <p id="confirmText"></p>
+      <div id="confirmDetail"></div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="cancelConfirm">취소</button>
+      <button class="btn gold" id="okConfirm">실행</button>
     </div>
   </div>
 </div>
-<div class="main">
-  <!-- HOME -->
-  <div class="view on" id="v-home">
-    <div class="card hero">
-      <div class="h-label">내 포트폴리오</div>
-      <div class="h-total" id="hTotal">0.00 <small>USDT</small></div>
-      <div class="h-pnl" id="hPnl" style="color:var(--t2)">--</div>
-      <div class="h-grid">
-        <div class="hgbox"><div class="hgl">현금</div><div class="hgv" id="hCash">-</div></div>
-        <div class="hgbox"><div class="hgl">평가</div><div class="hgv" id="hVal">-</div></div>
-        <div class="hgbox"><div class="hgl">순위</div><div class="hgv" id="hRank" style="color:var(--acc)">-</div></div>
-      </div>
-    </div>
-    <div class="section-header">
-      <span class="sec-title">🏆 실시간 랭킹</span>
-      <button class="btn-link" id="btnHomeRankRefresh">🔄 갱신</button>
-    </div>
-    <div id="leagueBadge" style="margin:0 12px 8px;display:flex;align-items:center;gap:6px">
-      <span id="leagueBadgeName" style="font-size:12px;font-weight:800;color:var(--acc);background:rgba(240,185,11,.1);border:1px solid rgba(240,185,11,.25);padding:3px 10px;border-radius:99px"></span>
-      <span id="leagueBadgeDday" style="font-size:11px;color:var(--t3)"></span>
-    </div>
-    <div id="homeRankList" class="home-rank-list">
-      <div class="empty"><span class="ei">🏅</span>참여자를 등록하면 랭킹이 표시됩니다</div>
-    </div>
-    <div class="section-header" style="margin-top:4px">
-      <span class="sec-title">📊 마켓 현황</span>
-      <span id="marketUpdated" style="font-size:10px;color:var(--t3)"></span>
-    </div>
-    <div id="homeMarket" class="home-market-list">
-      <div class="empty"><span class="ei">📡</span>시세 로딩 중...</div>
-    </div>
-    <div style="height:12px"></div>
-  </div>
-  <!-- TRADE -->
-  <div class="view" id="v-trade">
-    <div class="trade-top">
-      <label>투자자</label>
-      <select class="usr-sel" id="userSel"></select>
-      <div style="text-align:right;flex-shrink:0">
-        <div class="cash-lbl">현금</div>
-        <div class="cash-val" id="trCash">-</div>
-      </div>
-    </div>
-
-    <!-- 현물/선물 모드 탭 -->
-    <div class="trade-mode-tabs">
-      <div class="tmode on" id="tmodeSpot">현물</div>
-      <div class="tmode" id="tmodeFut">선물 (레버리지)</div>
-    </div>
-
-    <!-- 공통: 코인 검색 + 차트 -->
-    <div class="search-row">
-      <span class="s-ico">🔍</span>
-      <input class="s-inp" id="coinSearch" placeholder="BTC, ETH, 비트코인, DOGE…" autocomplete="off">
-    </div>
-    <div class="s-meta" id="searchMeta"></div>
-    <div id="coinList" class="coin-list"></div>
-    <div class="chart-wrap">
-      <div class="ct-head">
-        <div>
-          <div class="ct-sym" id="ctSym">—</div>
-          <div class="ct-price-big" id="ctPrice" style="color:var(--t1)">—</div>
-          <div class="ct-chg-big" id="ctChg" style="color:var(--t2)">—</div>
-        </div>
-        <div>
-          <div class="ctype-wrap" style="margin-bottom:5px">
-            <button class="ctype on" data-ct="candle">캔들</button>
-            <button class="ctype" data-ct="line">라인</button>
-          </div>
-          <div class="ws-live" id="wsLive" style="display:none"><div class="ws-dot"></div>실시간</div>
-        </div>
-      </div>
-      <div class="ct-stats">
-        <div class="cstat">24H 고 <b id="ct24h">—</b></div>
-        <div class="cstat">24H 저 <b id="ct24l">—</b></div>
-        <div class="cstat">거래량 <b id="ct24v">—</b></div>
-      </div>
-      <div class="ct-controls">
-        <div class="intervals" id="intervals">
-          <button class="ivl" data-i="15m">15m</button>
-          <button class="ivl" data-i="1h">1H</button>
-          <button class="ivl on" data-i="1d">1D</button>
-          <button class="ivl" data-i="1w">1W</button>
-          <button class="ivl" data-i="1M">1M</button>
-        </div>
-      </div>
-      <div class="chart-box" id="chartBox"><div class="chart-loading">코인을 선택하면 차트가 표시됩니다</div></div>
-      <div class="chart-foot" id="chartFoot"></div>
-    </div>
-
-    <!-- ══ 현물 패널 ══ -->
-    <div id="spotPanel">
-      <div class="order-tabs">
-        <div class="otab buy on" id="tabBuy">매수</div>
-        <div class="otab sell" id="tabSell">매도</div>
-      </div>
-      <div class="obody">
-        <div class="bal-row"><span class="lbl">사용 가능</span><span class="val" id="oBal">— USDT</span></div>
-        <div class="amt-wrap">
-          <input class="amt-inp" id="oAmt" type="number" placeholder="0.00" min="0" step="any" inputmode="decimal">
-          <span class="amt-cur">USDT</span>
-        </div>
-        <div class="pct-row">
-          <button class="pct" data-p="25">25%</button>
-          <button class="pct" data-p="50">50%</button>
-          <button class="pct" data-p="75">75%</button>
-          <button class="pct" data-p="100">최대</button>
-        </div>
-        <div class="preview" id="oPrev" style="display:none"></div>
-        <button class="btn btn-buy" id="btnOrder">코인 선택 후 매수</button>
-      </div>
-      <div class="exec" id="execEl"></div>
-      <div style="padding:10px 12px 4px;display:flex;align-items:center;justify-content:space-between">
-        <span class="stitle" style="margin:0">보유 코인</span>
-        <button class="btn btn-ghost btn-sm" id="btnRefresh">🔄 가격갱신</button>
-      </div>
-      <div id="hList" class="h-list"><div class="empty"><span class="ei">💼</span>보유 코인이 없습니다</div></div>
-      <div class="sell-panel" id="sellPanel" style="display:none">
-        <div class="sp-title" id="spTitle">—</div>
-        <div class="sp-meta" id="spMeta">—</div>
-        <div class="field" style="margin-bottom:8px"><label>매도 금액 (USDT)</label><input class="inp" id="sellAmt" type="number" placeholder="예: 500" min="0" step="any" inputmode="decimal"></div>
-        <div id="sellPrev" style="display:none;margin-bottom:8px"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
-          <button class="btn btn-ghost" id="btnSellPart">입력금액 매도</button>
-          <button class="btn btn-sell" id="btnSellFull">전량 매도</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══ 선물 패널 ══ -->
-    <div id="futPanel" style="display:none">
-
-      <!-- 개념 안내 카드 -->
-      <div class="fut-guide">
-        <div class="fut-guide-head" onclick="const b=this.nextElementSibling;b.style.display=b.style.display==='none'?'grid':'none';this.querySelector('.fg-arr').textContent=b.style.display==='none'?'▼':'▲'">
-          <span class="fut-guide-title">💡 선물 거래란? (처음이라면 읽어보세요)</span>
-          <span class="fg-arr" style="font-size:11px;color:var(--t3)">▼</span>
-        </div>
-        <div class="fut-guide-body" style="display:none">
-          <div class="fut-concept">
-            <div class="fut-concept-head">
-              <span class="fut-concept-icon">📈</span>
-              <span class="fut-concept-label" style="color:var(--G)">롱 (LONG) — 상승에 베팅</span>
-            </div>
-            <div class="fut-concept-desc">가격이 오를 것 같을 때 사용해요. 가격이 오르면 이익, 내리면 손실이에요.</div>
-            <div class="fut-concept-ex">예시) BTC가 지금 75,000달러인데 곧 오를 것 같다 → 롱 진입<br>→ 80,000달러 됐을 때 청산 → 수익 🎉</div>
-          </div>
-          <div class="fut-concept">
-            <div class="fut-concept-head">
-              <span class="fut-concept-icon">📉</span>
-              <span class="fut-concept-label" style="color:var(--R)">숏 (SHORT) — 하락에 베팅</span>
-            </div>
-            <div class="fut-concept-desc">가격이 내릴 것 같을 때 사용해요. 가격이 내리면 이익, 오르면 손실이에요.</div>
-            <div class="fut-concept-ex">예시) BTC가 75,000달러인데 곧 내릴 것 같다 → 숏 진입<br>→ 70,000달러 됐을 때 청산 → 수익 🎉</div>
-          </div>
-          <div class="fut-concept">
-            <div class="fut-concept-head">
-              <span class="fut-concept-icon">⚡</span>
-              <span class="fut-concept-label" style="color:var(--acc)">레버리지 — 증폭 투자</span>
-            </div>
-            <div class="fut-concept-desc">내 돈보다 더 큰 금액으로 투자할 수 있어요. 이익도 크지만 손실도 커요.</div>
-            <div class="fut-concept-ex">예시) 마진 1,000 USDT + 레버리지 10배<br>→ 10,000 USDT어치 포지션. 1% 오르면 +100 USDT (수익률 +10%)<br>⚠️ 반대로 움직이면 마진을 전부 잃을 수도 있어요 (강제청산)</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 주문 패널 -->
-      <div class="obody" style="margin-top:10px">
-        <div class="bal-row"><span class="lbl">사용 가능 마진</span><span class="val" id="futBal">— USDT</span></div>
-
-        <!-- 방향 선택 -->
-        <div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">방향 선택</div>
-        <div class="dir-wrap">
-          <div class="dir-btn long on" id="dirLong" onclick="setDir('long')">📈 LONG<div style="font-size:10px;font-weight:400;margin-top:2px;opacity:.8">상승 베팅</div></div>
-          <div class="dir-btn short" id="dirShort" onclick="setDir('short')">📉 SHORT<div style="font-size:10px;font-weight:400;margin-top:2px;opacity:.8">하락 베팅</div></div>
-        </div>
-        <div class="dir-desc long" id="dirDesc">
-          <b>롱 포지션</b> — 가격이 오르면 이익이에요.<br>
-          <span style="opacity:.8">진입가보다 높을 때 청산하면 수익!</span>
-        </div>
-
-        <!-- 레버리지 -->
-        <div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">레버리지 <span id="levDisplay" style="color:var(--acc)">1x</span></div>
-        <div class="lev-wrap" id="levWrap">
-          <button class="lev-btn on" data-lev="1">1x</button>
-          <button class="lev-btn" data-lev="2">2x</button>
-          <button class="lev-btn" data-lev="3">3x</button>
-          <button class="lev-btn" data-lev="5">5x</button>
-          <button class="lev-btn" data-lev="10">10x</button>
-          <button class="lev-btn" data-lev="20">20x</button>
-        </div>
-
-        <!-- 마진 입력 -->
-        <div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">마진 (담보금)</div>
-        <div class="amt-wrap">
-          <input class="amt-inp" id="futAmt" type="number" placeholder="0.00" min="0" step="any" inputmode="decimal">
-          <span class="amt-cur">USDT</span>
-        </div>
-        <div class="pct-row">
-          <button class="pct" data-fp="25">25%</button>
-          <button class="pct" data-fp="50">50%</button>
-          <button class="pct" data-fp="75">75%</button>
-          <button class="pct" data-fp="100">최대</button>
-        </div>
-
-        <!-- 미리보기 -->
-        <div id="futPrev" style="display:none;margin-bottom:8px"></div>
-
-        <button class="btn btn-buy" id="btnFutOrder">코인 선택 후 포지션 열기</button>
-      </div>
-
-      <!-- 보유 포지션 -->
-      <div style="padding:10px 12px 4px;display:flex;align-items:center;justify-content:space-between">
-        <span class="stitle" style="margin:0">보유 포지션</span>
-        <button class="btn btn-ghost btn-sm" id="btnFutRefresh">🔄 PnL 갱신</button>
-      </div>
-      <div id="posList" class="pos-list"><div class="empty"><span class="ei">📊</span>열린 포지션이 없습니다</div></div>
-    </div>
-
-    <div style="height:14px"></div>
-  </div>
-  <!-- RANK -->
-  <div class="view" id="v-rank">
-    <div class="r-head">
-      <div>
-        <span style="font-size:15px;font-weight:900">🏆 수익률 랭킹</span>
-        <div id="rankDday" style="font-size:11px;margin-top:3px"></div>
-      </div>
-      <button class="btn btn-ghost btn-sm" id="btnRRank">🔄 갱신</button>
-    </div>
-    <div id="rankList" class="r-list"></div>
-  </div>
-  <!-- LEAGUE -->
-  <div class="view" id="v-league">
-    <!-- 동적으로 전체 렌더링 -->
-    <div id="leagueRoot" style="padding-bottom:20px"></div>
-
-    <!-- 숨겨진 폼 (JS용) -->
-    <input id="joinTicket" type="hidden">
-    <input id="joinNick" type="hidden">
-  </div>
-  <!-- HISTORY -->
-  <div class="view" id="v-hist">
-    <div class="hi-head">
-      <span style="font-size:15px;font-weight:900">📋 거래 기록</span>
-      <select class="usr-sel" id="histSel" style="height:30px;font-size:12px"></select>
-    </div>
-    <div id="histList" class="hi-list"></div>
-  </div>
-</div>
-<nav class="bottomnav">
-  <button class="bnav on" data-tab="home"><div class="ico">🏠</div>홈</button>
-  <button class="bnav" data-tab="trade"><div class="ico">📈</div>거래</button>
-  <button class="bnav" data-tab="league"><div class="ico">🏛</div>리그</button>
-  <button class="bnav" data-tab="hist"><div class="ico">📋</div>기록</button>
-</nav>
-<div class="liq-flash" id="liqFlash"></div>
 <div class="toast" id="toast"></div>
-</div>
 
-<!-- Supabase CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-'use strict';
+const START_CASH = 10000;
+const STORE_KEY = "coinKingLeagueV2";
+const SUPA_URL = "https://abwitqdxagdbcogsscsk.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFid2l0cWR4YWdkYmNvZ3NzY3NrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MjQzMDUsImV4cCI6MjA5MjIwMDMwNX0.xg8QIXUTNJbvJrNQ9HdBiN05BqBzRkNCupV5bRGf4VU";
+const PROD_URL = "https://gaoryzet.github.io/coin-league/";
+const LOCAL_ADMIN_PIN = "2468";
+const coinsSeed = [
+  ["BTC","Bitcoin",65000,0.018,"#f7931a"],["ETH","Ethereum",3200,0.026,"#627eea"],
+  ["SOL","Solana",145,0.045,"#14f195"],["XRP","XRP",0.58,0.035,"#8ea6c9"],
+  ["DOGE","Dogecoin",0.14,0.06,"#c2a633"],["BNB","BNB",590,0.024,"#f3ba2f"],
+  ["ADA","Cardano",0.47,0.04,"#3cc8c8"],["AVAX","Avalanche",36,0.05,"#e84142"],
+  ["LINK","Chainlink",15.2,0.044,"#2a5ada"],["TON","Toncoin",5.4,0.055,"#35aee2"],
+  ["NEAR","Near",6.7,0.058,"#00ec97"],["APT","Aptos",9.8,0.06,"#b8ff00"]
+];
+let state = loadState();
+let selected = state.selected || "BTC";
+let side = "buy";
+let futDir = "long";
+let leverage = 1;
+let orderBusy = false;
+let pendingConfirm = null;
+let sb = null;
+let currentUser = null;
+let cloudAdmin = false;
+const isFileMode = location.protocol === "file:";
 
-/* ══════════════════════════════════════
-   ★ 여기에 Supabase 정보를 입력하세요 ★
-   Supabase → Settings → API 에서 복사
-══════════════════════════════════════ */
-const SUPA_URL = 'https://abwitqdxagdbcogsscsk.supabase.co';       // 예: https://abcxyz.supabase.co
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFid2l0cWR4YWdkYmNvZ3NzY3NrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MjQzMDUsImV4cCI6MjA5MjIwMDMwNX0.xg8QIXUTNJbvJrNQ9HdBiN05BqBzRkNCupV5bRGf4VU';  // 예: eyJhbGci...
-
-/* ══ BINANCE API ══ */
-const BASE = 'https://api.binance.com/api/v3';
-async function bFetch(path, params={}, ms=7000){
-  try{
-    const ctrl=new AbortController(), t=setTimeout(()=>ctrl.abort(),ms);
-    const q=new URLSearchParams(params).toString();
-    const res=await fetch(`${BASE}${path}${q?'?'+q:''}`,{signal:ctrl.signal});
-    clearTimeout(t); if(!res.ok) return null; return await res.json();
-  }catch(e){ return null; }
+function addDays(n){
+  const d = new Date();
+  d.setDate(d.getDate()+n);
+  return d.toISOString().slice(0,10);
 }
-async function fetchAll24hr(){ return bFetch('/ticker/24hr',{},12000); }
-async function fetchTicker(symbol){ return bFetch('/ticker/24hr',{symbol},5000); }
-async function fetchKlines(symbol,interval,limit=120){ return bFetch('/klines',{symbol,interval,limit},8000); }
-
-let ws=null, wsKey='';
-function openWS(symbol){
-  if(ws){try{ws.close();}catch(_){} ws=null;}
-  document.getElementById('wsLive').style.display='none';
-  if(!symbol) return;
-  wsKey=symbol;
+function defaultLeague(){
+  return {
+    id:uid(),
+    name:"코인왕 시즌 리그",
+    status:"ACTIVE",
+    startDate:new Date().toISOString().slice(0,10),
+    endDate:addDays(14),
+    initialCash:START_CASH,
+    rewardTitle:"리그 참가 보상 도착",
+    rewardText:"이번 리그 투자금이 준비됐어요.",
+    allowSpot:true,
+    allowFutures:true,
+    maxLeverage:25,
+    inviteCode:"KING-"+Math.floor(1000+Math.random()*9000)
+  };
+}
+function freshState(){
+  const league = defaultLeague();
+  const firstId = uid();
+  return {
+    selected:"BTC",
+    league,
+    adminMode:false,
+    market: coinsSeed.map(([symbol,name,price,vol,color],i)=>({symbol,name,price,prev:price,vol,color,change:0,rank:i+1})),
+    players:[{id:firstId,name:"나",cash:0,rewards:{[league.id]:false},holdings:{},positions:[],history:[]}],
+    activePlayerId:firstId,
+    createdAt:Date.now()
+  };
+}
+function loadState(){
   try{
-    ws=new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
-    ws.onopen=()=>{ document.getElementById('wsLive').style.display='inline-flex'; };
-    ws.onmessage=(e)=>{
-      try{
-        const d=JSON.parse(e.data), p=parseFloat(d.c), chg=parseFloat(d.P);
-        if(isNaN(p)) return;
-        const coin=getCoin(symbol);
-        if(coin){coin.price=p;coin.change=chg;}
-        if(ST.selSym===symbol){
-          const el=document.getElementById('ctPrice'), cl=document.getElementById('ctChg');
-          if(el){el.textContent=fP(p);el.style.color=chg>=0?'var(--G)':'var(--R)';}
-          if(cl){cl.textContent=`${chg>=0?'+':''}${chg.toFixed(2)}% (${fP(parseFloat(d.p))})`;cl.style.color=chg>=0?'var(--G)':'var(--R)';}
-        }
-        renderCoinItem(symbol); renderHoldings(); renderHeader();
-      }catch(_){}
-    };
-    ws.onerror=()=>{};
-    ws.onclose=()=>{ if(wsKey===symbol) document.getElementById('wsLive').style.display='none'; };
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY));
+    if(saved?.players?.length && saved?.market?.length) return migrateState(saved);
   }catch(_){}
+  const s = freshState();
+  return s;
 }
-
-/* ══ COIN METADATA ══ */
-const META={
-  BTC:{n:'Bitcoin',c:'#F7931A'},ETH:{n:'Ethereum',c:'#627EEA'},BNB:{n:'BNB',c:'#F0B90B'},
-  SOL:{n:'Solana',c:'#9945FF'},XRP:{n:'XRP',c:'#346AA9'},DOGE:{n:'Dogecoin',c:'#BA9F33'},
-  ADA:{n:'Cardano',c:'#0033AD'},AVAX:{n:'Avalanche',c:'#E84142'},SHIB:{n:'Shiba Inu',c:'#FF6D00'},
-  DOT:{n:'Polkadot',c:'#E6007A'},MATIC:{n:'Polygon',c:'#8247E5'},LINK:{n:'Chainlink',c:'#2A5ADA'},
-  UNI:{n:'Uniswap',c:'#FF007A'},ATOM:{n:'Cosmos',c:'#6F7390'},LTC:{n:'Litecoin',c:'#BFBBBB'},
-  NEAR:{n:'NEAR Protocol',c:'#00C08B'},APT:{n:'Aptos',c:'#00C8FF'},ARB:{n:'Arbitrum',c:'#28A0F0'},
-  OP:{n:'Optimism',c:'#FF0420'},SUI:{n:'Sui',c:'#4CA3FF'},TON:{n:'Toncoin',c:'#0088CC'},
-  PEPE:{n:'Pepe',c:'#00A550'},BONK:{n:'Bonk',c:'#FF6B00'},WIF:{n:'dogwifhat',c:'#9B4BC8'},
-  NOT:{n:'Notcoin',c:'#E6B800'},FLOKI:{n:'Floki',c:'#FF8C00'},
-  FET:{n:'Fetch.ai',c:'#1D6FAE'},RENDER:{n:'Render',c:'#FF4B00'},
-  WLD:{n:'Worldcoin',c:'#191C20'},JUP:{n:'Jupiter',c:'#C7F284'},TIA:{n:'Celestia',c:'#7B2BF9'},
-  SEI:{n:'Sei',c:'#9D1E28'},AAVE:{n:'Aave',c:'#B6509E'},GRT:{n:'The Graph',c:'#6747ED'},
-  LDO:{n:'Lido DAO',c:'#F0B299'},RUNE:{n:'THORChain',c:'#00CCFF'},FIL:{n:'Filecoin',c:'#0090FF'},
-  ICP:{n:'Internet Computer',c:'#29ABE2'},BCH:{n:'Bitcoin Cash',c:'#8DC351'},
-  ETC:{n:'Ethereum Classic',c:'#328332'},XLM:{n:'Stellar',c:'#7D00FF'},
-  TRX:{n:'TRON',c:'#EF0027'},INJ:{n:'Injective',c:'#00B2FF'},
-  ENA:{n:'Ethena',c:'#C84B31'},ONDO:{n:'Ondo',c:'#1A56DB'},
-  EIGEN:{n:'EigenLayer',c:'#6C4EE6'},ZK:{n:'ZKsync',c:'#8B5CF6'},
-  JTO:{n:'Jito',c:'#18CB99'},PENDLE:{n:'Pendle',c:'#5AFCFF'},
-  STRK:{n:'Starknet',c:'#EC796B'},PYTH:{n:'Pyth Network',c:'#9945FF'},
-};
-let ALL_COINS=[];
-function getCoin(sym){ return ALL_COINS.find(c=>c.symbol===sym)||null; }
-function parseTickers(tickers){
-  if(!Array.isArray(tickers)) return;
-  ALL_COINS=tickers
-    .filter(t=>t.symbol.endsWith('USDT')&&parseFloat(t.lastPrice)>0)
-    .map(t=>{
-      const base=t.symbol.replace('USDT',''), m=META[base]||{};
-      return {symbol:t.symbol,base,name:m.n||base,color:m.c||'#848E9C',
-        price:parseFloat(t.lastPrice)||0,change:parseFloat(t.priceChangePercent)||0,
-        vol24h:parseFloat(t.quoteVolume)||0,high:parseFloat(t.highPrice)||0,low:parseFloat(t.lowPrice)||0};
-    })
-    .sort((a,b)=>b.vol24h-a.vol24h);
-  setApiStatus('ok',`${ALL_COINS.length}개 코인 로드됨`);
+function migrateState(s){
+  if(!s.league) s.league = defaultLeague();
+  s.adminMode = false;
+  s.players.forEach(p=>{
+    if(!p.rewards) p.rewards = {};
+    if(typeof p.rewards[s.league.id] !== "boolean"){
+      p.rewards[s.league.id] = p.cash > 0 || Object.keys(p.holdings||{}).length > 0 || (p.positions||[]).length > 0;
+    }
+    if(!p.holdings) p.holdings = {};
+    if(!p.positions) p.positions = [];
+    if(!p.history) p.history = [];
+  });
+  if(!s.activePlayerId || !s.players.find(p=>p.id===s.activePlayerId)) s.activePlayerId = s.players[0].id;
+  return s;
 }
-
-/* ══ UTILS ══ */
-function fP(n){
-  if(n===undefined||n===null||isNaN(n)) return '—';
-  if(n>=10000) return n.toLocaleString('en-US',{maximumFractionDigits:2});
-  if(n>=1) return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4});
-  if(n>=0.01) return n.toFixed(5);
-  return n.toFixed(8);
+function save(){
+  state.selected = selected;
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
 }
-function fU(n){ return (n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function fPct(n){ return (n>=0?'+':'')+n.toFixed(2)+'%'; }
-function fVol(n){ return n>=1e9?`${(n/1e9).toFixed(1)}B`:n>=1e6?`${(n/1e6).toFixed(1)}M`:n>=1e3?`${(n/1e3).toFixed(0)}K`:`${n.toFixed(0)}`; }
-const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-const ticketCode=()=>'TICKET-'+Date.now().toString(36).toUpperCase().slice(-5)+'-'+Math.floor(1000+Math.random()*9000);
-const today=()=>new Date().toISOString().slice(0,10);
-const makeEnd=(d=14)=>{ const dt=new Date(); dt.setDate(dt.getDate()+d); return dt.toISOString().slice(0,10); };
-const dLeft=(s)=>s?Math.max(0,Math.ceil((new Date(s+'T23:59:59')-Date.now())/86400000)):0;
-function fDate(){ return new Date().toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}); }
-function setApiStatus(state,txt){
-  const dot=document.getElementById('sDot'), t=document.getElementById('sTxt');
-  if(!dot||!t) return;
-  dot.className='status-dot '+(state==='ok'?'s-ok':state==='err'?'s-err':'s-loading');
-  t.textContent=txt; t.style.color=state==='ok'?'var(--G)':state==='err'?'var(--R)':'var(--t3)';
+function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4)}
+function money(n){return (Number(n)||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})}
+function price(n){
+  n = Number(n)||0;
+  const max = n >= 100 ? 2 : n >= 1 ? 4 : 6;
+  return n.toLocaleString("en-US",{maximumFractionDigits:max});
 }
-
-/* ══ LOCAL STATE (개인 기기에만 저장 - 내가 누구인지) ══ */
-const LOCAL_SK='coinLeagueLocal';
-function loadLocal(){ try{ return JSON.parse(localStorage.getItem(LOCAL_SK))||{}; }catch(_){ return {}; } }
-function saveLocal(data){ Object.assign(LOCAL,data); localStorage.setItem(LOCAL_SK,JSON.stringify(LOCAL)); }
-let LOCAL=loadLocal();
-// LOCAL.participantId  = 내 참여자 ID
-// LOCAL.activeUserId   = 드롭다운에서 선택된 유저 (조회/거래용)
-// LOCAL.leagueId       = 현재 리그 ID (리그 교체 감지용)
-// LOCAL.selSym, chartInterval, chartType = UI 상태
-
-/* ══ 공유 상태 (Supabase에서 불러옴) ══ */
-let ST={
-  league: null,          // 현재 리그
-  participants: [],      // 참여자 목록 (holdings, history 포함)
-  closedLeagues: [],     // 종료된 리그 목록
-  selSym: LOCAL.selSym||'BTCUSDT',
-  chartInterval: LOCAL.chartInterval||'1d',
-  chartType: LOCAL.chartType||'candle',
-};
-
-let sb; // Supabase 클라이언트
-
-/* ══ SUPABASE 데이터 로드 ══ */
-async function fetchData(){
-  try{
-    // 활성 리그 조회
-    const {data:leagues}=await sb.from('leagues')
-      .select('*').eq('status','ACTIVE')
-      .order('created_at',{ascending:false}).limit(1);
-
-    if(!leagues?.length){
-      ST.league=null; ST.participants=[];
-      ST.closedLeagues=await fetchClosedLeagues();
+function pct(n){return (n>=0?"+":"")+n.toFixed(2)+"%"}
+function coin(){return state.market.find(c=>c.symbol===selected) || state.market[0]}
+function active(){return state.players.find(p=>p.id===state.activePlayerId) || state.players[0]}
+function hasReward(p=active()){return !!p?.rewards?.[state.league.id]}
+function leagueClosed(){return state.league.status !== "ACTIVE" || new Date(state.league.endDate+"T23:59:59").getTime() < Date.now()}
+function dday(){
+  if(leagueClosed()) return "종료";
+  const left = Math.ceil((new Date(state.league.endDate+"T23:59:59").getTime()-Date.now())/86400000);
+  return "D-"+Math.max(0,left);
+}
+function holdingValue(p){
+  return Object.entries(p.holdings).reduce((sum,[sym,h])=>{
+    const c = state.market.find(x=>x.symbol===sym);
+    return sum + h.qty * (c?.price || h.avg);
+  },0);
+}
+function calcPnL(pos, cur){
+  const move = pos.dir === "long" ? (cur - pos.entry) / pos.entry : (pos.entry - cur) / pos.entry;
+  return {pnl: move * pos.size, rate: move * pos.lev * 100};
+}
+function positionValue(p){
+  return p.positions.filter(x=>x.status==="OPEN").reduce((sum,pos)=>{
+    const c = state.market.find(x=>x.symbol===pos.symbol);
+    const {pnl} = calcPnL(pos, c?.price || pos.entry);
+    return sum + Math.max(0, pos.margin + pnl);
+  },0);
+}
+function totalAssets(p){return p.cash + holdingValue(p) + positionValue(p)}
+function seedMoney(){return state.league?.initialCash || START_CASH}
+function profitRate(p){
+  const seed = seedMoney();
+  return seed > 0 ? (totalAssets(p)-seed)/seed*100 : 0;
+}
+function liqPrice(dir, entry, lev){return dir === "long" ? entry * (1 - .9 / lev) : entry * (1 + .9 / lev)}
+function liqDistance(pos){
+  const c = state.market.find(x=>x.symbol===pos.symbol);
+  const cur = c?.price || pos.entry;
+  return pos.dir === "long" ? (cur - pos.liq) / cur * 100 : (pos.liq - cur) / cur * 100;
+}
+function log(p, type, detail){
+  p.history.push({id:uid(),time:new Date().toLocaleString("ko-KR",{month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}),type,...detail});
+}
+function toast(msg){
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>el.classList.remove("show"),2400);
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function hasAdminAuthority(){
+  return isFileMode || cloudAdmin === true;
+}
+function canManageLeague(){
+  return state.adminMode === true && hasAdminAuthority();
+}
+function authRedirectUrl(){
+  return isFileMode ? PROD_URL : `${location.origin}${location.pathname}`;
+}
+async function initAuth(){
+  const authBtn = document.getElementById("authBtn");
+  const authWho = document.getElementById("authWho");
+  if(!window.supabase){
+    authWho.textContent = "로컬 모드";
+    authBtn.textContent = "배포 열기";
+    authBtn.onclick = ()=>location.href = PROD_URL;
+    return;
+  }
+  sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+  const applyUser = async(user)=>{
+    currentUser = user || null;
+    cloudAdmin = false;
+    if(currentUser && !isFileMode){
+      const {data} = await sb.from("league_admins")
+        .select("role")
+        .eq("league_id", state.league.id)
+        .eq("user_id", currentUser.id)
+        .limit(1);
+      cloudAdmin = !!data?.length;
+    }
+    authWho.textContent = currentUser?.email || (isFileMode ? "로컬 모드" : "로그인 필요");
+    authBtn.textContent = currentUser ? "로그아웃" : (isFileMode ? "배포 열기" : "Google");
+    document.getElementById("adminBadge").style.display = cloudAdmin ? "inline-flex" : "none";
+    if(!canManageLeague() && state.adminMode){
+      state.adminMode = false;
+      save();
+    }
+    render();
+  };
+  sb.auth.onAuthStateChange(async(_,session)=>applyUser(session?.user || null));
+  const {data:{session}} = await sb.auth.getSession();
+  await applyUser(session?.user || null);
+  authBtn.onclick = async()=>{
+    if(isFileMode){
+      location.href = PROD_URL;
       return;
     }
-    const lg=leagues[0];
-
-    // 리그 교체 감지
-    if(LOCAL.leagueId && LOCAL.leagueId!==lg.id){
-      saveLocal({participantId:null,activeUserId:null,leagueId:lg.id});
-      toast('🆕 새 리그가 시작됐습니다! 참여해주세요.');
+    if(currentUser){
+      await sb.auth.signOut();
+      return;
     }
-    if(!LOCAL.leagueId) saveLocal({leagueId:lg.id});
-
-    ST.league={
-      id:lg.id, name:lg.name, ticket:lg.ticket,
-      initialCash:lg.initial_cash,
-      startDate:lg.start_date, endDate:lg.end_date, status:lg.status,
-    };
-
-    // 참여자 조회
-    const {data:parts}=await sb.from('participants')
-      .select('*').eq('league_id',lg.id).order('created_at',{ascending:true});
-
-    const partIds=(parts||[]).map(p=>p.id);
-
-    let holdings=[], history=[], positions=[];
-    if(partIds.length){
-      const {data:h}=await sb.from('holdings').select('*').in('participant_id',partIds);
-      const {data:hi}=await sb.from('trade_history').select('*')
-        .in('participant_id',partIds).order('created_at',{ascending:true});
-      // positions 테이블이 없어도 오류 무시
-      let po=[];
-      try{
-        const {data:poData}=await sb.from('positions').select('*')
-          .in('participant_id',partIds).eq('status','OPEN');
-        po=poData||[];
-      }catch(_){ po=[]; }
-      holdings=h||[]; history=hi||[]; positions=po;
-    }
-
-    ST.participants=(parts||[]).map(p=>({
-      id:p.id, nickname:p.nickname, cash:p.cash,
-      holdings:holdings.filter(h=>h.participant_id===p.id).map(h=>({
-        symbol:h.symbol, base:h.base, name:h.name, qty:h.qty, avgPrice:h.avg_price,
-      })),
-      history:history.filter(h=>h.participant_id===p.id).map(h=>({
-        id:h.id, type:h.type, symbol:h.symbol, base:h.base, name:h.name,
-        qty:h.qty, price:h.price, amount:h.amount,
-        profit:h.profit, profitRate:h.profit_rate, date:h.date_str,
-      })),
-      positions:positions.filter(po=>po.participant_id===p.id),
-    }));
-
-    // 내 참여자가 사라졌으면 초기화
-    if(LOCAL.participantId&&!ST.participants.find(p=>p.id===LOCAL.participantId)){
-      saveLocal({participantId:null});
-    }
-    if(LOCAL.activeUserId&&!ST.participants.find(p=>p.id===LOCAL.activeUserId)){
-      saveLocal({activeUserId:LOCAL.participantId||null});
-    }
-
-    ST.closedLeagues=await fetchClosedLeagues();
-  }catch(e){
-    console.error('fetchData error:', e);
-    setApiStatus('err','DB 연결 실패');
-  }
+    const {error} = await sb.auth.signInWithOAuth({
+      provider:"google",
+      options:{redirectTo:authRedirectUrl()}
+    });
+    if(error) toast("로그인 실패: "+error.message);
+  };
+}
+function requireTradable(){
+  if(leagueClosed()) return "종료된 리그에서는 거래할 수 없습니다.";
+  if(!hasReward()) return "리그 투자금을 먼저 받아야 거래할 수 있습니다.";
+  return "";
+}
+function claimReward(){
+  const p = active();
+  if(leagueClosed()) return toast("종료된 리그에서는 지급받을 수 없습니다.");
+  if(hasReward(p)) return toast("이미 이번 리그 투자금을 받았습니다.");
+  p.cash += seedMoney();
+  p.rewards[state.league.id] = true;
+  log(p,"현금 지급",{amount:seedMoney(),note:state.league.name});
+  save();
+  render();
+  toast(`${money(seedMoney())} USDT 지급 완료`);
 }
 
-async function fetchClosedLeagues(){
+function tickMarket(force=1){
+  state.market.forEach(c=>{
+    c.prev = c.price;
+    const drift = (Math.random() - .48) * c.vol * force;
+    c.price = Math.max(.000001, c.price * (1 + drift));
+    c.change = (c.price - c.prev) / c.prev * 100;
+  });
+  const liquidated = liquidateAll();
+  save();
+  render();
+  if(liquidated) toast(`${liquidated}개 포지션 강제청산`);
+}
+function liquidateAll(){
+  let count = 0;
+  state.players.forEach(p=>{
+    p.positions.forEach(pos=>{
+      if(pos.status !== "OPEN") return;
+      const c = state.market.find(x=>x.symbol===pos.symbol);
+      if(!c) return;
+      const hit = pos.dir === "long" ? c.price <= pos.liq : c.price >= pos.liq;
+      if(!hit) return;
+      pos.status = "LIQUIDATED";
+      pos.exit = c.price;
+      pos.pnl = -pos.margin;
+      pos.closedAt = Date.now();
+      log(p, "강제청산", {symbol:pos.symbol, amount:pos.margin, pnl:-pos.margin, note:`${pos.lev}x ${pos.dir.toUpperCase()}`});
+      count++;
+    });
+  });
+  return count;
+}
+
+function validateSpot(amount){
+  const p = active(), c = coin();
+  const gate = requireTradable();
+  if(gate) return {ok:false,msg:gate};
+  if(!state.league.allowSpot) return {ok:false,msg:"이 리그는 현물 거래가 꺼져 있습니다."};
+  if(!c) return {ok:false,msg:"코인을 선택하세요."};
+  if(!Number.isFinite(amount) || amount < 1) return {ok:false,msg:"최소 주문 금액은 1 USDT입니다."};
+  if(side === "buy" && amount > p.cash) return {ok:false,msg:"현금보다 큰 금액은 매수할 수 없습니다."};
+  if(side === "sell"){
+    const h = p.holdings[c.symbol];
+    const max = (h?.qty || 0) * c.price;
+    if(!h || max <= 0) return {ok:false,msg:"선택한 코인의 보유 수량이 없습니다."};
+    if(amount > max + .000001) return {ok:false,msg:"보유 평가액보다 큰 금액은 매도할 수 없습니다."};
+  }
+  return {ok:true};
+}
+function executeSpot(amount){
+  if(orderBusy) return;
+  const valid = validateSpot(amount);
+  if(!valid.ok) return toast(valid.msg);
+  orderBusy = true;
   try{
-    const {data:lgs}=await sb.from('leagues').select('id,name,end_date,winner_nickname,initial_cash')
-      .eq('status','CLOSED').order('created_at',{ascending:false});
-    if(!lgs?.length) return [];
-    const lgIds=lgs.map(l=>l.id);
-    const {data:parts}=await sb.from('participants').select('id,league_id,nickname,cash').in('league_id',lgIds);
-    const {data:holds}=await sb.from('holdings').select('participant_id,qty,avg_price').in('league_id',lgIds);
-    return lgs.map(l=>{
-      const myParts=(parts||[]).filter(p=>p.league_id===l.id);
-      const init=l.initial_cash||10000;
-      // 각 참여자의 최종 자산 계산 (holdings avg_price 기준 - 종료 시점 근사값)
-      const ranked=myParts.map(p=>{
-        const hVal=(holds||[]).filter(h=>h.participant_id===p.id).reduce((s,h)=>s+h.qty*h.avg_price,0);
-        const total=p.cash+hVal, rate=init>0?(total-init)/init*100:0;
-        return {nickname:p.nickname,total,rate};
-      }).sort((a,b)=>b.total-a.total);
-      return {
-        id:l.id, name:l.name, endedAt:l.end_date||'',
-        winner:l.winner_nickname||ranked[0]?.nickname||'-',
-        initialCash:init, participantCount:myParts.length, ranked,
-      };
-    });
-  }catch(_){ return []; }
-}
-
-/* ══ 헬퍼 ══ */
-function getActiveUserId(){
-  const id=LOCAL.activeUserId||LOCAL.participantId;
-  if(id&&ST.participants.find(p=>p.id===id)) return id;
-  return ST.participants[0]?.id||'';
-}
-function getUser(id){
-  const uid=id||getActiveUserId();
-  return ST.participants.find(p=>p.id===uid)||null;
-}
-function isClosed(){
-  if(!ST.league) return true;
-  return ST.league.status==='CLOSED'||dLeft(ST.league.endDate)<=0;
-}
-function calcUser(u){
-  const init=ST.league?.initialCash||10000;
-  // 현물 평가액
-  const val=u.holdings.reduce((s,h)=>{
-    const c=getCoin(h.symbol);
-    return s+(c?.price||h.avgPrice||0)*h.qty;
-  },0);
-  // 선물 포지션 미실현 가치 (마진 + 미실현 PnL)
-  const posVal=(u.positions||[]).reduce((s,pos)=>{
-    const c=getCoin(pos.symbol);
-    if(!c?.price) return s+pos.margin; // 가격 없으면 마진만 포함
-    const {pnl}=calcPnL(pos,c.price);
-    return s+Math.max(0, pos.margin+pnl); // 최소 0 (강제청산 전)
-  },0);
-  const total=u.cash+val+posVal;
-  const profit=total-init;
-  const rate=init>0?(profit/init)*100:0;
-  return {val,total,profit,rate,posVal};
-}
-function getRanks(){
-  return ST.participants.map(u=>({...u,_m:calcUser(u)})).sort((a,b)=>b._m.total-a._m.total||b._m.rate-a._m.rate);
-}
-
-/* ══ 비즈니스 로직 (모두 async) ══ */
-async function joinLeague(nick,ticket){
-  if(!ST.league) return toast('활성 리그가 없습니다. 리그 탭에서 관리자가 시작해주세요.');
-  if(isClosed()) return toast('종료된 리그에는 참여할 수 없습니다.');
-  nick=nick.trim(); if(!nick) return toast('닉네임을 입력해주세요.');
-  // 티켓 검증: pendingTicket 또는 직접 전달된 ticket 사용
-  const pendingT = window._pendingTicket||'';
-  const useTicket = ticket||pendingT;
-  const cur=ST.league.ticket;
-  if(useTicket && useTicket!==cur) return toast('현재 리그의 티켓이 아닙니다.');
-  const nk=nick.toLowerCase().replace(/\s/g,'');
-  if(ST.participants.some(p=>p.nickname.toLowerCase().replace(/\s/g,'')==nk)) return toast('이미 참여 중인 닉네임입니다.');
-  const {data:cl}=await sb.from('claimed').select('id').eq('league_id',ST.league.id).eq('nickname_key',nk);
-  if(cl?.length) return toast('이 리그에서 이미 자금을 받은 닉네임입니다.');
-  const id=uid(), cash=ST.league.initialCash||100000;
-
-  // user_id 컬럼 유무에 관계없이 안전하게 insert
-  let insertError;
-  if(CURRENT_USER?.id){
-    const r1=await sb.from('participants').insert({id,league_id:ST.league.id,nickname:nick,cash,user_id:CURRENT_USER.id});
-    if(r1.error && (r1.error.message.includes('user_id')||r1.error.code==='42703')){
-      // user_id 컬럼 없음 → 없이 재시도
-      const r2=await sb.from('participants').insert({id,league_id:ST.league.id,nickname:nick,cash});
-      insertError=r2.error;
-    } else { insertError=r1.error; }
-  } else {
-    const r=await sb.from('participants').insert({id,league_id:ST.league.id,nickname:nick,cash});
-    insertError=r.error;
-  }
-  if(insertError) return toast('참여 실패: '+insertError.message);
-
-  await sb.from('claimed').insert({league_id:ST.league.id,nickname_key:nk}).catch(()=>{});
-  saveLocal({participantId:id,activeUserId:id,leagueId:ST.league.id});
-  await fetchData(); renderAll();
-  toast(`🎉 ${nick}님, ${fU(cash)} USDT 지급 완료!`);
-}
-
-async function doBuy(amount){
-  if(isClosed()) return toast('종료된 리그에서는 거래할 수 없습니다.');
-  const u=getUser(); if(!u) return toast('먼저 리그에 참여해주세요.');
-  const c=getCoin(ST.selSym); if(!c) return toast('코인을 선택해주세요.');
-  if(!c.price||c.price<=0) return toast('가격 정보가 없습니다.');
-  amount=parseFloat(amount)||0;
-  if(amount<1) return toast('최소 1 USDT 이상 매수해주세요.');
-  if(amount>u.cash) return toast('보유 현금이 부족합니다.');
-  const qty=amount/c.price;
-  const existH=u.holdings.find(x=>x.symbol===c.symbol);
-  if(existH){
-    const tot=existH.qty+qty, newAvg=(existH.qty*existH.avgPrice+qty*c.price)/tot;
-    const {error}=await sb.from('holdings').update({qty:tot,avg_price:newAvg})
-      .eq('participant_id',u.id).eq('symbol',c.symbol);
-    if(error) return toast('매수 실패: '+error.message);
-  } else {
-    const {error}=await sb.from('holdings').insert({
-      id:uid(),participant_id:u.id,league_id:ST.league.id,
-      symbol:c.symbol,base:c.base,name:c.name,qty,avg_price:c.price,
-    });
-    if(error) return toast('매수 실패: '+error.message);
-  }
-  await sb.from('participants').update({cash:u.cash-amount}).eq('id',u.id);
-  await sb.from('trade_history').insert({
-    id:uid(),participant_id:u.id,league_id:ST.league.id,
-    type:'BUY',symbol:c.symbol,base:c.base,name:c.name,
-    qty,price:c.price,amount,date_str:fDate(),
-  });
-  await fetchData(); renderAll();
-  showExec('BUY',c,qty,c.price,amount);
-  toast(`✅ ${c.base} ${qty.toFixed(6)} 매수 체결`);
-}
-
-async function doSell(symbol,reqAmt=null){
-  if(isClosed()) return toast('종료된 리그에서는 거래할 수 없습니다.');
-  const u=getUser(); if(!u) return toast('참여자를 선택해주세요.');
-  const h=u.holdings.find(x=>x.symbol===symbol); if(!h) return toast('보유하지 않은 코인입니다.');
-  const c=getCoin(symbol); if(!c?.price||c.price<=0) return toast('가격 정보가 없습니다.');
-  const maxAmt=h.qty*c.price;
-  const amount=reqAmt===null?maxAmt:Math.min(parseFloat(reqAmt)||0,maxAmt);
-  if(amount<1) return toast('최소 1 USDT 이상 매도해주세요.');
-  const qty=amount/c.price, sellAmt=qty*c.price, invested=qty*h.avgPrice;
-  const profit=sellAmt-invested, profitRate=invested>0?(profit/invested)*100:0;
-  if(qty>=h.qty-1e-9){
-    await sb.from('holdings').delete().eq('participant_id',u.id).eq('symbol',symbol);
-    if(selH===symbol) selH='';
-  } else {
-    await sb.from('holdings').update({qty:h.qty-qty}).eq('participant_id',u.id).eq('symbol',symbol);
-  }
-  await sb.from('participants').update({cash:u.cash+sellAmt}).eq('id',u.id);
-  await sb.from('trade_history').insert({
-    id:uid(),participant_id:u.id,league_id:ST.league.id,
-    type:'SELL',symbol,base:c.base,name:c.name,
-    qty,price:c.price,amount:sellAmt,profit,profit_rate:profitRate,date_str:fDate(),
-  });
-  await fetchData(); renderAll();
-  showExec('SELL',c,qty,c.price,sellAmt,profit,profitRate);
-  toast(`✅ ${c.base} ${qty.toFixed(6)} 매도 체결`);
-}
-
-async function createDefaultLeague(){
-  const lg={
-    id:uid(), name:'니가가라 코인왕 리그', ticket:ticketCode(),
-    initial_cash:10000, start_date:today(), end_date:makeEnd(14), status:'ACTIVE',
-  };
-  const {error}=await sb.from('leagues').insert(lg);
-  if(error) console.error('league create error:', error);
-  return lg;
-}
-
-async function doNew(){
-  if(!confirm('새 리그를 시작하면 현재 참여자·거래 기록이 초기화됩니다. 계속할까요?')) return;
-  if(ST.league){
-    const winner=getRanks()[0]?.nickname||'-';
-    await sb.from('leagues').update({status:'CLOSED',winner_nickname:winner}).eq('id',ST.league.id);
-  }
-  const lg=await createDefaultLeague();
-  saveLocal({participantId:null,activeUserId:null,leagueId:lg.id});
-  await fetchData(); renderAll();
-  toast('🆕 새 리그 시작! 새 티켓이 발급되었습니다.');
-}
-
-async function doClose(){
-  if(!ST.league) return;
-  if(isClosed()) return toast('이미 종료된 리그입니다.');
-  if(!confirm('리그를 종료하면 거래가 불가합니다. 종료할까요?')) return;
-  const winner=getRanks()[0]?.nickname||'-';
-  await sb.from('leagues').update({status:'CLOSED',winner_nickname:winner}).eq('id',ST.league.id);
-  await fetchData(); renderAll(); toast('🏁 리그 종료됨.');
-}
-
-async function doDelete(){
-  if(!ST.league) return;
-  if(!confirm('리그와 모든 데이터를 삭제할까요?')) return;
-  await sb.from('leagues').delete().eq('id',ST.league.id);
-  saveLocal({participantId:null,activeUserId:null,leagueId:null});
-  await fetchData();
-  renderAll(); toast('삭제 완료.');
-}
-
-/* ══ 실시간 구독 ══ */
-/* ── 실시간 동기화: Realtime 대신 10초 폴링 사용 (Supabase Realtime 설정 불필요) ── */
-let _pollTimer;
-function setupRealtime(){
-  clearInterval(_pollTimer);
-  _pollTimer = setInterval(async()=>{
-    await fetchData();
-    renderAll();
-  }, 10000); // 10초마다 DB 동기화
-}
-
-/* ══ 차트 ══ */
-function drawCandle(klines,box){
-  if(!klines||klines.length<2){box.innerHTML='<div class="chart-loading">차트 데이터 없음</div>';return;}
-  const D=klines.map(k=>({t:+k[0],o:+k[1],h:+k[2],l:+k[3],c:+k[4],v:+k[5]}));
-  const W=400,H=195,pL=6,pR=58,pT=8,pB=26,vH=28;
-  const cW=W-pL-pR, cH=H-pT-pB-vH-4;
-  const mxP=Math.max(...D.map(d=>d.h)), mnP=Math.min(...D.map(d=>d.l)), sP=mxP-mnP||1;
-  const mxV=Math.max(...D.map(d=>d.v))||1;
-  const n=D.length, slot=cW/n, cw=Math.max(1,slot*.7);
-  const px=i=>pL+i*slot+slot/2, py=p=>pT+cH-((p-mnP)/sP)*cH, vy=pT+cH+4;
-  const cands=D.map((d,i)=>{
-    const up=d.c>=d.o, cl=up?'#0ECB81':'#F6465D';
-    const bT=py(Math.max(d.o,d.c)), bB=py(Math.min(d.o,d.c)), bH=Math.max(1,bB-bT);
-    const volH=(d.v/mxV)*vH;
-    return `<line x1="${px(i)}" y1="${py(d.h)}" x2="${px(i)}" y2="${py(d.l)}" stroke="${cl}" stroke-width="1.2"/>
-<rect x="${(px(i)-cw/2).toFixed(1)}" y="${bT.toFixed(1)}" width="${cw.toFixed(1)}" height="${bH.toFixed(1)}" fill="${cl}"/>
-<rect x="${(px(i)-cw/2).toFixed(1)}" y="${(vy+vH-volH).toFixed(1)}" width="${cw.toFixed(1)}" height="${volH.toFixed(1)}" fill="${cl}55"/>`;
-  }).join('');
-  const yTk=[0,.25,.5,.75,1].map(t=>({p:mnP+t*sP,y:py(mnP+t*sP)}));
-  const xIx=[0,Math.floor(n*.25),Math.floor(n*.5),Math.floor(n*.75),n-1];
-  const gid='c'+Math.random().toString(36).slice(2,6);
-  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block">
-${yTk.map(t=>`<line x1="${pL}" y1="${t.y.toFixed(1)}" x2="${W-pR}" y2="${t.y.toFixed(1)}" stroke="#2B2F36" stroke-width=".5"/>
-<text x="${W-pR+4}" y="${(t.y+3.5).toFixed(1)}" font-size="9" fill="#474D57">${fP(t.p)}</text>`).join('')}
-<line x1="${pL}" y1="${vy.toFixed(1)}" x2="${W-pR}" y2="${vy.toFixed(1)}" stroke="#2B2F36" stroke-width=".5"/>
-${xIx.map(i=>`<text x="${px(i).toFixed(1)}" y="${H-7}" text-anchor="middle" font-size="9" fill="#474D57">${fXL(D[i].t,ST.chartInterval)}</text>`).join('')}
-${cands}
-<rect x="${pL}" y="${pT}" width="${cW}" height="${cH+vH+4}" fill="transparent" id="hz${gid}"/>
-<line id="vl${gid}" x1="-1" y1="${pT}" x2="-1" y2="${H-pB}" stroke="#363C45" stroke-width="1" stroke-dasharray="3"/>
-<circle id="pt${gid}" cx="-100" cy="-100" r="3.5" fill="none" stroke="#F0B90B" stroke-width="2"/>
-</svg><div class="chart-tip" id="tt${gid}"></div>`;
-  const zone=box.querySelector(`#hz${gid}`),vl=box.querySelector(`#vl${gid}`),tip=box.querySelector(`#tt${gid}`),pt=box.querySelector(`#pt${gid}`);
-  const mv=X=>{
-    const r=box.getBoundingClientRect(), rx=(X-r.left)*(W/r.width)-pL;
-    const i=Math.min(Math.max(0,Math.round((rx/cW)*(n-1))),n-1);
-    const d=D[i], x=px(i), y=py(d.c);
-    vl.setAttribute('x1',x);vl.setAttribute('x2',x);pt.setAttribute('cx',x);pt.setAttribute('cy',y.toFixed(1));
-    tip.style.display='block';
-    const up=d.c>=d.o;
-    tip.innerHTML=`<div class="ct-time">${new Date(d.t).toLocaleDateString('ko-KR',{month:'short',day:'numeric',hour:'2-digit'})}</div>
-<div class="ct-o"><span style="color:var(--t2)">시가</span>${fP(d.o)}</div>
-<div class="ct-h"><span>고가</span>${fP(d.h)}</div>
-<div class="ct-l"><span>저가</span>${fP(d.l)}</div>
-<div class="ct-cv"><span style="color:${up?'var(--G)':'var(--R)'}">종가</span>${fP(d.c)}</div>`;
-  };
-  zone.addEventListener('mousemove',e=>mv(e.clientX));
-  zone.addEventListener('touchmove',e=>{e.preventDefault();mv(e.touches[0].clientX);},{passive:false});
-  zone.addEventListener('mouseleave',()=>{vl.setAttribute('x1','-1');vl.setAttribute('x2','-1');pt.setAttribute('cx','-100');tip.style.display='none';});
-  zone.addEventListener('touchend',()=>{vl.setAttribute('x1','-1');vl.setAttribute('x2','-1');pt.setAttribute('cx','-100');tip.style.display='none';});
-}
-function drawLine(klines,box){
-  if(!klines||klines.length<2){box.innerHTML='<div class="chart-loading">데이터 없음</div>';return;}
-  const cls=klines.map(k=>+k[4]), n=cls.length;
-  const W=400,H=195,pL=6,pR=58,pT=8,pB=26;
-  const cW=W-pL-pR, cH=H-pT-pB;
-  const mn=Math.min(...cls), mx=Math.max(...cls), sp=mx-mn||1;
-  const cx=i=>pL+(i/(n-1))*cW, cy=p=>pT+cH-((p-mn)/sp)*cH;
-  const pts=cls.map((p,i)=>`${cx(i).toFixed(1)},${cy(p).toFixed(1)}`).join(' ');
-  const aD=`M${cx(0)},${cy(cls[0])} `+cls.slice(1).map((_,i)=>`L${cx(i+1)},${cy(cls[i+1])}`).join(' ')+` L${cx(n-1)},${pT+cH} L${cx(0)},${pT+cH}Z`;
-  const up=cls[n-1]>=cls[0], cl=up?'#0ECB81':'#F6465D';
-  const gid='l'+Math.random().toString(36).slice(2,6);
-  const yTk=[0,.25,.5,.75,1].map(t=>({p:mn+t*sp,y:cy(mn+t*sp)}));
-  const xIx=[0,Math.floor(n*.25),Math.floor(n*.5),Math.floor(n*.75),n-1];
-  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block">
-<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${cl}" stop-opacity=".2"/><stop offset="100%" stop-color="${cl}" stop-opacity="0"/></linearGradient></defs>
-${yTk.map(t=>`<line x1="${pL}" y1="${t.y.toFixed(1)}" x2="${W-pR}" y2="${t.y.toFixed(1)}" stroke="#2B2F36" stroke-width=".5"/><text x="${W-pR+4}" y="${(t.y+3.5).toFixed(1)}" font-size="9" fill="#474D57">${fP(t.p)}</text>`).join('')}
-${xIx.map(i=>`<text x="${cx(i).toFixed(1)}" y="${H-7}" text-anchor="middle" font-size="9" fill="#474D57">${fXL(klines[i][0],ST.chartInterval)}</text>`).join('')}
-<path d="${aD}" fill="url(#${gid})"/>
-<polyline points="${pts}" fill="none" stroke="${cl}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<rect x="${pL}" y="${pT}" width="${cW}" height="${cH}" fill="transparent" id="lhz${gid}"/>
-<circle id="lpt${gid}" cx="-100" cy="-100" r="4" fill="${cl}" stroke="var(--bg0)" stroke-width="2"/>
-</svg><div class="chart-tip" id="ltt${gid}"></div>`;
-  const zone=box.querySelector(`#lhz${gid}`),pt=box.querySelector(`#lpt${gid}`),tip=box.querySelector(`#ltt${gid}`);
-  const mv=X=>{
-    const r=box.getBoundingClientRect(), rx=(X-r.left)*(W/r.width)-pL;
-    const i=Math.min(Math.max(0,Math.round((rx/cW)*(n-1))),n-1);
-    pt.setAttribute('cx',cx(i).toFixed(1));pt.setAttribute('cy',cy(cls[i]).toFixed(1));
-    tip.style.display='block';
-    tip.innerHTML=`<div class="ct-time">${fXL(klines[i][0],ST.chartInterval)}</div><div class="ct-cv">${fP(cls[i])}</div>`;
-  };
-  zone.addEventListener('mousemove',e=>mv(e.clientX));
-  zone.addEventListener('touchmove',e=>{e.preventDefault();mv(e.touches[0].clientX);},{passive:false});
-  zone.addEventListener('mouseleave',()=>{pt.setAttribute('cx','-100');tip.style.display='none';});
-}
-function fXL(ts,iv){
-  const d=new Date(+ts);
-  if(iv==='15m'||iv==='1h') return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-  if(iv==='1d'||iv==='1w') return `${d.getMonth()+1}/${d.getDate()}`;
-  return `${d.getMonth()+1}월`;
-}
-let kCache={};
-async function loadChart(sym,iv,force=false){
-  const box=document.getElementById('chartBox'); if(!box) return;
-  box.innerHTML='<div class="chart-loading"><span class="spin">⟳</span> 차트 로딩 중…</div>';
-  document.getElementById('chartFoot').innerHTML='';
-  const key=`${sym}_${iv}`;
-  let kl=(!force&&kCache[key])?kCache[key]:null;
-  if(!kl){ kl=await fetchKlines(sym,iv,120); if(kl) kCache[key]=kl; }
-  if(!kl){
-    box.innerHTML='<div class="chart-loading" style="color:var(--R)">⚠ 차트 로드 실패</div>';
-    document.getElementById('chartFoot').textContent='Binance API 연결 실패'; return;
-  }
-  ST.chartType==='candle'?drawCandle(kl,box):drawLine(kl,box);
-  const last=+kl[kl.length-1][4], first=+kl[0][4], pct=((last-first)/first)*100;
-  document.getElementById('chartFoot').innerHTML=`<span style="color:${pct>=0?'var(--G)':'var(--R)'};font-weight:700">${fPct(pct)}</span> · Binance ${iv} · ${kl.length}봉`;
-}
-
-/* ══ 렌더링 ══ */
-/* ══ 선물 상태 ══ */
-let futMode='spot';
-let futDir='long';
-let futLev=1;
-
-function setDir(dir){
-  futDir=dir;
-  document.getElementById('dirLong').className='dir-btn long'+(dir==='long'?' on':'');
-  document.getElementById('dirShort').className='dir-btn short'+(dir==='short'?' on':'');
-  const dd=document.getElementById('dirDesc');
-  if(dir==='long'){
-    dd.className='dir-desc long';
-    dd.innerHTML='<b>롱 포지션</b> — 가격이 오르면 이익이에요.<br><span style="opacity:.8">진입가보다 높을 때 청산하면 수익!</span>';
-  } else {
-    dd.className='dir-desc short';
-    dd.innerHTML='<b>숏 포지션</b> — 가격이 내리면 이익이에요.<br><span style="opacity:.8">진입가보다 낮을 때 청산하면 수익!</span>';
-  }
-  updateFutPrev();
-  updateOrder(); // 버튼 텍스트도 업데이트
-}
-window.setDir=setDir;
-
-function calcLiqPrice(dir,entry,lev){
-  return dir==='long' ? entry*(1-0.9/lev) : entry*(1+0.9/lev);
-}
-function calcPnL(pos,cur){
-  const pct=pos.direction==='long'?(cur-pos.entry_price)/pos.entry_price:(pos.entry_price-cur)/pos.entry_price;
-  return {pnl:pct*pos.size, rate:pct*pos.leverage*100};
-}
-
-async function doOpenPosition(margin){
-  if(isClosed()) return toast('종료된 리그에서는 거래할 수 없습니다.');
-  const u=getUser(); if(!u) return toast('먼저 리그에 참여해주세요.');
-  const c=getCoin(ST.selSym); if(!c) return toast('코인을 선택해주세요.');
-  if(!c.price||c.price<=0) return toast('가격 정보가 없습니다.');
-  margin=parseFloat(margin)||0;
-  if(margin<1) return toast('최소 1 USDT 이상 입력해주세요.');
-  if(margin>u.cash) return toast('보유 현금이 부족합니다.');
-  const size=margin*futLev, liqPrice=calcLiqPrice(futDir,c.price,futLev);
-  const {error}=await sb.from('positions').insert({
-    id:uid(),participant_id:u.id,league_id:ST.league.id,
-    symbol:c.symbol,base:c.base,name:c.name,
-    direction:futDir,leverage:futLev,
-    margin,size,entry_price:c.price,liq_price:liqPrice,
-    pnl:0,pnl_rate:0,status:'OPEN',
-  });
-  if(error) return toast('포지션 오픈 실패: '+error.message);
-  await sb.from('participants').update({cash:u.cash-margin}).eq('id',u.id);
-  await fetchData(); renderAll();
-  toast(`✅ ${c.base} ${futDir==='long'?'📈 롱':'📉 숏'} ${futLev}x 포지션 오픈`);
-}
-window.doClosePosition=async function(posId){
-  const u=getUser(); if(!u) return;
-  const pos=u.positions?.find(p=>p.id===posId); if(!pos) return;
-  const c=getCoin(pos.symbol);
-  if(!c?.price||c.price<=0) return toast('가격 정보가 없습니다.');
-  const {pnl}=calcPnL(pos,c.price);
-  const ret=Math.max(0, pos.margin+pnl);
-  await sb.from('positions').update({status:'CLOSED',pnl,pnl_rate:pnl/pos.margin*100}).eq('id',posId);
-  await sb.from('participants').update({cash:u.cash+ret}).eq('id',u.id);
-  await fetchData(); renderAll();
-  toast(`✅ 청산 · ${pnl>=0?'+':''}${fU(pnl)} USDT ${pnl>=0?'수익':'손실'}`);
-};
-
-async function checkLiquidations(){
-  for(const u of ST.participants){
-    // positions는 이미 OPEN만 로드됨
-    for(const pos of (u.positions||[])){
-      const c=getCoin(pos.symbol); if(!c?.price) continue;
-      const liq=(pos.direction==='long'&&c.price<=pos.liq_price)
-               ||(pos.direction==='short'&&c.price>=pos.liq_price);
-      if(!liq) continue;
-      // 강제청산: 마진 전액 손실 (cash는 open 시 이미 차감됨 → 추가 변경 불필요)
-      const {error}=await sb.from('positions')
-        .update({status:'LIQUIDATED', pnl:-pos.margin, pnl_rate:-100})
-        .eq('id',pos.id);
-      if(error) continue;
-      const fl=document.getElementById('liqFlash');
-      if(fl){fl.classList.add('show');setTimeout(()=>fl.classList.remove('show'),800);}
-      if(u.id===LOCAL.participantId){
-        toast(`💥 ${pos.base} ${pos.direction==='long'?'LONG':'SHORT'} 강제청산! 마진 ${fU(pos.margin)} USDT 손실`);
-      }
-      await fetchData(); renderAll(); return;
+    const p = active(), c = coin();
+    if(side === "buy"){
+      const qty = amount / c.price;
+      const h = p.holdings[c.symbol] || {qty:0,avg:0,name:c.name};
+      const nextQty = h.qty + qty;
+      h.avg = (h.qty * h.avg + qty * c.price) / nextQty;
+      h.qty = nextQty;
+      h.name = c.name;
+      p.holdings[c.symbol] = h;
+      p.cash -= amount;
+      log(p,"매수",{symbol:c.symbol,qty,price:c.price,amount});
+      toast(`${c.symbol} 매수 체결`);
+    }else{
+      const h = p.holdings[c.symbol];
+      const qty = amount / c.price;
+      const invested = qty * h.avg;
+      const pnl = amount - invested;
+      h.qty -= qty;
+      if(h.qty <= 1e-10) delete p.holdings[c.symbol];
+      p.cash += amount;
+      log(p,"매도",{symbol:c.symbol,qty,price:c.price,amount,pnl});
+      toast(`${c.symbol} 매도 체결 · ${pnl>=0?"+":""}${money(pnl)} USDT`);
     }
+    document.getElementById("spotAmount").value = "";
+    save();
+    render();
+  } finally {
+    orderBusy = false;
   }
 }
-
-function updateFutPrev(){
-  const prev=document.getElementById('futPrev'); if(!prev) return;
-  const margin=parseFloat(document.getElementById('futAmt')?.value)||0;
-  const c=getCoin(ST.selSym);
-  if(!c?.price||margin<=0){prev.style.display='none';return;}
-  const size=margin*futLev, liq=calcLiqPrice(futDir,c.price,futLev);
-  const cl=futDir==='long'?'g':'r';
-  prev.style.display='block';
-  prev.innerHTML=`<div class="preview">
-<div class="prev-row"><span class="prev-lbl">포지션 크기</span><span class="prev-val">${fU(size)} USDT (마진×${futLev}배)</span></div>
-<div class="prev-row"><span class="prev-lbl">진입가</span><span class="prev-val">${fP(c.price)}</span></div>
-<div class="prev-row"><span class="prev-lbl">강제청산가</span><span class="prev-val" style="color:var(--R)">${fP(liq)}</span></div>
-<div class="prev-row"><span class="prev-lbl">1% 변동 시 손익</span><span class="prev-val ${cl}">${futDir==='long'?'+':'−'}${fU(size*0.01)} USDT</span></div>
-</div>`;
+function validateFuture(margin){
+  const p = active(), c = coin();
+  const gate = requireTradable();
+  if(gate) return {ok:false,msg:gate};
+  if(!state.league.allowFutures) return {ok:false,msg:"이 리그는 선물 거래가 꺼져 있습니다."};
+  if(leverage > state.league.maxLeverage) return {ok:false,msg:`이 리그의 최대 레버리지는 ${state.league.maxLeverage}x입니다.`};
+  if(!c) return {ok:false,msg:"코인을 선택하세요."};
+  if(!Number.isFinite(margin) || margin < 1) return {ok:false,msg:"최소 마진은 1 USDT입니다."};
+  if(margin > p.cash) return {ok:false,msg:"현금보다 큰 마진은 사용할 수 없습니다."};
+  const liq = liqPrice(futDir, c.price, leverage);
+  const dist = futDir === "long" ? (c.price-liq)/c.price*100 : (liq-c.price)/c.price*100;
+  if(dist < 2) return {ok:false,msg:"청산가가 현재가와 너무 가깝습니다. 레버리지를 낮추세요."};
+  return {ok:true,liq,dist,size:margin*leverage};
 }
-
-function renderPositions(){
-  const u=getUser(), list=document.getElementById('posList'); if(!list) return;
-  const positions=(u?.positions||[]);
-  const fbEl=document.getElementById('futBal');
-  if(fbEl) fbEl.textContent=u?fU(u.cash)+' USDT':'—';
-  if(!positions.length){
-    list.innerHTML='<div class="empty"><span class="ei">📊</span>열린 포지션이 없습니다</div>';
+function requestFuture(){
+  const margin = Number(document.getElementById("futMargin").value);
+  const valid = validateFuture(margin);
+  if(!valid.ok) return toast(valid.msg);
+  const c = coin();
+  const risky = leverage >= 10 || valid.dist < 10 || margin / active().cash > .5;
+  if(!risky) return executeFuture(margin, valid);
+  confirmAction({
+    title:"레버리지 주문 확인",
+    text:`${c.symbol} ${futDir==="long"?"롱":"숏"} ${leverage}x 포지션을 엽니다.`,
+    detail:`마진 ${money(margin)} USDT · 포지션 ${money(valid.size)} USDT · 청산가 ${price(valid.liq)} · 청산까지 ${valid.dist.toFixed(2)}%`,
+    action:()=>executeFuture(margin, valid)
+  });
+}
+function executeFuture(margin, valid){
+  if(orderBusy) return;
+  orderBusy = true;
+  try{
+    const p = active(), c = coin();
+    p.cash -= margin;
+    const pos = {
+      id:uid(), symbol:c.symbol, name:c.name, dir:futDir, lev:leverage,
+      margin, size:valid.size, entry:c.price, liq:valid.liq, status:"OPEN", openedAt:Date.now()
+    };
+    p.positions.push(pos);
+    log(p,"포지션 오픈",{symbol:c.symbol,amount:margin,price:c.price,note:`${leverage}x ${futDir.toUpperCase()}`});
+    document.getElementById("futMargin").value = "";
+    save();
+    render();
+    toast(`${c.symbol} ${leverage}x 포지션 오픈`);
+  } finally {
+    orderBusy = false;
+  }
+}
+function closePosition(id){
+  const p = active();
+  const pos = p.positions.find(x=>x.id===id && x.status==="OPEN");
+  if(!pos) return;
+  const c = state.market.find(x=>x.symbol===pos.symbol);
+  const hit = pos.dir === "long" ? c.price <= pos.liq : c.price >= pos.liq;
+  if(hit){
+    pos.status = "LIQUIDATED";
+    pos.exit = c.price;
+    pos.pnl = -pos.margin;
+    pos.closedAt = Date.now();
+    log(p,"강제청산",{symbol:pos.symbol,amount:pos.margin,pnl:-pos.margin,note:`${pos.lev}x ${pos.dir.toUpperCase()}`});
+    save(); render(); toast("청산가 통과로 강제청산 처리");
     return;
   }
-  const rows = positions.map((pos,i)=>{
-    const c=getCoin(pos.symbol), cur=c?.price||pos.entry_price;
-    const hasLive=!!(c?.price);
-    const {pnl,rate}=calcPnL(pos,cur);
-    const cl=pnl>=0?'g':'r', isLong=pos.direction==='long';
-    const liqDist=isLong?((cur-pos.liq_price)/cur*100):((pos.liq_price-cur)/cur*100);
-    const warn=liqDist>0&&liqDist<20, danger=liqDist>0&&liqDist<5;
-    const priceChg=(cur-pos.entry_price)/pos.entry_price*100;
-    const borderStyle=danger?'border-color:var(--R)':'';
-    const warnHtml=danger
-      ?'<div class="liq-warn" style="display:block">🚨 청산가까지 '+liqDist.toFixed(1)+'% — 즉시 확인!</div>'
-      :warn?'<div class="liq-warn" style="display:block;background:rgba(240,185,11,.1);border-color:rgba(240,185,11,.3);color:var(--acc)">⚠️ 청산가까지 '+liqDist.toFixed(1)+'% 남음</div>':'';
-    return '<div class="pos-card" style="'+borderStyle+'">'
-      +'<div class="pos-head">'
-        +'<span class="pos-dir '+(isLong?'pos-long':'pos-short')+'">'+(isLong?'LONG':'SHORT')+'</span>'
-        +'<span class="pos-lev">'+pos.leverage+'x</span>'
-        +'<span class="pos-sym">'+pos.base+'/USDT</span>'
-        +'<span class="pos-pnl '+cl+'">'+(pnl>=0?'+':'')+fU(pnl)+'<small style="font-size:10px"> U</small></span>'
-      +'</div>'
-      +'<div class="pos-body">'
-        +warnHtml
-        +'<div class="pos-grid">'
-          +'<div class="pos-stat"><div class="pos-stat-l">마진</div><div class="pos-stat-v">'+fU(pos.margin)+' U</div></div>'
-          +'<div class="pos-stat"><div class="pos-stat-l">포지션</div><div class="pos-stat-v">'+fU(pos.size)+' U</div></div>'
-          +'<div class="pos-stat"><div class="pos-stat-l">진입가</div><div class="pos-stat-v">'+fP(pos.entry_price)+'</div></div>'
-          +'<div class="pos-stat"><div class="pos-stat-l">청산가</div><div class="pos-stat-v" style="color:var(--R)">'+fP(pos.liq_price)+'</div></div>'
-          +'<div class="pos-stat"><div class="pos-stat-l">현재가</div><div class="pos-stat-v '+(hasLive?'g':'')+'">'
-            +fP(cur)+(hasLive?'<span style="font-size:9px;color:var(--G)"> ●</span>':'')+'</div></div>'
-          +'<div class="pos-stat"><div class="pos-stat-l">가격변동</div><div class="pos-stat-v '+(priceChg>=0?'g':'r')+'">'
-            +(priceChg>=0?'+':'')+priceChg.toFixed(2)+'%</div></div>'
-        +'</div>'
-        +'<div style="background:var(--bg3);border-radius:8px;padding:10px 12px;margin-bottom:8px">'
-          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'
-            +'<span style="font-size:12px;color:var(--t2)">미실현 손익</span>'
-            +'<span class="'+cl+'" style="font-size:15px;font-weight:900">'+(pnl>=0?'+':'')+fU(pnl)+' USDT</span>'
-          +'</div>'
-          +'<div style="display:flex;justify-content:space-between;align-items:center">'
-            +'<span style="font-size:11px;color:var(--t3)">수익률 (레버리지 반영)</span>'
-            +'<span class="'+cl+'" style="font-size:13px;font-weight:800">'+(rate>=0?'+':'')+rate.toFixed(2)+'%</span>'
-          +'</div>'
-        +'</div>'
-        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
-          +'<button class="btn btn-ghost" style="height:36px;font-size:12px" data-refresh-sym="'+pos.symbol+'">🔄 가격 갱신</button>'
-          +'<button class="btn btn-danger" style="height:36px;font-size:13px" data-close-pos="'+pos.id+'">청산하기</button>'
-        +'</div>'
-      +'</div>'
-    +'</div>';
-  });
-  list.innerHTML = rows.join('');
-
-  // 이벤트 위임 (따옴표 문제 없음)
-  list.onclick = async(e)=>{
-    const refreshBtn = e.target.closest('[data-refresh-sym]');
-    const closeBtn   = e.target.closest('[data-close-pos]');
-    if(refreshBtn){
-      const sym = refreshBtn.dataset.refreshSym;
-      const t = await fetchTicker(sym);
-      if(t){const c=getCoin(sym);if(c)c.price=+t.lastPrice;}
-      renderPositions();
-      toast('가격 갱신됨');
-    }
-    if(closeBtn){
-      await doClosePosition(closeBtn.dataset.closePos);
-    }
-  };
+  const {pnl,rate} = calcPnL(pos, c.price);
+  const returned = Math.max(0, pos.margin + pnl);
+  pos.status = "CLOSED";
+  pos.exit = c.price;
+  pos.pnl = pnl;
+  pos.rate = rate;
+  pos.closedAt = Date.now();
+  p.cash += returned;
+  log(p,"포지션 청산",{symbol:pos.symbol,amount:returned,price:c.price,pnl,note:`${pos.lev}x ${pos.dir.toUpperCase()}`});
+  save();
+  render();
+  toast(`포지션 청산 · ${pnl>=0?"+":""}${money(pnl)} USDT`);
 }
 
-function renderAll(){
-  renderHeader(); renderHomeRank(); renderHomeMarket();
-  renderLeague(); renderTrade(); renderRank(); renderHistory(); renderPositions();
+function confirmAction(cfg){
+  pendingConfirm = cfg.action;
+  document.getElementById("confirmTitle").textContent = cfg.title;
+  document.getElementById("confirmText").textContent = cfg.text;
+  document.getElementById("confirmDetail").innerHTML = `<div class="danger">${escapeHtml(cfg.detail)}</div>`;
+  document.getElementById("confirmModal").classList.add("show");
 }
-function renderHeader(){
-  const ranks=getRanks(), u=getUser(), cl=isClosed();
+function closeConfirm(){document.getElementById("confirmModal").classList.remove("show"); pendingConfirm = null}
 
-  // 상단 바 상태
-  const tbPill=document.getElementById('tbPill');
-  if(tbPill){
-    if(!ST.league){ tbPill.textContent='리그 없음'; tbPill.className='pill pill-off'; }
-    else { tbPill.textContent=cl?'종료됨':'진행 중'; tbPill.className='pill '+(cl?'pill-off':'pill-on'); }
-  }
-
-  // 홈 리그 배지
-  const lgBadge=document.getElementById('leagueBadge');
-  const bn=document.getElementById('leagueBadgeName');
-  const bd=document.getElementById('leagueBadgeDday');
-  if(lgBadge){
-    if(!ST.league){ lgBadge.style.display='none'; }
-    else {
-      lgBadge.style.display='flex';
-      if(bn) bn.textContent=ST.league.name;
-      if(bd){
-        if(cl){ bd.textContent='🏁 종료'; bd.style.color='var(--R)'; }
-        else{ const d=dLeft(ST.league.endDate); const clr=d<=3?'var(--R)':d<=7?'var(--acc)':'var(--G)'; bd.textContent='D-'+d; bd.style.color=clr; }
-      }
-    }
-  }
-
-  // 포트폴리오 히어로
-  if(!u){
-    ['hTotal','hPnl','hCash','hVal','hRank'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
-    const pnl=document.getElementById('hPnl'); if(pnl) pnl.style.color='var(--t2)';
-  } else {
-    const m=calcUser(u), myR=ranks.findIndex(r=>r.id===u.id)+1;
-    document.getElementById('hTotal').innerHTML=fU(m.total)+' <small>USDT</small>';
-    document.getElementById('hPnl').textContent=(m.profit>=0?'+':'')+fU(m.profit)+' USDT ('+fPct(m.rate)+')';
-    document.getElementById('hPnl').style.color=m.profit>=0?'var(--G)':'var(--R)';
-    document.getElementById('hCash').textContent=fU(u.cash);
-    document.getElementById('hVal').textContent=fU(m.val);
-    document.getElementById('hRank').textContent=myR?myR+'위':'—';
-  }
+function render(){
+  renderPlayers();
+  renderMarket();
+  renderDashboard();
+  renderLeague();
+  renderSpotPreview();
+  renderFuturePreview();
+  renderPositions();
+  renderHistory();
 }
-function renderHomeRank(){
-  const list=document.getElementById('homeRankList'); if(!list) return;
-  const ranks=getRanks(), myId=LOCAL.participantId;
-  if(!ST.league){
-    list.innerHTML='<div class="empty"><span class="ei">🏛</span>리그 탭에서 새 리그를 시작해주세요</div>';
-    return;
-  }
-  if(!ranks.length){
-    list.innerHTML='<div class="empty"><span class="ei">👥</span><b style="color:var(--t2)">'+ST.league.name+'</b><br>아직 참여자가 없어요<br><small style="color:var(--t3)">리그 탭에서 참여하세요</small></div>';
-    return;
-  }
-  list.innerHTML=ranks.map((r,i)=>{
-    const m=r._m, cl=m.rate>=0?'g':'r', isMe=myId===r.id;
-    const nc=i===0?'hn1':i===1?'hn2':i===2?'hn3':'hnn';
-    const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1);
-    return '<div class="hr-row'+(isMe?' me':'')+'">'+
-      '<div class="hr-num '+nc+'">'+med+'</div>'+
-      '<div class="hr-mid"><div class="hr-nick">'+r.nickname+(isMe?'<span class="me-badge">나</span>':'')+'</div>'+
-      '<div class="hr-sub">현금 '+fU(r.cash)+' · '+r.holdings.length+'코인</div></div>'+
-      '<div class="hr-right"><div class="hr-asset">'+fU(m.total)+'<small style="font-size:9px;color:var(--t2)"> U</small></div>'+
-      '<div class="hr-rate '+cl+'">'+fPct(m.rate)+'</div></div></div>';
-  }).join('');
+function renderPlayers(){
+  const sel = document.getElementById("playerSelect");
+  sel.innerHTML = state.players.map(p=>`<option value="${p.id}" ${p.id===state.activePlayerId?"selected":""}>${escapeHtml(p.name)}</option>`).join("");
 }
+function renderMarket(){
+  const q = document.getElementById("search").value.trim().toLowerCase();
+  const list = state.market.filter(c=>!q || c.symbol.toLowerCase().includes(q) || c.name.toLowerCase().includes(q));
+  document.getElementById("market").innerHTML = list.map(c=>`
+    <button class="coin ${c.symbol===selected?"on":""}" data-symbol="${c.symbol}">
+      <span class="ico" style="background:${c.color}22;color:${c.color}">${c.symbol.slice(0,4)}</span>
+      <span><span class="name">${c.symbol}</span><span class="small"> · ${c.name}</span></span>
+      <span class="price">${price(c.price)}<br><span class="${c.change>=0?"g":"r"} small">${pct(c.change)}</span></span>
+    </button>
+  `).join("");
+  document.getElementById("spotTitle").textContent = `${coin().symbol}/USDT · ${price(coin().price)}`;
+}
+function renderDashboard(){
+  const p = active();
+  const total = totalAssets(p);
+  const rate = profitRate(p);
+  const open = p.positions.filter(x=>x.status==="OPEN");
+  const riskMargin = open.reduce((s,x)=>s+x.margin,0);
+  const nearest = open.length ? Math.min(...open.map(liqDistance)) : null;
+  document.getElementById("mTotal").textContent = money(total) + " U";
+  document.getElementById("mRate").innerHTML = `<span class="${rate>=0?"g":"r"}">${pct(rate)}</span> / 지급 ${money(seedMoney())} U`;
+  document.getElementById("mCash").textContent = money(p.cash) + " U";
+  document.getElementById("mRisk").textContent = money(riskMargin) + " U";
+  document.getElementById("mRiskNote").textContent = nearest === null ? "열린 포지션 없음" : `가장 가까운 청산가 ${nearest.toFixed(2)}%`;
 
-function renderHomeMarket(){
-  const list=document.getElementById('homeMarket'); if(!list) return;
-  const top=ALL_COINS.slice(0,10);
-  if(!top.length){list.innerHTML='<div class="empty"><span class="ei">📡</span>시세 로딩 중...</div>';return;}
-  list.innerHTML=top.map(c=>{
-    const cl=c.change>=0?'g':'r', clr=c.color||'#848E9C';
-    return `<div class="hm-row" data-sym="${c.symbol}">
-<div class="hm-ico" style="background:${clr}20;color:${clr}">${c.base.slice(0,4)}</div>
-<div class="hm-mid"><div class="hm-base">${c.base}</div><div class="hm-name">${c.name}</div></div>
-<div class="hm-bar">${makeMiniBar(c.change)}</div>
-<div class="hm-right"><div class="hm-price">${c.price?fP(c.price):'—'}</div><div class="hm-chg ${cl}">${c.price?fPct(c.change):''}</div></div>
-</div>`;
-  }).join('');
-  const el=document.getElementById('marketUpdated');
-  if(el) el.textContent=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+'기준';
-}
-function makeMiniBar(pct){
-  const up=pct>=0, clr=up?'#0ECB81':'#F6465D', bars=7;
-  const rects=Array.from({length:bars},(_,i)=>{
-    const h=4+Math.abs(Math.sin((i+Math.abs(pct||0)*0.3)*1.2))*16;
-    const y=20-h, w=4, x=i*6, alpha=i===bars-1?1:0.35+i*0.09;
-    return `<rect x="${x}" y="${y.toFixed(1)}" width="${w}" height="${h.toFixed(1)}" rx="1" fill="${clr}" opacity="${alpha.toFixed(2)}"/>`;
-  }).join('');
-  return `<svg viewBox="0 0 42 22" xmlns="http://www.w3.org/2000/svg">${rects}</svg>`;
+  document.getElementById("leagueStrip").innerHTML = `<div><b>${escapeHtml(state.league.name)}</b><span>${state.league.status==="ACTIVE"?"진행 중":"종료"} · ${dday()} · ${state.players.length}명</span></div><strong class="y">${state.league.inviteCode}</strong>`;
+  document.getElementById("rewardBox").innerHTML = hasReward(p)
+    ? `<div class="reward claimed"><h2>투자금 지급 완료</h2><p>이번 리그에서는 1회만 지급됩니다. 이제 거래로 수익률을 겨뤄보세요.</p></div>`
+    : `<div class="reward"><h2>🎟 ${escapeHtml(state.league.rewardTitle)}</h2><p>${escapeHtml(state.league.rewardText)} ${money(seedMoney())} USDT를 1회 받을 수 있어요.</p><button class="btn gold" id="claimRewardHome">가상 현금 받기</button></div>`;
+  document.getElementById("claimRewardHome")?.addEventListener("click",claimReward);
+
+  const ranks = [...state.players].sort((a,b)=>profitRate(b)-profitRate(a));
+  document.getElementById("rankBox").innerHTML = `<table class="table"><thead><tr><th>순위</th><th>참가자</th><th>수익률</th></tr></thead><tbody>`+
+    ranks.map((r,i)=>{
+      const t = totalAssets(r), rr = profitRate(r);
+      return `<tr><td>${i+1}</td><td>${escapeHtml(r.name)}<div class="small">${money(t)} U</div></td><td><span class="${rr>=0?"g":"r"}">${pct(rr)}</span></td></tr>`;
+    }).join("")+"</tbody></table>";
+
+  const rows = Object.entries(p.holdings);
+  document.getElementById("holdingBox").innerHTML = rows.length ? `<table class="table"><thead><tr><th>코인</th><th>수량</th><th>평가</th></tr></thead><tbody>`+
+    rows.map(([sym,h])=>{
+      const c = state.market.find(x=>x.symbol===sym);
+      const val = h.qty * c.price, pnl = val - h.qty*h.avg;
+      return `<tr><td>${sym}<div class="small">평균 ${price(h.avg)}</div></td><td>${h.qty.toFixed(6)}</td><td>${money(val)} U <span class="${pnl>=0?"g":"r"}">${pnl>=0?"+":""}${money(pnl)}</span></td></tr>`;
+    }).join("")+"</tbody></table>" : `<div class="empty">보유 현물이 없습니다.</div>`;
 }
 function renderLeague(){
-  const root = document.getElementById('leagueRoot');
-  if(!root) return;
-  const myId = LOCAL.participantId;
-  const isJoined = !!(myId && ST.participants.find(p=>p.id===myId));
-  const closed = isClosed();
-  const ranks = getRanks();
-
-  let html = '';
-
-  /* ══ 상태 1: 리그 없음 ══ */
-  if(!ST.league){
-    html = `
-<div style="padding:24px 16px">
-  <div style="text-align:center;padding:32px 0 20px">
-    <div style="font-size:40px;margin-bottom:12px">🏁</div>
-    <div style="font-size:17px;font-weight:900;margin-bottom:6px">진행 중인 리그가 없어요</div>
-    <div style="font-size:13px;color:var(--t2);margin-bottom:24px">관리자가 새 리그를 시작해주세요</div>
-  </div>
-  <div class="card" style="border-color:rgba(240,185,11,.3)">
-    <div class="stitle" style="color:var(--acc);margin-bottom:12px">🆕 새 리그 시작</div>
-    <div class="field"><label>리그 이름</label><input class="inp" id="newLgName" value="니가가라 코인왕 리그 1st" maxlength="24"></div>
-    <div class="field"><label>종료일</label><input class="inp" id="newLgEnd" type="date" value="${makeEnd(14)}"></div>
-    <div class="field"><label>초기 자금 (USDT)</label><input class="inp" id="newLgCash" type="number" value="100000" min="100" step="1000"></div>
-    <button class="btn btn-acc" style="margin-top:4px" onclick="doNewLeague()">🚀 리그 시작 &amp; 티켓 발행</button>
-  </div>
-  ${_renderClosedLeagues()}
-</div>`;
-
-  /* ══ 상태 2: 리그 종료됨 → 결과 화면 ══ */
-  } else if(closed){
-    const winner = ranks[0];
-    const wm = winner?._m;
-    html = `
-<div style="padding:12px 16px">
-  <!-- 종료 배너 -->
-  <div style="background:linear-gradient(135deg,#1a0505,#1a1000);border:1px solid rgba(246,70,93,.3);border-radius:var(--r);padding:18px;margin-bottom:14px;text-align:center">
-    <div style="font-size:28px;margin-bottom:6px">🏁</div>
-    <div style="font-size:16px;font-weight:900;color:var(--R);margin-bottom:4px">리그 종료</div>
-    <div style="font-size:14px;font-weight:800;color:var(--t1)">${ST.league.name}</div>
-    <div style="font-size:12px;color:var(--t2);margin-top:4px">${ST.league.endDate} 종료 · ${ST.participants.length}명 참여</div>
-  </div>
-
-  <!-- 우승자 -->
-  ${winner?`
-  <div style="background:linear-gradient(135deg,#1a1200,#1a0e00);border:1px solid rgba(240,185,11,.4);border-radius:var(--r);padding:18px;margin-bottom:14px;text-align:center">
-    <div style="font-size:32px">🥇</div>
-    <div style="font-size:18px;font-weight:900;color:var(--acc);margin-top:4px">${winner.nickname}</div>
-    <div style="font-size:24px;font-weight:900;color:var(--G);margin-top:4px">${fPct(wm.rate)}</div>
-    <div style="font-size:13px;color:var(--t2);margin-top:2px">최종 ${fU(wm.total)} USDT</div>
-    <div style="font-size:12px;color:var(--t3);margin-top:2px">초기 ${fU(ST.league.initialCash)} → +${fU(wm.profit)} USDT</div>
-  </div>`:''}
-
-  <!-- 최종 순위 -->
-  <div class="card">
-    <div class="stitle" style="margin-bottom:10px">📊 최종 순위</div>
-    <div style="display:grid;gap:6px">
-      ${ranks.map((r,i)=>{
-        const m=r._m, cl=m.rate>=0?'g':'r', isMe=myId===r.id;
-        const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
-        return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:${isMe?'rgba(240,185,11,.08)':'var(--bg3)'};border-radius:8px;${isMe?'border:1px solid rgba(240,185,11,.2)':''}">
-<span style="font-size:16px;flex-shrink:0;min-width:24px;text-align:center">${med}</span>
-<span style="font-weight:800;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nickname}${isMe?'<span class="me-badge">나</span>':''}</span>
-<span style="font-size:12px;color:var(--t2);margin-right:8px;flex-shrink:0">${fU(m.total)} U</span>
-<span class="${cl}" style="font-size:13px;flex-shrink:0">${fPct(m.rate)}</span>
-</div>`;
-      }).join('')}
-    </div>
-    <button class="btn btn-ghost" style="margin-top:12px;font-size:12px" onclick="(()=>{const txt='🏆 ${ST.league.name} 최종결과\\n'+${JSON.stringify(ranks.map((r,i)=>`${i+1}위 ${r.nickname} ${fPct(r._m.rate)} (${fU(r._m.total)} USDT)`).join('\\n'))};navigator.clipboard?.writeText(txt);toast('📋 결과 복사됨!')})()">📋 결과 복사하기</button>
-  </div>
-
-  <!-- 새 리그 시작 -->
-  <div class="card" style="margin-top:4px;border-color:rgba(240,185,11,.25)">
-    <div class="stitle" style="color:var(--acc);margin-bottom:10px">🆕 새 리그 시작</div>
-    <div class="field"><label>리그 이름</label><input class="inp" id="newLgName" value="니가가라 코인왕 리그 2nd" maxlength="24"></div>
-    <div class="field"><label>종료일</label><input class="inp" id="newLgEnd" type="date" value="${makeEnd(14)}"></div>
-    <div class="field"><label>초기 자금 (USDT)</label><input class="inp" id="newLgCash" type="number" value="${ST.league.initialCash||100000}" min="100" step="1000"></div>
-    <button class="btn btn-acc" style="margin-top:4px" onclick="doNewLeague()">🚀 새 리그 시작 &amp; 티켓 발행</button>
-  </div>
-
-  ${_renderClosedLeagues()}
-</div>`;
-
-  /* ══ 상태 3: 리그 진행 중 ══ */
+  const p = active();
+  const canClaim = !hasReward(p) && !leagueClosed();
+  document.getElementById("claimRewardLeague").style.display = canClaim ? "block" : "none";
+  document.getElementById("leagueInfo").innerHTML = `
+    <div class="preview">
+      <div class="pline"><span>리그명</span><b>${escapeHtml(state.league.name)}</b></div>
+      <div class="pline"><span>상태</span><b>${state.league.status==="ACTIVE"?"진행 중":"종료"}</b></div>
+      <div class="pline"><span>기간</span><b>${state.league.startDate} ~ ${state.league.endDate}</b></div>
+      <div class="pline"><span>남은 기간</span><b>${dday()}</b></div>
+      <div class="pline"><span>초기 투자금</span><b>${money(seedMoney())} USDT</b></div>
+      <div class="pline"><span>지급 상태</span><b class="${hasReward(p)?"g":"y"}">${hasReward(p)?"지급 완료":"미수령"}</b></div>
+      <div class="pline"><span>거래 설정</span><b>현물 ${state.league.allowSpot?"ON":"OFF"} · 선물 ${state.league.allowFutures?"ON":"OFF"} · 최대 ${state.league.maxLeverage}x</b></div>
+      <div class="pline"><span>초대 코드</span><b>${state.league.inviteCode}</b></div>
+    </div>`;
+  const ranks = [...state.players].sort((a,b)=>profitRate(b)-profitRate(a));
+  document.getElementById("leagueRankMeta").textContent = `${ranks.length}명`;
+  document.getElementById("leagueRankBox").innerHTML = `<table class="table"><thead><tr><th>순위</th><th>참가자</th><th>자산</th></tr></thead><tbody>`+
+    ranks.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(r.name)}<div class="small">${hasReward(r)?"지급 완료":"미수령"}</div></td><td>${money(totalAssets(r))} U<br><span class="${profitRate(r)>=0?"g":"r"}">${pct(profitRate(r))}</span></td></tr>`).join("")+
+    `</tbody></table>`;
+  renderAdmin();
+}
+function renderAdmin(){
+  const btn = document.getElementById("toggleAdmin");
+  btn.textContent = canManageLeague() ? "관리자 끄기" : "관리자 켜기";
+  const box = document.getElementById("adminPanel");
+  if(!canManageLeague()){
+    box.innerHTML = hasAdminAuthority()
+      ? `<div class="warn">관리자 모드를 켜면 리그 생성, 수정, 종료, 삭제 메뉴가 표시됩니다.</div>`
+      : `<div class="danger">관리자 권한이 없습니다. 리그 생성자 또는 관리자 계정으로 Google 로그인해야 합니다.</div>`;
+    return;
+  }
+  box.innerHTML = `
+    <div class="admin-grid">
+      <div class="field"><label>리그명</label><input id="lgName" value="${escapeHtml(state.league.name)}"></div>
+      <div class="form2">
+        <div class="field"><label>시작일</label><input id="lgStart" type="date" value="${state.league.startDate}"></div>
+        <div class="field"><label>종료일</label><input id="lgEnd" type="date" value="${state.league.endDate}"></div>
+      </div>
+      <div class="field"><label>초기 가상 현금</label><input id="lgCash" type="number" min="1" step="100" value="${seedMoney()}"></div>
+      <div class="field"><label>보상 배너 제목</label><input id="lgRewardTitle" value="${escapeHtml(state.league.rewardTitle)}"></div>
+      <div class="field"><label>보상 배너 문구</label><input id="lgRewardText" value="${escapeHtml(state.league.rewardText)}"></div>
+      <div class="form2">
+        <label class="switch"><span>현물 거래</span><input id="lgSpot" type="checkbox" ${state.league.allowSpot?"checked":""}></label>
+        <label class="switch"><span>선물 거래</span><input id="lgFut" type="checkbox" ${state.league.allowFutures?"checked":""}></label>
+      </div>
+      <div class="field"><label>최대 레버리지</label><select id="lgLev"><option>1</option><option>3</option><option>5</option><option>10</option><option>25</option></select></div>
+      <div class="row"><button class="btn gold grow" id="saveLeague">리그 수정 저장</button><button class="btn blue" id="newLeague">새 리그 생성</button></div>
+      <div class="row"><button class="btn ghost grow" id="closeLeague">리그 종료</button><button class="btn red" id="deleteLeague">리그 삭제</button></div>
+    </div>`;
+  document.getElementById("lgLev").value = String(state.league.maxLeverage);
+  document.getElementById("saveLeague").addEventListener("click",saveLeagueSettings);
+  document.getElementById("newLeague").addEventListener("click",createNewLeague);
+  document.getElementById("closeLeague").addEventListener("click",()=>{if(!requireAdminAction()) return; confirmAction({title:"리그 종료",text:"현재 리그를 종료하고 거래를 막습니다.",detail:"종료 후에는 랭킹과 기록만 확인할 수 있습니다.",action:()=>{if(!requireAdminAction()) return; state.league.status="CLOSED"; save(); render(); toast("리그 종료 완료")}})});
+  document.getElementById("deleteLeague").addEventListener("click",()=>{if(!requireAdminAction()) return; confirmAction({title:"리그 삭제 경고",text:"현재 리그의 참가자, 거래 기록, 지급 상태가 모두 초기화됩니다.",detail:"되돌릴 수 없습니다. 정말 삭제하시려면 실행을 누르세요.",action:()=>{if(!requireAdminAction()) return; state=freshState(); selected="BTC"; save(); render(); toast("리그 삭제 및 초기화 완료")}})});
+}
+function readLeagueForm(){
+  return {
+    name:document.getElementById("lgName").value.trim() || "새 코인왕 리그",
+    startDate:document.getElementById("lgStart").value || new Date().toISOString().slice(0,10),
+    endDate:document.getElementById("lgEnd").value || addDays(14),
+    initialCash:Math.max(1,Number(document.getElementById("lgCash").value)||START_CASH),
+    rewardTitle:document.getElementById("lgRewardTitle").value.trim() || "리그 참가 보상 도착",
+    rewardText:document.getElementById("lgRewardText").value.trim() || "이번 리그 투자금이 준비됐어요.",
+    allowSpot:document.getElementById("lgSpot").checked,
+    allowFutures:document.getElementById("lgFut").checked,
+    maxLeverage:Number(document.getElementById("lgLev").value)||25
+  };
+}
+function requireAdminAction(){
+  if(canManageLeague()) return true;
+  toast("관리자 권한이 필요합니다.");
+  return false;
+}
+function saveLeagueSettings(){
+  if(!requireAdminAction()) return;
+  const next = readLeagueForm();
+  if(new Date(next.endDate) < new Date(next.startDate)) return toast("종료일은 시작일 이후여야 합니다.");
+  Object.assign(state.league,next);
+  save();
+  render();
+  toast("리그 설정 저장 완료");
+}
+function createNewLeague(){
+  if(!requireAdminAction()) return;
+  const next = readLeagueForm();
+  if(new Date(next.endDate) < new Date(next.startDate)) return toast("종료일은 시작일 이후여야 합니다.");
+  confirmAction({
+    title:"새 리그 생성",
+    text:"새 리그를 시작하면 참가자 자산과 거래 기록이 초기화됩니다.",
+    detail:`${next.name} · ${money(next.initialCash)} USDT · ${next.startDate} ~ ${next.endDate}`,
+    action:()=>{
+      const league = {...defaultLeague(),...next,id:uid(),status:"ACTIVE",inviteCode:"KING-"+Math.floor(1000+Math.random()*9000)};
+      state.league = league;
+      state.players = state.players.map(p=>({id:p.id,name:p.name,cash:0,rewards:{[league.id]:false},holdings:{},positions:[],history:[]}));
+      if(!state.players.length){
+        const id=uid();
+        state.players=[{id,name:"나",cash:0,rewards:{[league.id]:false},holdings:{},positions:[],history:[]}];
+        state.activePlayerId=id;
+      }
+      selected="BTC";
+      save();
+      render();
+      toast("새 리그 생성 완료");
+    }
+  });
+}
+function spotMax(){
+  const p = active(), c = coin();
+  if(side === "buy") return p.cash;
+  const h = p.holdings[c.symbol];
+  return (h?.qty || 0) * c.price;
+}
+function renderSpotPreview(){
+  const amount = Number(document.getElementById("spotAmount").value);
+  const c = coin(), p = active();
+  const prev = document.getElementById("spotPreview");
+  const gate = requireTradable();
+  if(gate || !state.league.allowSpot){
+    prev.innerHTML = `<div class="danger">${gate || "이 리그는 현물 거래가 꺼져 있습니다."}</div>`;
+    document.getElementById("spotSubmit").disabled = true;
+    document.getElementById("spotSubmit").textContent = side === "buy" ? `${c.symbol} 시장가 매수` : `${c.symbol} 시장가 매도`;
+    document.getElementById("spotSubmit").className = "btn " + (side === "buy" ? "green" : "red");
+    return;
+  }
+  const valid = validateSpot(amount);
+  if(!amount){
+    prev.innerHTML = `<div class="preview"><div class="pline"><span>주문 가능</span><b>${money(spotMax())} USDT</b></div><div class="pline"><span>현재가</span><b>${price(c.price)}</b></div></div>`;
+    document.getElementById("spotSubmit").disabled = false;
+  } else if(!valid.ok){
+    prev.innerHTML = `<div class="danger">${valid.msg}</div>`;
+    document.getElementById("spotSubmit").disabled = true;
   } else {
-    const me = ST.participants.find(p=>p.id===myId);
-    const mm = me?calcUser(me):null;
-    const myRank = me?ranks.findIndex(r=>r.id===myId)+1:0;
-    const d = dLeft(ST.league.endDate);
-    const dclr = d<=3?'var(--R)':d<=7?'var(--acc)':'var(--G)';
-    const ticketUrl = `${location.origin}${location.pathname}?t=${encodeURIComponent(ST.league.ticket)}`;
-
-    html = `
-<div style="padding:12px 16px">
-  <!-- 리그 상태 카드 -->
-  <div class="lg-status-card" style="margin-bottom:12px">
-    <div class="lg-status-top">
-      <div class="lg-status-name">${ST.league.name}</div>
-      <span class="lg-join-badge lg-join-y">진행 중</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px;font-size:12px;margin-bottom:${isJoined?'10px':'14px'}">
-      <span style="color:${dclr};font-weight:800">D-${d}</span>
-      <span style="color:var(--t3)">·</span>
-      <span style="color:var(--t2)">${ST.league.endDate} 종료</span>
-      <span style="color:var(--t3)">·</span>
-      <span style="color:var(--t2)">${ST.participants.length}명 참여</span>
-    </div>
-    ${isJoined && mm ? `
-    <div class="lg-my-info" style="margin-bottom:10px">
-      <span style="font-size:18px">👤</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:800">${me.nickname}</div>
-        <div style="font-size:11px;color:var(--t2)">${fU(mm.total)} USDT · ${myRank}위</div>
-      </div>
-      <span class="${mm.rate>=0?'g':'r'}">${fPct(mm.rate)}</span>
-    </div>` : ''}
-    <!-- 초대 링크 -->
-    <div style="background:rgba(240,185,11,.06);border:1px dashed rgba(240,185,11,.3);border-radius:8px;padding:10px;margin-bottom:10px">
-      <div style="font-size:10px;font-weight:800;color:var(--acc);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">🎫 초대 티켓</div>
-      <div style="font-family:monospace;font-size:13px;font-weight:900;color:var(--acc);margin-bottom:6px;letter-spacing:1px">${ST.league.ticket}</div>
-      <div style="font-size:10px;color:var(--t3);word-break:break-all;margin-bottom:8px">${ticketUrl}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-        <button class="btn btn-ghost btn-sm" onclick="(()=>{navigator.clipboard?.writeText('${ticketUrl}');toast('📋 초대 링크 복사됨!')})()" style="width:100%">🔗 링크 복사</button>
-        <button class="btn btn-ghost btn-sm" onclick="(()=>{navigator.clipboard?.writeText('${ST.league.ticket}');toast('📋 티켓 코드 복사됨!')})()" style="width:100%">🎫 코드 복사</button>
-      </div>
-    </div>
-    <!-- 참여 폼 -->
-    ${!isJoined?`
-    <div style="border-top:1px solid var(--bd);padding-top:12px">
-      <div style="font-size:12px;font-weight:800;color:var(--t2);margin-bottom:8px">리그 참여하기</div>
-      <div class="field" style="margin-bottom:7px"><label>닉네임</label><input class="inp" id="joinNickMain" maxlength="12" placeholder="예: 코인마스터" autocomplete="off"></div>
-      <div class="field" style="margin-bottom:10px">
-        <label>티켓 코드 <span style="color:var(--t3);font-weight:400">(초대 링크로 오셨다면 자동 입력돼요)</span></label>
-        <input class="inp" id="joinTicketMain" maxlength="32" placeholder="TICKET-XXXXX" value="${window._pendingTicket||ST.league.ticket}">
-      </div>
-      <button class="btn btn-acc" id="btnJoinSubmit">참여하기 · ${fU(ST.league.initialCash||100000)} USDT 받기</button>
-    </div>`:`
-    <button class="btn btn-ghost btn-sm" style="width:100%" onclick="document.getElementById('addMemberSection').style.display=document.getElementById('addMemberSection').style.display==='none'?'block':'none'">+ 다른 참여자 추가</button>
-    <div id="addMemberSection" style="display:none;margin-top:8px;border-top:1px solid var(--bd);padding-top:10px">
-      <div class="field" style="margin-bottom:7px"><label>닉네임</label><input class="inp" id="joinNickExtra2" maxlength="12" placeholder="예: 코인마스터" autocomplete="off"></div>
-      <button class="btn btn-acc" onclick="(async()=>{await joinLeague(document.getElementById('joinNickExtra2').value,'');document.getElementById('joinNickExtra2').value='';document.getElementById('addMemberSection').style.display='none';})()">참여하기 · 자금 수령</button>
-    </div>`}
-  </div>
-
-  <!-- 참여자 목록 -->
-  <div class="card" style="padding:12px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <span style="font-size:13px;font-weight:900">참여자 현황</span>
-      <span style="font-size:11px;color:var(--t2)">${ST.league.name} · ${ranks.length}명</span>
-    </div>
-    <div style="display:grid;gap:5px">
-      ${ranks.length?ranks.map((r,i)=>{
-        const m=r._m, cl=m.rate>=0?'g':'r', isMe2=myId===r.id;
-        const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
-        return `<div class="ptc-row" style="${isMe2?'background:rgba(240,185,11,.08);border-color:rgba(240,185,11,.2)':''}">
-<div><div class="ptc-nick">${med} ${r.nickname}${isMe2?'<span class="me-badge">나</span>':''}</div><div class="ptc-sub">${fU(m.total)} USDT</div></div>
-<span class="${cl}">${fPct(m.rate)}</span>
-</div>`;
-      }).join(''):'<div class="empty" style="padding:16px"><span class="ei">👥</span>아직 참여자가 없어요</div>'}
-    </div>
-  </div>
-
-  <!-- 관리자 패널 -->
-  <details class="admin" style="margin-top:4px">
-    <summary>⚙️ 리그 관리 <span style="font-size:11px;color:var(--t2);font-weight:400">관리자 전용</span></summary>
-    <div class="admin-body">
-      <form id="lgForm">
-        <div class="field"><label>리그 이름</label><input class="inp" id="lgName" maxlength="24" value="${ST.league.name}"></div>
-        <div class="field"><label>종료일</label><input class="inp" id="lgEnd" type="date" value="${ST.league.endDate||''}"></div>
-        <div class="field"><label>초기 자금 (USDT)</label><input class="inp" id="lgCash" type="number" value="${ST.league.initialCash||100000}" min="100" step="1000"></div>
-        <button class="btn btn-ghost" type="submit" style="margin-top:4px">💾 설정 저장</button>
-      </form>
-      <div class="divider"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-        <button class="btn btn-ghost btn-sm" id="btnClose" style="height:36px">🏁 리그 종료</button>
-        <button class="btn btn-ghost btn-sm" id="btnExport" style="height:36px">📋 순위 복사</button>
-      </div>
-      <button class="btn btn-danger btn-sm" id="btnDel" style="width:100%;height:36px;margin-top:6px">🗑 리그 삭제</button>
-      <p class="warn-txt">⚠ 삭제하면 모든 거래 기록이 사라집니다.</p>
-    </div>
-  </details>
-
-  ${_renderClosedLeagues()}
-</div>`;
+    const qty = amount / c.price;
+    const after = side === "buy" ? p.cash - amount : p.cash + amount;
+    prev.innerHTML = `<div class="preview"><div class="pline"><span>예상 수량</span><b>${qty.toFixed(6)} ${c.symbol}</b></div><div class="pline"><span>체결가</span><b>${price(c.price)}</b></div><div class="pline"><span>체결 후 현금</span><b>${money(after)} USDT</b></div></div>`;
+    document.getElementById("spotSubmit").disabled = false;
   }
-
-  root.innerHTML = html;
-
-  // 이벤트 바인딩
-  const btnJoin = document.getElementById('btnJoinSubmit');
-  if(btnJoin) btnJoin.onclick = async()=>{
-    const nick = document.getElementById('joinNickMain')?.value||'';
-    const ticket = document.getElementById('joinTicketMain')?.value.trim()||'';
-    await joinLeague(nick, ticket);
-  };
-  const lgForm = document.getElementById('lgForm');
-  if(lgForm) lgForm.onsubmit = async(e)=>{
-    e.preventDefault();
-    const name=document.getElementById('lgName')?.value.trim()||ST.league.name;
-    const end=document.getElementById('lgEnd')?.value||ST.league.endDate;
-    const cash=parseInt(document.getElementById('lgCash')?.value)||ST.league.initialCash;
-    const {error}=await sb.from('leagues').update({name,end_date:end,initial_cash:cash}).eq('id',ST.league.id);
-    if(error) return toast('저장 실패: '+error.message);
-    await fetchData(); renderAll(); toast('✅ 설정 저장됨');
-  };
-  const btnClose=document.getElementById('btnClose');
-  if(btnClose) btnClose.onclick=doClose;
-  const btnDel=document.getElementById('btnDel');
-  if(btnDel) btnDel.onclick=doDelete;
-  const btnExport=document.getElementById('btnExport');
-  if(btnExport) btnExport.onclick=()=>{
-    const txt='🏆 '+ST.league.name+'\n'+ranks.map((r,i)=>`${i+1}위 ${r.nickname} ${fPct(r._m.rate)} (${fU(r._m.total)} USDT)`).join('\n');
-    navigator.clipboard?.writeText(txt).catch(()=>{}); toast('📋 랭킹 복사됨!');
-  };
+  document.getElementById("spotSubmit").textContent = side === "buy" ? `${c.symbol} 시장가 매수` : `${c.symbol} 시장가 매도`;
+  document.getElementById("spotSubmit").className = "btn " + (side === "buy" ? "green" : "red");
 }
-
-function _renderClosedLeagues(){
-  if(!ST.closedLeagues?.length) return '';
-  const items = ST.closedLeagues.map((l,li)=>{
-    const podium=l.ranked.slice(0,3).map((r,i)=>{
-      const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
-      const cl=r.rate>=0?'g':'r';
-      return `<div class="closed-podium-row">
-<span style="font-size:14px;flex-shrink:0;min-width:24px">${med}</span>
-<span style="font-weight:800;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nickname}</span>
-<span style="font-size:12px;color:var(--t2);margin-right:8px">${fU(r.total)} U</span>
-<span class="${cl}" style="font-size:12px">${fPct(r.rate)}</span>
-</div>`;
-    }).join('');
-    return `<div class="closed-card">
-<div class="closed-card-head" onclick="const b=this.nextElementSibling;b.style.display=b.style.display==='none'?'block':'none'">
-  <div><div class="closed-card-name">${l.name}</div><div style="font-size:11px;color:var(--t3);margin-top:2px">🏆 ${l.winner} · ${l.participantCount}명 · ${l.endedAt}</div></div>
-  <span style="font-size:11px;color:var(--t3)">▼</span>
-</div>
-<div class="closed-card-body" style="display:${li===0?'block':'none'}">
-  <div class="closed-stat-grid">
-    <div class="closed-stat"><div class="closed-stat-l">초기자금</div><div class="closed-stat-v">${fU(l.initialCash)}<small style="font-size:9px;color:var(--t2)"> U</small></div></div>
-    <div class="closed-stat"><div class="closed-stat-l">참여</div><div class="closed-stat-v">${l.participantCount}명</div></div>
-    <div class="closed-stat"><div class="closed-stat-l">우승</div><div class="closed-stat-v" style="color:var(--acc);font-size:11px;overflow:hidden;text-overflow:ellipsis">${l.winner}</div></div>
-  </div>
-  ${l.ranked.length?`<div style="font-size:11px;font-weight:800;color:var(--t2);margin-bottom:6px">최종 순위</div><div class="closed-podium">${podium}</div>`:''}
-</div>
-</div>`;
-  }).join('');
-  return `<div style="margin-top:12px"><div class="closed-section-title" style="margin-bottom:8px">📁 종료된 리그 ${ST.closedLeagues.length}개</div>${items}</div>`;
-}
-
-async function doNewLeague(){
-  const name = document.getElementById('newLgName')?.value.trim();
-  const end  = document.getElementById('newLgEnd')?.value;
-  const cash = parseInt(document.getElementById('newLgCash')?.value)||100000;
-  if(!name) return toast('리그 이름을 입력해주세요');
-  if(!end)  return toast('종료일을 입력해주세요');
-  // 기존 리그 종료 처리
-  if(ST.league){
-    const winner = getRanks()[0]?.nickname||'-';
-    await sb.from('leagues').update({status:'CLOSED',winner_nickname:winner}).eq('id',ST.league.id);
+function renderFuturePreview(){
+  const margin = Number(document.getElementById("futMargin").value);
+  const prev = document.getElementById("futPreview");
+  const gate = requireTradable();
+  if(gate || !state.league.allowFutures){
+    prev.innerHTML = `<div class="danger">${gate || "이 리그는 선물 거래가 꺼져 있습니다."}</div>`;
+    document.getElementById("futSubmit").disabled = true;
+    return;
   }
-  const lg = {
-    id:uid(), name, ticket:ticketCode(),
-    initial_cash:cash, start_date:today(), end_date:end, status:'ACTIVE',
-  };
-  const {error} = await sb.from('leagues').insert(lg);
-  if(error) return toast('리그 시작 실패: '+error.message);
-  saveLocal({participantId:null, activeUserId:null, leagueId:lg.id});
-  await fetchData(); renderAll();
-  toast(`🎉 "${name}" 시작! 티켓: ${lg.ticket}`);
-}
-
-
-
-function renderTrade(){
-  const aid=getActiveUserId();
-  const u=getUser();
-  const opts=ST.participants.length
-    ?ST.participants.map(p=>`<option value="${p.id}" ${p.id===aid?'selected':''}>${p.nickname}</option>`).join('')
-    :'<option value="">참여 후 이용 가능</option>';
-  document.getElementById('userSel').innerHTML=opts;
-  document.getElementById('histSel').innerHTML=opts;
-  document.getElementById('trCash').textContent=u?`${fU(u.cash)} U`:'—';
-  renderCoinList(); renderHoldings(); updateOrder();
-}
-function renderCoinList(){
-  const q=(document.getElementById('coinSearch')?.value||'').toLowerCase().trim();
-  let filtered=!q?ALL_COINS.slice(0,30):ALL_COINS.filter(c=>c.base.toLowerCase().includes(q)||c.name.toLowerCase().includes(q)||c.symbol.toLowerCase().includes(q));
-  const meta=document.getElementById('searchMeta');
-  if(meta) meta.textContent=q?`"${q}" 검색결과 ${filtered.length}개 / 전체 ${ALL_COINS.length}개`:`거래량 상위 30위 (전체 ${ALL_COINS.length}개)`;
-  document.getElementById('coinList').innerHTML=filtered.slice(0,40).map(c=>{
-    const sel=c.symbol===ST.selSym?' on':'', cl=c.change>=0?'g':'r';
-    return `<div class="coin-item${sel}" data-sym="${c.symbol}">
-<div class="c-ico" style="background:${c.color}22;color:${c.color}">${c.base.slice(0,4)}</div>
-<div class="c-mid"><div class="c-base">${c.base}</div><div class="c-name">${c.name}</div></div>
-<div class="c-right"><div class="c-price">${c.price?fP(c.price):'—'}</div><div class="c-chg ${cl}">${c.price?fPct(c.change):''}</div><div class="c-vol">${c.vol24h?fVol(c.vol24h)+' USDT':''}</div></div>
-</div>`;
-  }).join('')||'<div class="empty">검색 결과 없음</div>';
-}
-function renderCoinItem(sym){
-  const el=document.querySelector(`.coin-item[data-sym="${sym}"]`); if(!el) return;
-  const c=getCoin(sym); if(!c) return;
-  const cl=c.change>=0?'g':'r';
-  const prEl=el.querySelector('.c-price'); if(prEl) prEl.textContent=fP(c.price);
-  const chEl=el.querySelector('.c-chg'); if(chEl){chEl.textContent=fPct(c.change);chEl.className='c-chg '+cl;}
-}
-function renderHoldings(){
-  const u=getUser(); const list=document.getElementById('hList');
-  if(!u||!u.holdings.length){list.innerHTML='<div class="empty"><span class="ei">💼</span>보유 코인이 없습니다</div>';updateSellPanel();return;}
-  list.innerHTML=u.holdings.map(h=>{
-    const c=getCoin(h.symbol), p=c?.price||h.avgPrice||0;
-    const val=p*h.qty, invested=h.avgPrice*h.qty;
-    const rate=invested>0?((val-invested)/invested)*100:0, cl=rate>=0?'g':'r';
-    const sel=h.symbol===selH?' sel':'';
-    return `<div class="h-row${sel}" data-sym="${h.symbol}">
-<div class="h-ico" style="background:${c?.color||'#848E9C'}22;color:${c?.color||'#848E9C'}">${h.base.slice(0,4)}</div>
-<div style="flex:1;min-width:0"><div class="h-base">${h.base}</div><div class="h-qty">${h.qty.toFixed(6)}</div></div>
-<div class="h-right"><div class="h-val">${fU(val)} U</div><div class="h-pct ${cl}">${fPct(rate)}</div></div>
-</div>`;
-  }).join('');
-  updateSellPanel();
-}
-let selH='', isBuy=true;
-function updateSellPanel(){
-  const panel=document.getElementById('sellPanel'), u=getUser();
-  if(!u||!selH){panel.style.display='none';return;}
-  const h=u.holdings.find(x=>x.symbol===selH); if(!h){panel.style.display='none';return;}
-  const c=getCoin(selH), p=c?.price||h.avgPrice||0;
-  const val=p*h.qty, invested=h.avgPrice*h.qty;
-  const rate=invested>0?((val-invested)/invested)*100:0, cl=rate>=0?'g':'r';
-  panel.style.display='block';
-  document.getElementById('spTitle').textContent=`${h.base}/USDT`;
-  document.getElementById('spMeta').innerHTML=`${h.qty.toFixed(6)} ${h.base} · 평가 ${fU(val)} USDT · <span class="${cl}">${fPct(rate)}</span>`;
-  updateSellPrev();
-}
-function updateSellPrev(){
-  const prev=document.getElementById('sellPrev'), amt=parseFloat(document.getElementById('sellAmt')?.value)||0;
-  if(!selH||amt<=0){prev.style.display='none';return;}
-  const u=getUser(), h=u?.holdings.find(x=>x.symbol===selH), c=getCoin(selH);
-  if(!h||!c?.price){prev.style.display='none';return;}
-  const qty=Math.min(amt/c.price,h.qty), sell=qty*c.price, profit=sell-qty*h.avgPrice;
-  const cl=profit>=0?'g':'r';
-  prev.style.display='block';
-  prev.innerHTML=`<div class="preview">
-<div class="prev-row"><span class="prev-lbl">수량</span><span class="prev-val">${qty.toFixed(6)} ${h.base}</span></div>
-<div class="prev-row"><span class="prev-lbl">수령</span><span class="prev-val">${fU(sell)} USDT</span></div>
-<div class="prev-row"><span class="prev-lbl">실현손익</span><span class="prev-val ${cl}">${profit>=0?'+':''}${fU(profit)} USDT</span></div>
-</div>`;
-}
-function updateOrder(){
-  const u=getUser(), c=getCoin(ST.selSym);
-  const avail=isBuy?(u?.cash||0):(u?.holdings.find(h=>h.symbol===ST.selSym)?.qty||0)*(c?.price||0);
-  document.getElementById('oBal').textContent=`${fU(avail)} USDT`;
-  document.getElementById('btnOrder').textContent=c?(isBuy?`${c.base} 시장가 매수`:`${c.base} 시장가 매도`):'코인 선택 후 매수';
-  document.getElementById('btnOrder').className='btn '+(isBuy?'btn-buy':'btn-sell');
-  document.getElementById('btnOrder').disabled=!c||isClosed();
-  // 선물 버튼도 업데이트
-  const fb=document.getElementById('btnFutOrder');
-  if(fb){
-    fb.textContent=c?`${c.base} ${futDir==='long'?'📈 롱':'📉 숏'} ${futLev}x 포지션 열기`:'코인 선택 후 포지션 열기';
-    fb.className='btn '+(futDir==='long'?'btn-buy':'btn-sell');
-    fb.disabled=!c||isClosed();
+  if(leverage > state.league.maxLeverage){
+    prev.innerHTML = `<div class="danger">이 리그의 최대 레버리지는 ${state.league.maxLeverage}x입니다.</div>`;
+    document.getElementById("futSubmit").disabled = true;
+    return;
   }
-  const fb2=document.getElementById('futBal'); if(fb2) fb2.textContent=u?`${fU(u.cash)} USDT`:'—';
-  updateOrderPrev();
+  const valid = validateFuture(margin);
+  if(!margin){
+    prev.innerHTML = `<div class="warn">레버리지는 수익과 손실을 모두 키웁니다. 청산가를 먼저 확인하세요.</div>`;
+    document.getElementById("futSubmit").disabled = false;
+    return;
+  }
+  if(!valid.ok){
+    prev.innerHTML = `<div class="danger">${valid.msg}</div>`;
+    document.getElementById("futSubmit").disabled = true;
+    return;
+  }
+  const riskClass = valid.dist < 8 || leverage >= 10 ? "danger" : "preview";
+  prev.innerHTML = `<div class="${riskClass}"><div class="pline"><span>포지션 크기</span><b>${money(valid.size)} USDT</b></div><div class="pline"><span>진입가</span><b>${price(coin().price)}</b></div><div class="pline"><span>강제청산가</span><b>${price(valid.liq)}</b></div><div class="pline"><span>청산까지</span><b>${valid.dist.toFixed(2)}%</b></div><div class="pline"><span>1% 변동 손익</span><b>${money(valid.size*.01)} USDT</b></div></div>`;
+  document.getElementById("futSubmit").disabled = false;
 }
-function updateOrderPrev(){
-  const prev=document.getElementById('oPrev'), amt=parseFloat(document.getElementById('oAmt')?.value)||0;
-  const c=getCoin(ST.selSym), u=getUser();
-  if(!c||!c.price||amt<=0){prev.style.display='none';return;}
-  const qty=amt/c.price;
-  prev.style.display='block';
-  prev.innerHTML=`<div class="prev-row"><span class="prev-lbl">예상 수량</span><span class="prev-val">${qty.toFixed(6)} ${c.base}</span></div>
-<div class="prev-row"><span class="prev-lbl">${isBuy?'매수 후 잔고':'수령 금액'}</span><span class="prev-val">${fU(isBuy?(u?.cash||0)-amt:amt)} USDT</span></div>`;
-}
-function showExec(type,c,qty,price,amount,profit,profitRate){
-  const el=document.getElementById('execEl'); el.style.display='block';
-  const ib=type==='BUY';
-  el.innerHTML=`<div class="exec-inner ${ib?'exec-buy':'exec-sell'}">
-<div class="exec-head"><span class="etype ${ib?'et-buy':'et-sell'}">${ib?'매수':'매도'}</span><span class="ename">${c.base}/USDT</span></div>
-<div class="edetail">${qty.toFixed(6)} ${c.base} · ${fP(price)} · ${fU(amount)} USDT</div>
-${typeof profit!=='undefined'?`<div class="eprofit ${profit>=0?'g':'r'}">${profit>=0?'+':''}${fU(profit)} USDT (${fPct(profitRate||0)})</div>`:''}
-</div>`;
-}
-function renderRank(){
-  // D-day
-  (function(){
-    const el=document.getElementById('rankDday'); if(!el) return;
-    if(!ST.league){el.innerHTML='';return;}
-    if(isClosed()){el.innerHTML='<span style="color:var(--R);font-weight:800">🏁 리그 종료됨</span>';return;}
-    const d=dLeft(ST.league.endDate);
-    const clr=d<=3?'var(--R)':d<=7?'var(--acc)':'var(--G)';
-    el.innerHTML=`<span style="color:${clr};font-weight:800">D-${d}</span>&nbsp;<span style="color:var(--t3)">· ${ST.league.endDate} 종료</span>`;
-  })();
-  const list=document.getElementById('rankList'), ranks=getRanks(), myId=LOCAL.participantId;
-  if(!ranks.length){list.innerHTML='<div class="empty"><span class="ei">🏅</span>참여자가 등록되면 랭킹이 표시됩니다</div>';return;}
-  list.innerHTML=ranks.map((r,i)=>{
-    const m=r._m, cl=m.rate>=0?'g':'r', isMe=myId===r.id;
-    const nc=i===0?'rb1':i===1?'rb2':i===2?'rb3':'rbn';
-    const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
-    return `<div class="r-row${isMe?' me':''}">
-<div class="r-badge ${nc}">${med}</div>
-<div class="r-mid"><div class="r-nick">${r.nickname}${isMe?'<span class="me-badge">나</span>':''}</div><div class="r-sub">현금 ${fU(r.cash)} · ${r.holdings.length}코인</div></div>
-<div class="r-right"><div class="r-asset">${fU(m.total)} <small style="font-size:10px;color:var(--t2)">U</small></div><div class="r-rate ${cl}">${fPct(m.rate)}</div></div>
-</div>`;
-  }).join('');
+function renderPositions(){
+  const p = active();
+  const open = p.positions.filter(x=>x.status==="OPEN");
+  const box = document.getElementById("positionBox");
+  if(!open.length){box.innerHTML = `<div class="empty">열린 포지션이 없습니다.</div>`; return}
+  box.innerHTML = open.map(pos=>{
+    const c = state.market.find(x=>x.symbol===pos.symbol);
+    const {pnl,rate} = calcPnL(pos,c.price);
+    const dist = liqDistance(pos);
+    const danger = dist < 8;
+    return `<div class="pos ${danger?"toprisk":""}">
+      <div class="poshead">
+        <div><span class="badge ${pos.dir}">${pos.dir==="long"?"LONG":"SHORT"} ${pos.lev}x</span> <b>${pos.symbol}/USDT</b></div>
+        <strong class="${pnl>=0?"g":"r"}">${pnl>=0?"+":""}${money(pnl)} U</strong>
+      </div>
+      <div class="posgrid">
+        <div class="mini"><span>마진</span><b>${money(pos.margin)} U</b></div>
+        <div class="mini"><span>포지션</span><b>${money(pos.size)} U</b></div>
+        <div class="mini"><span>진입 / 현재</span><b>${price(pos.entry)} / ${price(c.price)}</b></div>
+        <div class="mini"><span>청산가</span><b class="r">${price(pos.liq)}</b></div>
+        <div class="mini"><span>수익률</span><b class="${rate>=0?"g":"r"}">${pct(rate)}</b></div>
+        <div class="mini"><span>청산까지</span><b class="${danger?"r":"y"}">${dist.toFixed(2)}%</b></div>
+        <button class="btn" data-move="${pos.symbol}">가격 변동</button>
+        <button class="btn red" data-close="${pos.id}">청산하기</button>
+      </div>
+    </div>`;
+  }).join("");
 }
 function renderHistory(){
-  const selId=document.getElementById('histSel')?.value||getActiveUserId();
-  const u=getUser(selId), list=document.getElementById('histList');
-  if(!u||!u.history.length){list.innerHTML='<div class="empty"><span class="ei">📋</span>거래 기록이 없습니다</div>';return;}
-  list.innerHTML=u.history.slice().reverse().map(h=>{
-    const ib=h.type==='BUY', ph=(!ib&&typeof h.profit!=='undefined')?`<div class="hi-profit ${h.profit>=0?'g':'r'}">${h.profit>=0?'+':''}${fU(h.profit)} USDT (${fPct(h.profitRate||0)})</div>`:'';
-    return `<div class="hi-row">
-<div class="hi-top"><span class="hi-type ${ib?'ht-buy':'ht-sell'}">${ib?'매수':'매도'}</span><span class="hi-name">${h.base}/USDT</span><span class="hi-date">${h.date}</span></div>
-<div class="hi-detail">${h.qty.toFixed(6)} ${h.base} · ${fP(h.price)} · ${fU(h.amount)} USDT</div>
-${ph}
-</div>`;
-  }).join('');
+  const h = active().history.slice().reverse();
+  document.getElementById("historyCount").textContent = `${h.length}건`;
+  document.getElementById("historyBox").innerHTML = h.length ? `<table class="table"><thead><tr><th>시간</th><th>구분</th><th>내용</th><th>금액</th></tr></thead><tbody>`+
+    h.map(x=>`<tr><td>${x.time}</td><td>${x.type}</td><td>${x.symbol || ""} <span class="small">${x.note || ""}</span></td><td>${x.pnl!==undefined?`<span class="${x.pnl>=0?"g":"r"}">${x.pnl>=0?"+":""}${money(x.pnl)}</span>`:money(x.amount||0)} U</td></tr>`).join("")+
+    `</tbody></table>` : `<div class="empty">거래 기록이 없습니다.</div>`;
 }
 
-/* ══ 코인 선택 ══ */
-async function selectCoin(sym){
-  ST.selSym=sym; saveLocal({selSym:sym}); renderCoinList();
-  const c=getCoin(sym); if(!c) return;
-  document.getElementById('ctSym').textContent=`${c.base}/USDT`;
-  if(c.price){
-    const pEl=document.getElementById('ctPrice'), chEl=document.getElementById('ctChg');
-    pEl.textContent=fP(c.price); pEl.style.color=c.change>=0?'var(--G)':'var(--R)';
-    chEl.textContent=`${c.change>=0?'+':''}${c.change.toFixed(2)}%`; chEl.style.color=c.change>=0?'var(--G)':'var(--R)';
-  }
-  loadChart(sym,ST.chartInterval,true);
-  const t=await fetchTicker(sym);
-  if(t){
-    c.price=+t.lastPrice||c.price; c.change=+t.priceChangePercent||c.change;
-    c.high=+t.highPrice; c.low=+t.lowPrice; c.vol24h=+t.quoteVolume;
-    const pEl=document.getElementById('ctPrice'), chEl=document.getElementById('ctChg');
-    pEl.textContent=fP(c.price); pEl.style.color=c.change>=0?'var(--G)':'var(--R)';
-    chEl.textContent=`${c.change>=0?'+':''}${c.change.toFixed(2)}% (${fP(+t.priceChange)})`; chEl.style.color=c.change>=0?'var(--G)':'var(--R)';
-    document.getElementById('ct24h').textContent=fP(c.high);
-    document.getElementById('ct24l').textContent=fP(c.low);
-    document.getElementById('ct24v').textContent=fVol(c.vol24h)+' USDT';
-    renderCoinItem(sym);
-  }
-  openWS(sym); updateOrder();
-}
-
-/* ══ 이벤트 ══ */
-document.querySelectorAll('.bnav').forEach(b=>{
-  b.addEventListener('click',()=>{
-    document.querySelectorAll('.bnav').forEach(x=>x.classList.remove('on'));
-    document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
-    b.classList.add('on'); document.getElementById('v-'+b.dataset.tab).classList.add('on');
-    if(b.dataset.tab==='rank') renderRank();
-    if(b.dataset.tab==='hist') renderHistory();
-  });
+document.getElementById("nav").addEventListener("click",e=>{
+  const b = e.target.closest("button[data-view]"); if(!b) return;
+  document.querySelectorAll("#nav button").forEach(x=>x.classList.remove("on"));
+  document.querySelectorAll(".view").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");
+  document.getElementById("view-"+b.dataset.view).classList.add("on");
 });
-// btnAddMember 이벤트 제거됨 (lgStatusCard 인라인 버튼으로 대체)
-window.joinLeague=joinLeague;
-window.doNewLeague=doNewLeague;
-window.doClose=doClose;
-window.doDelete=doDelete;
-// lgForm은 renderLeague에서 동적 바인딩
-document.getElementById('userSel').addEventListener('change',e=>{
-  saveLocal({activeUserId:e.target.value}); selH=''; renderTrade();
+document.getElementById("playerSelect").addEventListener("change",e=>{state.activePlayerId=e.target.value; save(); render()});
+document.getElementById("addPlayer").addEventListener("click",()=>{
+  const input = document.getElementById("newName");
+  const name = input.value.trim();
+  if(name.length < 2) return toast("참가자 이름을 2자 이상 입력하세요.");
+  const p = {id:uid(),name,cash:0,rewards:{[state.league.id]:false},holdings:{},positions:[],history:[]};
+  state.players.push(p); state.activePlayerId = p.id; input.value = ""; save(); render(); toast("참가자 추가 완료");
 });
-document.getElementById('histSel').addEventListener('change',()=>renderHistory());
-document.getElementById('coinSearch').addEventListener('input',()=>renderCoinList());
-document.getElementById('coinList').addEventListener('click',e=>{ const item=e.target.closest('.coin-item'); if(!item) return; selectCoin(item.dataset.sym); });
-document.getElementById('homeMarket').addEventListener('click',e=>{
-  const row=e.target.closest('.hm-row'); if(!row) return;
-  document.querySelectorAll('.bnav').forEach(x=>x.classList.remove('on'));
-  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
-  document.querySelector('[data-tab="trade"]').classList.add('on');
-  document.getElementById('v-trade').classList.add('on');
-  selectCoin(row.dataset.sym);
+document.getElementById("resetGame").addEventListener("click",()=>confirmAction({
+  title:"리그 초기화",
+  text:"모든 참가자, 거래 기록, 포지션을 초기화합니다.",
+  detail:"기존 파일 백업은 별도로 보존되어 있지만, 브라우저 로컬 저장 데이터는 새로 시작됩니다.",
+  action:()=>{state=freshState(); state.activePlayerId=state.players[0].id; selected="BTC"; save(); render(); toast("리그 초기화 완료")}
+}));
+document.getElementById("market").addEventListener("click",e=>{
+  const b = e.target.closest("[data-symbol]"); if(!b) return;
+  selected = b.dataset.symbol; save(); render();
 });
-document.getElementById('btnHomeRankRefresh').addEventListener('click',async()=>{
-  const syms=new Set(ST.participants.flatMap(p=>p.holdings.map(h=>h.symbol)));
-  for(const sym of syms){ const t=await fetchTicker(sym); if(t){const c=getCoin(sym);if(c){c.price=+t.lastPrice;c.change=+t.priceChangePercent;}} await new Promise(r=>setTimeout(r,150)); }
-  renderHomeRank(); renderHeader();
-});
-document.getElementById('intervals').addEventListener('click',e=>{
-  const b=e.target.closest('.ivl'); if(!b) return;
-  document.querySelectorAll('.ivl').forEach(x=>x.classList.remove('on')); b.classList.add('on');
-  ST.chartInterval=b.dataset.i; saveLocal({chartInterval:b.dataset.i}); loadChart(ST.selSym,ST.chartInterval,true);
-});
-document.querySelectorAll('.ctype').forEach(b=>{
-  b.addEventListener('click',()=>{
-    document.querySelectorAll('.ctype').forEach(x=>x.classList.remove('on')); b.classList.add('on');
-    ST.chartType=b.dataset.ct; saveLocal({chartType:b.dataset.ct}); loadChart(ST.selSym,ST.chartInterval,true);
-  });
-});
-document.getElementById('tabBuy').addEventListener('click',()=>{ isBuy=true; document.getElementById('tabBuy').classList.add('on'); document.getElementById('tabSell').classList.remove('on'); updateOrder(); });
-document.getElementById('tabSell').addEventListener('click',()=>{ isBuy=false; document.getElementById('tabSell').classList.add('on'); document.getElementById('tabBuy').classList.remove('on'); updateOrder(); });
-document.getElementById('oAmt').addEventListener('input',updateOrderPrev);
-document.querySelector('.pct-row').addEventListener('click',e=>{
-  const b=e.target.closest('.pct'); if(!b) return;
-  const u=getUser(), c=getCoin(ST.selSym), p=parseInt(b.dataset.p)/100;
-  let max=0;
-  if(isBuy) max=(u?.cash||0)*p;
-  else{ const h=u?.holdings.find(x=>x.symbol===ST.selSym); max=(h?.qty||0)*(c?.price||0)*p; }
-  document.getElementById('oAmt').value=max.toFixed(2); updateOrderPrev();
-});
-document.getElementById('btnOrder').addEventListener('click',async()=>{
-  const amt=parseFloat(document.getElementById('oAmt').value)||0;
-  if(isBuy) await doBuy(amt); else await doSell(ST.selSym,amt);
-  document.getElementById('oAmt').value=''; updateOrderPrev();
-});
-document.getElementById('hList').addEventListener('click',e=>{
-  const row=e.target.closest('.h-row'); if(!row) return;
-  selH=selH===row.dataset.sym?'':row.dataset.sym;
-  renderHoldings(); document.getElementById('sellAmt').value=''; updateSellPrev();
-  if(selH) selectCoin(selH);
-});
-document.getElementById('sellAmt').addEventListener('input',updateSellPrev);
-document.getElementById('btnSellPart').addEventListener('click',async()=>{ const a=parseFloat(document.getElementById('sellAmt').value)||0; if(!a) return toast('금액을 입력해주세요.'); await doSell(selH,a); });
-document.getElementById('btnSellFull').addEventListener('click',async()=>{ if(!selH) return toast('보유 코인을 선택해주세요.'); await doSell(selH,null); });
-document.getElementById('btnRefresh').addEventListener('click',async()=>{
-  const u=getUser(); if(!u||!u.holdings.length) return toast('보유 코인이 없습니다.');
-  toast('⏳ 가격 갱신 중...'); let ok=0;
-  for(const h of u.holdings){ const t=await fetchTicker(h.symbol); if(t){const c=getCoin(h.symbol);if(c){c.price=+t.lastPrice;c.change=+t.priceChangePercent;ok++;}} await new Promise(r=>setTimeout(r,150)); }
-  renderAll(); toast(`✅ ${ok}개 코인 가격 갱신 완료`);
-});
-document.getElementById('btnRRank').addEventListener('click',async()=>{
-  toast('⏳ 갱신 중...');
-  const syms=new Set(ST.participants.flatMap(p=>p.holdings.map(h=>h.symbol)));
-  for(const sym of syms){ const t=await fetchTicker(sym); if(t){const c=getCoin(sym);if(c){c.price=+t.lastPrice;c.change=+t.priceChangePercent;}} await new Promise(r=>setTimeout(r,150)); }
-  renderRank(); renderHeader(); toast('✅ 랭킹 갱신 완료');
-});
-
-/* ══ 현물/선물 탭 전환 ══ */
-document.getElementById('tmodeSpot').addEventListener('click',()=>{
-  futMode='spot';
-  document.getElementById('tmodeSpot').classList.add('on');
-  document.getElementById('tmodeFut').classList.remove('on');
-  document.getElementById('spotPanel').style.display='block';
-  document.getElementById('futPanel').style.display='none';
-});
-document.getElementById('tmodeFut').addEventListener('click',()=>{
-  futMode='futures';
-  document.getElementById('tmodeFut').classList.add('on');
-  document.getElementById('tmodeSpot').classList.remove('on');
-  document.getElementById('spotPanel').style.display='none';
-  document.getElementById('futPanel').style.display='block';
-  renderPositions();
-});
-
-/* ── 레버리지 버튼 ── */
-document.getElementById('levWrap').addEventListener('click',e=>{
-  const b=e.target.closest('.lev-btn'); if(!b) return;
-  document.querySelectorAll('.lev-btn').forEach(x=>x.classList.remove('on')); b.classList.add('on');
-  futLev=parseInt(b.dataset.lev);
-  document.getElementById('levDisplay').textContent=futLev+'x';
-  updateFutPrev();
-});
-
-/* ── 선물 마진 % 버튼 ── */
-document.querySelectorAll('[data-fp]').forEach(b=>{
-  b.addEventListener('click',()=>{
-    const u=getUser(), p=parseInt(b.dataset.fp)/100;
-    const max=(u?.cash||0)*p;
-    document.getElementById('futAmt').value=max.toFixed(2); updateFutPrev();
-  });
-});
-
-/* ── 선물 마진 입력 ── */
-document.getElementById('futAmt').addEventListener('input',updateFutPrev);
-
-/* ── 선물 주문 버튼 ── */
-document.getElementById('btnFutOrder').addEventListener('click',async()=>{
-  const amt=parseFloat(document.getElementById('futAmt').value)||0;
-  await doOpenPosition(amt);
-  document.getElementById('futAmt').value=''; updateFutPrev();
-});
-
-/* ── 선물 PnL 갱신 버튼 ── */
-document.getElementById('btnFutRefresh').addEventListener('click',async()=>{
-  const u=getUser(); if(!u||!u.positions?.length) return toast('열린 포지션이 없습니다.');
-  const syms=new Set(u.positions.map(p=>p.symbol));
-  for(const sym of syms){ const t=await fetchTicker(sym); if(t){const c=getCoin(sym);if(c){c.price=+t.lastPrice;}} await new Promise(r=>setTimeout(r,150)); }
-  await checkLiquidations();
-  renderPositions(); toast('✅ PnL 갱신 완료');
-});
-
-/* ══ URL 파라미터 (초대 링크) ══ */
-(()=>{
-  const t=new URLSearchParams(location.search).get('t');
-  if(t){
-    // 티켓을 LOCAL에 저장해두고 리그 탭으로 이동
-    window._pendingTicket=t;
-    // 리그 탭 자동 활성화
-    document.querySelectorAll('.bnav').forEach(x=>x.classList.remove('on'));
-    document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
-    const lb=document.querySelector('[data-tab="league"]');
-    if(lb){ lb.classList.add('on'); document.getElementById('v-league').classList.add('on'); }
-    toast('🎫 초대 티켓 확인! 닉네임을 입력해 참여하세요.');
-  }
-})();
-
-/* ══ 토스트 ══ */
-let _tt;
-function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),3000); }
-
-/* ══ 30초 자동 가격 갱신 ══ */
-setInterval(async()=>{
-  const posSyms=new Set(ST.participants.flatMap(p=>(p.positions||[]).map(h=>h.symbol)));
-  const syms=new Set([ST.selSym,...ST.participants.flatMap(p=>p.holdings.map(h=>h.symbol)),...posSyms]);
-  for(const sym of syms){
-    const t=await fetchTicker(sym);
-    if(t){const c=getCoin(sym);if(c){c.price=+t.lastPrice;c.change=+t.priceChangePercent;}}
-    await new Promise(r=>setTimeout(r,200));
-  }
-  await checkLiquidations();
-  renderCoinList(); renderHoldings(); renderHeader(); renderHomeRank(); renderHomeMarket();
-  if(futMode==='futures') renderPositions();
-},30000);
-
-/* ══ 초기화 ══ */
-/* ══ 인앱 브라우저 감지 ══ */
-function isInAppBrowser(){
-  const ua = navigator.userAgent.toLowerCase();
-  return /kakaotalk|line|naver|instagram|fbav|fb_iab|twitter|wechat|micromessenger/.test(ua);
-}
-function isIOS(){
-  return /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
-}
-function openExternal(){
-  // Android: intent scheme으로 크롬 강제 오픈
-  const url = location.href;
-  location.href = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end';
-  setTimeout(()=>{ location.href = url; }, 500);
-}
-function copyUrl(){
-  const url = location.href;
-  if(navigator.clipboard){
-    navigator.clipboard.writeText(url).then(()=>{
-      const btn = document.getElementById('copyUrlBtn');
-      if(btn){ btn.textContent='✅ 복사됨!'; setTimeout(()=>{ btn.textContent='📋 링크 복사하기'; },2000); }
-    });
-  } else {
-    // fallback
-    const el = document.createElement('textarea');
-    el.value = url; el.style.position='fixed'; el.style.opacity='0';
-    document.body.appendChild(el); el.select();
-    try{ document.execCommand('copy'); }catch(_){}
-    document.body.removeChild(el);
-    const btn = document.getElementById('copyUrlBtn');
-    if(btn){ btn.textContent='✅ 복사됨!'; setTimeout(()=>{ btn.textContent='📋 링크 복사하기'; },2000); }
-  }
-}
-if(isInAppBrowser()){
-  const w = document.getElementById('inappWarning');
-  const b = document.getElementById('btnGoogleLogin');
-  if(w){ w.style.display='block'; }
-  if(b){ b.style.opacity='.3'; b.style.pointerEvents='none'; }
-  const urlBox = document.getElementById('iosUrlBox');
-  if(urlBox) urlBox.textContent = location.href;
-  if(isIOS()){
-    const el = document.getElementById('inappIOS');
-    if(el) el.style.display='block';
-  } else {
-    const el = document.getElementById('inappAndroid');
-    if(el) el.style.display='block';
-  }
-}
-
-/* ══ 구글 로그인 ══ */
-let CURRENT_USER = null; // Supabase auth user
-
-function showLoginOverlay(){ document.getElementById('loginOverlay').style.display='flex'; }
-function hideLoginOverlay(){ document.getElementById('loginOverlay').style.display='none'; }
-
-function updateAvatarUI(user){
-  const btn = document.getElementById('userAvatarBtn');
-  if(!btn) return;
-  if(user?.user_metadata?.avatar_url){
-    btn.outerHTML = `<img class="user-avatar" id="userAvatarBtn" src="${user.user_metadata.avatar_url}" alt="프로필" title="${user.email}">`;
-  } else {
-    btn.textContent = user ? (user.email?.[0]?.toUpperCase()||'👤') : '👤';
-  }
-  const emailEl = document.getElementById('logoutMenuEmail');
-  if(emailEl) emailEl.textContent = user?.email || '';
-}
-
-async function handleAuthUser(user){
-  CURRENT_USER = user;
-  if(!user){ showLoginOverlay(); return; }
-  hideLoginOverlay();
-  updateAvatarUI(user);
-  // 이 유저의 participant 찾기
-  const {data:parts} = await sb.from('participants')
-    .select('id,league_id').eq('user_id', user.id).limit(1);
-  if(parts?.length){
-    const p = parts[0];
-    saveLocal({participantId: p.id, activeUserId: p.id, leagueId: p.league_id});
-  }
-}
-
-document.getElementById('btnGoogleLogin').addEventListener('click', async()=>{
-  const {error} = await sb.auth.signInWithOAuth({
-    provider:'google',
-    options:{ redirectTo: `${location.origin}${location.pathname}` }
-  });
-  if(error) toast('로그인 실패: '+error.message);
-});
-
-document.getElementById('userAvatarBtn')?.addEventListener('click', ()=>{
-  document.getElementById('logoutMenu').classList.toggle('show');
-});
-document.addEventListener('click', e=>{
-  if(!e.target.closest('#userAvatarBtn')&&!e.target.closest('#logoutMenu')){
-    document.getElementById('logoutMenu')?.classList.remove('show');
-  }
-});
-document.getElementById('btnLogout').addEventListener('click', async()=>{
-  await sb.auth.signOut();
-  saveLocal({participantId:null, activeUserId:null});
-  CURRENT_USER = null;
-  document.getElementById('logoutMenu').classList.remove('show');
-  updateAvatarUI(null);
-  showLoginOverlay();
-  toast('로그아웃 됐어요.');
-});
-
-async function init(){
-  try{
-    // 1. Supabase 초기화
-    if(!window.supabase){ setApiStatus('err','Supabase 로드 실패'); return; }
-    sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
-    setApiStatus('loading','연결 중...');
-
-    // 2. Binance 시세 먼저 로드 (DB와 무관하게)
-    fetchAll24hr().then(all=>{
-      if(all){ parseTickers(all); renderCoinList(); renderHomeMarket(); }
-    });
-    // 차트도 바로 로드 시작
-    loadChart(ST.selSym, ST.chartInterval, true);
-
-    // 3. 인증 상태 변화 감지
-    sb.auth.onAuthStateChange(async(event, session)=>{
-      if(event==='SIGNED_IN'){
-        hideLoginOverlay();
-        await handleAuthUser(session.user);
-        await fetchData();
-        setupRealtime();
-        renderAll();
-        selectCoin(ST.selSym);
-      } else if(event==='SIGNED_OUT'){
-        showLoginOverlay();
-        setApiStatus('err','로그인 필요');
-      }
-    });
-
-    // 4. 현재 세션 확인
-    const {data:{session}, error:sessErr} = await sb.auth.getSession();
-    if(sessErr){ setApiStatus('err','세션 오류: '+sessErr.message); showLoginOverlay(); return; }
-
-    if(!session?.user){
-      setApiStatus('err','로그인 필요');
-      showLoginOverlay();
-      return;
+document.getElementById("search").addEventListener("input",renderMarket);
+document.getElementById("tickMarket").addEventListener("click",()=>tickMarket(1.8));
+document.getElementById("checkLiq").addEventListener("click",()=>{const n=liquidateAll(); save(); render(); toast(n?`${n}개 포지션 청산`:"청산 대상 없음")});
+document.getElementById("claimRewardLeague").addEventListener("click",claimReward);
+document.getElementById("toggleAdmin").addEventListener("click",()=>{
+  if(isFileMode){
+    if(state.adminMode){
+      state.adminMode=false; save(); render(); return;
     }
-
-    // 5. 로그인된 상태 — 데이터 로드
-    hideLoginOverlay();
-    await handleAuthUser(session.user);
-    await fetchData();
-    setupRealtime();
-    renderAll();
-    selectCoin(ST.selSym);
-
-  }catch(e){
-    console.error('init error:', e);
-    setApiStatus('err','초기화 실패: '+e.message);
+    const pin = prompt("로컬 미리보기 관리자 PIN을 입력하세요.");
+    if(pin !== LOCAL_ADMIN_PIN) return toast("관리자 PIN이 올바르지 않습니다.");
+    state.adminMode=true; save(); render(); return;
   }
-}
-
-init();
+  if(!currentUser) return toast("Google 로그인 후 관리자 권한을 확인할 수 있습니다.");
+  if(!cloudAdmin) return toast("이 Google 계정에는 관리자 권한이 없습니다.");
+  state.adminMode = !state.adminMode;
+  save();
+  render();
+});
+document.getElementById("tabBuy").addEventListener("click",()=>{side="buy"; document.getElementById("tabBuy").classList.add("on"); document.getElementById("tabSell").classList.remove("on"); renderSpotPreview()});
+document.getElementById("tabSell").addEventListener("click",()=>{side="sell"; document.getElementById("tabSell").classList.add("on"); document.getElementById("tabBuy").classList.remove("on"); renderSpotPreview()});
+document.getElementById("spotAmount").addEventListener("input",renderSpotPreview);
+document.getElementById("spotQuick").addEventListener("click",e=>{
+  const b = e.target.closest("[data-pct]"); if(!b) return;
+  document.getElementById("spotAmount").value = (spotMax() * Number(b.dataset.pct) / 100).toFixed(2);
+  renderSpotPreview();
+});
+document.getElementById("spotSubmit").addEventListener("click",()=>executeSpot(Number(document.getElementById("spotAmount").value)));
+document.getElementById("dirLong").addEventListener("click",()=>{futDir="long"; document.getElementById("dirLong").className="on long"; document.getElementById("dirShort").className=""; renderFuturePreview()});
+document.getElementById("dirShort").addEventListener("click",()=>{futDir="short"; document.getElementById("dirShort").className="on short"; document.getElementById("dirLong").className=""; renderFuturePreview()});
+document.getElementById("levBox").addEventListener("click",e=>{
+  const b = e.target.closest("[data-lev]"); if(!b) return;
+  leverage = Number(b.dataset.lev);
+  document.querySelectorAll("#levBox button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");
+  renderFuturePreview();
+});
+document.getElementById("futMargin").addEventListener("input",renderFuturePreview);
+document.getElementById("futQuick").addEventListener("click",e=>{
+  const b = e.target.closest("[data-pct]"); if(!b) return;
+  document.getElementById("futMargin").value = (active().cash * Number(b.dataset.pct) / 100).toFixed(2);
+  renderFuturePreview();
+});
+document.getElementById("futSubmit").addEventListener("click",requestFuture);
+document.getElementById("positionBox").addEventListener("click",e=>{
+  const move = e.target.closest("[data-move]");
+  const close = e.target.closest("[data-close]");
+  if(move){tickMarket(2.4); return}
+  if(close) closePosition(close.dataset.close);
+});
+document.getElementById("cancelConfirm").addEventListener("click",closeConfirm);
+document.getElementById("okConfirm").addEventListener("click",()=>{const fn=pendingConfirm; closeConfirm(); if(fn) fn()});
+document.getElementById("confirmModal").addEventListener("click",e=>{if(e.target.id==="confirmModal") closeConfirm()});
+setInterval(()=>tickMarket(.35),15000);
+render();
+initAuth().catch(e=>console.warn("auth init failed", e));
 </script>
 </body>
 </html>
