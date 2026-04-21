@@ -444,7 +444,7 @@ function emptyLeague(){
   };
 }
 function freshState(){
-  const league = defaultLeague();
+  const league = emptyLeague();
   const firstId = uid();
   return {
     selected:"BTC",
@@ -457,11 +457,13 @@ function freshState(){
   };
 }
 function loadState(){
+  const s = freshState();
   try{
     const saved = JSON.parse(localStorage.getItem(STORE_KEY));
-    if(saved?.players?.length && saved?.market?.length) return migrateState(saved);
+    if(saved?.selected) s.selected = saved.selected;
+    if(typeof saved?.adminMode === "boolean") s.adminMode = saved.adminMode;
+    if(saved?.activePlayerId) s.activePlayerId = saved.activePlayerId;
   }catch(_){}
-  const s = freshState();
   return s;
 }
 function migrateState(s){
@@ -484,19 +486,19 @@ function migrateState(s){
 function mapCloudLeague(row){
   if(!row) return null;
   return {
-    ...state.league,
+    ...defaultLeague(),
     id:row.id,
-    name:row.name || state.league.name,
+    name:row.name || "코인왕 시즌 리그",
     status:row.status || "ACTIVE",
-    startDate:row.start_date || state.league.startDate,
-    endDate:row.end_date || state.league.endDate,
-    initialCash:Number(row.initial_cash) || state.league.initialCash || START_CASH,
-    inviteCode:row.ticket || row.invite_code || state.league.inviteCode,
-    rewardTitle:state.league.rewardTitle || "리그 참가 보상 도착",
-    rewardText:state.league.rewardText || "이번 리그 투자금이 준비됐어요.",
-    allowSpot:state.league.allowSpot !== false,
-    allowFutures:state.league.allowFutures !== false,
-    maxLeverage:state.league.maxLeverage || 25
+    startDate:row.start_date || new Date().toISOString().slice(0,10),
+    endDate:row.end_date || addDays(14),
+    initialCash:Number(row.initial_cash) || START_CASH,
+    inviteCode:row.ticket || row.invite_code || "-",
+    rewardTitle:row.reward_title || "리그 참가 보상 도착",
+    rewardText:row.reward_text || "이번 리그 투자금이 준비됐어요.",
+    allowSpot:row.allow_spot !== false,
+    allowFutures:row.allow_futures !== false,
+    maxLeverage:Number(row.max_leverage) || 25
   };
 }
 function mergeCloudParticipants(rows=[]){
@@ -655,8 +657,12 @@ async function saveCloudParticipantProfile(p){
   return true;
 }
 function save(){
-  state.selected = selected;
-  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  localStorage.setItem(STORE_KEY, JSON.stringify({
+    version:3,
+    selected,
+    adminMode:!!state.adminMode,
+    activePlayerId:state.activePlayerId || ""
+  }));
 }
 function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4)}
 function money(n){return (Number(n)||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})}
@@ -695,6 +701,7 @@ function positionValue(p){
 function totalAssets(p){return p.cash + holdingValue(p) + positionValue(p)}
 function seedMoney(){return state.league?.initialCash || START_CASH}
 function hasActiveLeague(){return !!state.league?.id && state.league.status === "ACTIVE"}
+function rankingPlayers(){return state.players.filter(p=>hasReward(p))}
 function profitRate(p){
   const seed = seedMoney();
   return seed > 0 ? (totalAssets(p)-seed)/seed*100 : 0;
@@ -1154,6 +1161,10 @@ function renderPlayers(){
   const sel = document.getElementById("playerSelect");
   sel.innerHTML = state.players.map(p=>`<option value="${p.id}" ${p.id===state.activePlayerId?"selected":""}>${escapeHtml(displayName(p))}</option>`).join("");
   sel.disabled = !!currentUser && !cloudAdmin && cloudParticipantSchema !== "base";
+  const showLocalTools = isFileMode;
+  document.getElementById("newName").style.display = showLocalTools ? "" : "none";
+  document.getElementById("addPlayer").style.display = showLocalTools ? "" : "none";
+  document.getElementById("resetGame").style.display = showLocalTools ? "" : "none";
 }
 function renderMarket(){
   const q = document.getElementById("search").value.trim().toLowerCase();
@@ -1292,18 +1303,19 @@ function renderDashboard(){
   document.getElementById("mRisk").textContent = money(riskMargin) + " U";
   document.getElementById("mRiskNote").textContent = nearest === null ? "열린 포지션 없음" : `가장 가까운 청산가 ${nearest.toFixed(2)}%`;
 
-  document.getElementById("leagueStrip").innerHTML = `<div><b>${escapeHtml(state.league.name)}</b><span>${state.league.status==="ACTIVE"?"진행 중":"종료"} · ${dday()} · ${state.players.length}명</span></div><strong class="y">${state.league.inviteCode}</strong>`;
+  const rankSource = rankingPlayers();
+  document.getElementById("leagueStrip").innerHTML = `<div><b>${escapeHtml(state.league.name)}</b><span>${state.league.status==="ACTIVE"?"진행 중":"종료"} · ${dday()} · ${rankSource.length}명</span></div><strong class="y">${state.league.inviteCode}</strong>`;
   document.getElementById("rewardBox").innerHTML = hasReward(p)
     ? `<div class="reward claimed"><h2>투자금 지급 완료</h2><p>이번 리그에서는 1회만 지급됩니다. 이제 거래로 수익률을 겨뤄보세요.</p></div>`
     : `<div class="reward"><h2>🎟 ${escapeHtml(state.league.rewardTitle)}</h2><p>${escapeHtml(state.league.rewardText)} ${money(seedMoney())} USDT를 1회 받을 수 있어요.</p><button class="btn gold" id="claimRewardHome">가상 현금 받기</button></div>`;
   document.getElementById("claimRewardHome")?.addEventListener("click",claimReward);
 
-  const ranks = [...state.players].sort((a,b)=>profitRate(b)-profitRate(a));
-  document.getElementById("rankBox").innerHTML = `<table class="table"><thead><tr><th>순위</th><th>참가자</th><th>수익률</th></tr></thead><tbody>`+
+  const ranks = [...rankSource].sort((a,b)=>profitRate(b)-profitRate(a));
+  document.getElementById("rankBox").innerHTML = ranks.length ? `<table class="table"><thead><tr><th>순위</th><th>참가자</th><th>수익률</th></tr></thead><tbody>`+
     ranks.map((r,i)=>{
       const t = totalAssets(r), rr = profitRate(r);
       return `<tr><td>${i+1}</td><td>${escapeHtml(displayName(r))}<div class="small">${money(t)} U</div></td><td><span class="${rr>=0?"g":"r"}">${pct(rr)}</span></td></tr>`;
-    }).join("")+"</tbody></table>";
+    }).join("")+"</tbody></table>" : `<div class="empty">아직 참가자가 없습니다.</div>`;
 
   const rows = Object.entries(p.holdings);
   document.getElementById("holdingBox").innerHTML = rows.length ? `<table class="table"><thead><tr><th>코인</th><th>수량</th><th>평가</th></tr></thead><tbody>`+
@@ -1343,11 +1355,11 @@ function renderLeague(){
       <div class="pline"><span>거래 설정</span><b>현물 ${state.league.allowSpot?"ON":"OFF"} · 선물 ${state.league.allowFutures?"ON":"OFF"} · 최대 ${state.league.maxLeverage}x</b></div>
       <div class="pline"><span>초대 코드</span><b>${state.league.inviteCode}</b></div>
     </div>`;
-  const ranks = [...state.players].sort((a,b)=>profitRate(b)-profitRate(a));
+  const ranks = [...rankingPlayers()].sort((a,b)=>profitRate(b)-profitRate(a));
   document.getElementById("leagueRankMeta").textContent = `${ranks.length}명`;
-  document.getElementById("leagueRankBox").innerHTML = `<table class="table"><thead><tr><th>순위</th><th>참가자</th><th>자산</th></tr></thead><tbody>`+
+  document.getElementById("leagueRankBox").innerHTML = ranks.length ? `<table class="table"><thead><tr><th>순위</th><th>참가자</th><th>자산</th></tr></thead><tbody>`+
     ranks.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(displayName(r))}<div class="small">${hasReward(r)?"지급 완료":"미수령"}</div></td><td>${money(totalAssets(r))} U<br><span class="${profitRate(r)>=0?"g":"r"}">${pct(profitRate(r))}</span></td></tr>`).join("")+
-    `</tbody></table>`;
+    `</tbody></table>` : `<div class="empty">아직 참가자가 없습니다.</div>`;
   document.getElementById("saveNickname")?.addEventListener("click",saveNickname);
   document.getElementById("leagueNickname")?.addEventListener("keydown",e=>{if(e.key==="Enter") saveNickname()});
   renderAdmin();
