@@ -378,6 +378,22 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   <div class="login-logo">NIGAGARA COINKING</div>
   <h1 class="login-title">코인왕 리그에<br>오신 걸 환영해요! 🏆</h1>
   <p class="login-desc">구글 계정으로 로그인하면<br>어떤 기기에서도 내 데이터가 유지돼요.</p>
+
+  <!-- 인앱 브라우저 경고 (기본 숨김) -->
+  <div id="inappWarning" style="display:none;width:100%;max-width:320px;background:rgba(246,70,93,.1);border:1px solid rgba(246,70,93,.3);border-radius:10px;padding:16px;margin-bottom:20px;text-align:left">
+    <div style="font-size:14px;font-weight:900;color:#F6465D;margin-bottom:8px">⚠️ 카카오톡 브라우저 감지됨</div>
+    <div style="font-size:13px;color:#848E9C;line-height:1.8">
+      Google 로그인은 카카오톡 내부 브라우저에서 작동하지 않아요.<br><br>
+      <b style="color:#EAECEF">아래 방법으로 열어주세요:</b><br>
+      1️⃣ 우측 하단 <b style="color:#EAECEF">점 3개(⋮)</b> 탭<br>
+      2️⃣ <b style="color:#EAECEF">다른 브라우저로 열기</b> 선택<br>
+      3️⃣ 크롬 또는 삼성 인터넷 선택
+    </div>
+    <button onclick="window.open(location.href,'_blank')" style="margin-top:12px;width:100%;height:40px;background:#F0B90B;color:#000;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer">
+      🌐 외부 브라우저로 열기
+    </button>
+  </div>
+
   <button class="btn-google" id="btnGoogleLogin">
     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
     Google로 시작하기
@@ -1883,6 +1899,18 @@ setInterval(async()=>{
 },30000);
 
 /* ══ 초기화 ══ */
+/* ══ 인앱 브라우저 감지 ══ */
+function isInAppBrowser(){
+  const ua = navigator.userAgent.toLowerCase();
+  return /kakaotalk|line|naver|instagram|fbav|fb_iab|twitter|wechat|micromessenger/.test(ua);
+}
+if(isInAppBrowser()){
+  const w = document.getElementById('inappWarning');
+  const b = document.getElementById('btnGoogleLogin');
+  if(w) w.style.display='block';
+  if(b) b.style.opacity='.4';
+}
+
 /* ══ 구글 로그인 ══ */
 let CURRENT_USER = null; // Supabase auth user
 
