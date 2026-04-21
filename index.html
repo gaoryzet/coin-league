@@ -239,6 +239,69 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .hm-chg{font-size:11px;font-weight:700;margin-top:1px;white-space:nowrap}
 .hm-bar{width:40px;flex-shrink:0}
 .hm-bar svg{display:block;width:100%;height:24px}
+/* ── 리그 상태 카드 ── */
+.lg-status-card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:14px}
+.lg-status-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.lg-status-name{font-size:14px;font-weight:900;color:var(--t1);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lg-join-badge{padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800;white-space:nowrap;flex-shrink:0}
+.lg-join-y{background:var(--Gbg);color:var(--G);border:1px solid rgba(14,203,129,.25)}
+.lg-join-n{background:rgba(240,185,11,.1);color:var(--acc);border:1px solid rgba(240,185,11,.25)}
+.lg-join-form{border-top:1px solid var(--bd);padding-top:12px;margin-top:2px}
+.lg-my-info{display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:var(--r);padding:9px 12px;font-size:13px}
+/* ── 종료된 리그 대시보드 ── */
+.closed-section-title{font-size:11px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.closed-card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:8px;overflow:hidden}
+.closed-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 14px;cursor:pointer}
+.closed-card-name{font-size:13px;font-weight:900;color:var(--t1)}
+.closed-card-date{font-size:11px;color:var(--t3);flex-shrink:0}
+.closed-card-body{border-top:1px solid var(--bd);padding:12px 14px}
+.closed-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.closed-stat{background:var(--bg3);border-radius:var(--r);padding:8px;text-align:center}
+.closed-stat-l{font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.closed-stat-v{font-size:13px;font-weight:800;margin-top:3px;word-break:break-all}
+.closed-podium{display:grid;gap:5px}
+.closed-podium-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg3);border-radius:var(--r)}
+/* ── 거래 모드 탭 (현물/선물) ── */
+.trade-mode-tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg1);border-bottom:1px solid var(--bd)}
+.tmode{padding:9px;font-weight:800;font-size:13px;text-align:center;color:var(--t3);border-bottom:2px solid transparent;transition:.12s}
+.tmode.on{color:var(--t1);border-color:var(--acc)}
+.fut-guide{margin:10px 12px 0;border-radius:var(--r);overflow:hidden;border:1px solid rgba(240,185,11,.2);background:rgba(240,185,11,.04)}
+.fut-guide-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer}
+.fut-guide-title{font-size:12px;font-weight:800;color:var(--acc)}
+.fut-guide-body{padding:0 12px 12px;display:grid;gap:8px}
+.fut-concept{background:var(--bg2);border-radius:var(--r);padding:10px 12px;border:1px solid var(--bd)}
+.fut-concept-head{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.fut-concept-icon{font-size:18px}
+.fut-concept-label{font-size:12px;font-weight:900}
+.fut-concept-desc{font-size:11px;color:var(--t2);line-height:1.6}
+.fut-concept-ex{font-size:10px;color:var(--t3);margin-top:4px;padding:6px 8px;background:var(--bg3);border-radius:4px;line-height:1.6}
+.dir-wrap{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.dir-btn{padding:10px 6px;border-radius:var(--r);font-weight:800;font-size:14px;text-align:center;border:2px solid var(--bd);background:var(--bg3);color:var(--t2);transition:.15s;cursor:pointer}
+.dir-btn.long.on{border-color:var(--G);background:var(--Gbg);color:var(--G)}
+.dir-btn.short.on{border-color:var(--R);background:var(--Rbg);color:var(--R)}
+.dir-desc{border-radius:var(--r);padding:9px 12px;margin-bottom:10px;font-size:12px;line-height:1.6}
+.dir-desc.long{background:var(--Gbg);border:1px solid rgba(14,203,129,.2);color:var(--G)}
+.dir-desc.short{background:var(--Rbg);border:1px solid rgba(246,70,93,.2);color:var(--R)}
+.lev-wrap{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
+.lev-btn{padding:5px 10px;border-radius:var(--r);font-size:12px;font-weight:800;background:var(--bg3);color:var(--t2);border:1px solid var(--bd);cursor:pointer;transition:.1s;flex-shrink:0}
+.lev-btn.on{background:rgba(240,185,11,.12);color:var(--acc);border-color:var(--acc)}
+.pos-list{border-top:1px solid var(--bd)}
+.pos-card{margin:8px 12px;border-radius:var(--r);overflow:hidden;border:1px solid var(--bd)}
+.pos-head{display:flex;align-items:center;gap:8px;padding:10px 12px}
+.pos-dir{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:800;flex-shrink:0}
+.pos-long{background:var(--Gbg);color:var(--G)}
+.pos-short{background:var(--Rbg);color:var(--R)}
+.pos-lev{font-size:11px;color:var(--acc);font-weight:800;background:rgba(240,185,11,.1);padding:2px 6px;border-radius:4px;flex-shrink:0}
+.pos-sym{font-weight:800;font-size:14px;flex:1;min-width:0}
+.pos-pnl{font-size:13px;font-weight:800;text-align:right;flex-shrink:0}
+.pos-body{padding:0 12px 12px;border-top:1px solid var(--bd)}
+.pos-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.pos-stat{background:var(--bg3);border-radius:4px;padding:7px 9px}
+.pos-stat-l{font-size:10px;color:var(--t3);font-weight:700}
+.pos-stat-v{font-size:12px;font-weight:800;margin-top:2px}
+.liq-warn{font-size:11px;color:var(--R);margin-bottom:8px;padding:6px 8px;background:var(--Rbg);border-radius:4px}
+.liq-flash{position:fixed;inset:0;background:rgba(246,70,93,.18);z-index:100;pointer-events:none;opacity:0;transition:.3s}
+.liq-flash.show{opacity:1}
 .g{color:var(--G);font-weight:800}
 .r{color:var(--R);font-weight:800}
 .empty{text-align:center;padding:24px;color:var(--t3);font-size:13px}
@@ -269,7 +332,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 <div class="topbar">
   <div class="tb-left">
     <span class="header-logo-text">NIGAGARA<br>COINKING</span>
-    <div class="tb-mid" id="tbName">니가가라 코인왕 리그</div>
+
   </div>
   <div class="tb-right">
     <div class="pill pill-on" id="tbPill">진행 중</div>
@@ -296,6 +359,10 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       <span class="sec-title">🏆 실시간 랭킹</span>
       <button class="btn-link" id="btnHomeRankRefresh">🔄 갱신</button>
     </div>
+    <div id="leagueBadge" style="margin:0 12px 8px;display:flex;align-items:center;gap:6px">
+      <span id="leagueBadgeName" style="font-size:12px;font-weight:800;color:var(--acc);background:rgba(240,185,11,.1);border:1px solid rgba(240,185,11,.25);padding:3px 10px;border-radius:99px"></span>
+      <span id="leagueBadgeDday" style="font-size:11px;color:var(--t3)"></span>
+    </div>
     <div id="homeRankList" class="home-rank-list">
       <div class="empty"><span class="ei">🏅</span>참여자를 등록하면 랭킹이 표시됩니다</div>
     </div>
@@ -318,6 +385,14 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         <div class="cash-val" id="trCash">-</div>
       </div>
     </div>
+
+    <!-- 현물/선물 모드 탭 -->
+    <div class="trade-mode-tabs">
+      <div class="tmode on" id="tmodeSpot">현물</div>
+      <div class="tmode" id="tmodeFut">선물 (레버리지)</div>
+    </div>
+
+    <!-- 공통: 코인 검색 + 차트 -->
     <div class="search-row">
       <span class="s-ico">🔍</span>
       <input class="s-inp" id="coinSearch" placeholder="BTC, ETH, 비트코인, DOGE…" autocomplete="off">
@@ -356,41 +431,136 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       <div class="chart-box" id="chartBox"><div class="chart-loading">코인을 선택하면 차트가 표시됩니다</div></div>
       <div class="chart-foot" id="chartFoot"></div>
     </div>
-    <div class="order-tabs">
-      <div class="otab buy on" id="tabBuy">매수</div>
-      <div class="otab sell" id="tabSell">매도</div>
-    </div>
-    <div class="obody">
-      <div class="bal-row"><span class="lbl">사용 가능</span><span class="val" id="oBal">— USDT</span></div>
-      <div class="amt-wrap">
-        <input class="amt-inp" id="oAmt" type="number" placeholder="0.00" min="0" step="any" inputmode="decimal">
-        <span class="amt-cur">USDT</span>
+
+    <!-- ══ 현물 패널 ══ -->
+    <div id="spotPanel">
+      <div class="order-tabs">
+        <div class="otab buy on" id="tabBuy">매수</div>
+        <div class="otab sell" id="tabSell">매도</div>
       </div>
-      <div class="pct-row">
-        <button class="pct" data-p="25">25%</button>
-        <button class="pct" data-p="50">50%</button>
-        <button class="pct" data-p="75">75%</button>
-        <button class="pct" data-p="100">최대</button>
+      <div class="obody">
+        <div class="bal-row"><span class="lbl">사용 가능</span><span class="val" id="oBal">— USDT</span></div>
+        <div class="amt-wrap">
+          <input class="amt-inp" id="oAmt" type="number" placeholder="0.00" min="0" step="any" inputmode="decimal">
+          <span class="amt-cur">USDT</span>
+        </div>
+        <div class="pct-row">
+          <button class="pct" data-p="25">25%</button>
+          <button class="pct" data-p="50">50%</button>
+          <button class="pct" data-p="75">75%</button>
+          <button class="pct" data-p="100">최대</button>
+        </div>
+        <div class="preview" id="oPrev" style="display:none"></div>
+        <button class="btn btn-buy" id="btnOrder">코인 선택 후 매수</button>
       </div>
-      <div class="preview" id="oPrev" style="display:none"></div>
-      <button class="btn btn-buy" id="btnOrder">코인 선택 후 매수</button>
-    </div>
-    <div class="exec" id="execEl"></div>
-    <div style="padding:10px 12px 4px;display:flex;align-items:center;justify-content:space-between">
-      <span class="stitle" style="margin:0">보유 코인</span>
-      <button class="btn btn-ghost btn-sm" id="btnRefresh">🔄 가격갱신</button>
-    </div>
-    <div id="hList" class="h-list"><div class="empty"><span class="ei">💼</span>보유 코인이 없습니다</div></div>
-    <div class="sell-panel" id="sellPanel" style="display:none">
-      <div class="sp-title" id="spTitle">—</div>
-      <div class="sp-meta" id="spMeta">—</div>
-      <div class="field" style="margin-bottom:8px"><label>매도 금액 (USDT)</label><input class="inp" id="sellAmt" type="number" placeholder="예: 500" min="0" step="any" inputmode="decimal"></div>
-      <div id="sellPrev" style="display:none;margin-bottom:8px"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
-        <button class="btn btn-ghost" id="btnSellPart">입력금액 매도</button>
-        <button class="btn btn-sell" id="btnSellFull">전량 매도</button>
+      <div class="exec" id="execEl"></div>
+      <div style="padding:10px 12px 4px;display:flex;align-items:center;justify-content:space-between">
+        <span class="stitle" style="margin:0">보유 코인</span>
+        <button class="btn btn-ghost btn-sm" id="btnRefresh">🔄 가격갱신</button>
+      </div>
+      <div id="hList" class="h-list"><div class="empty"><span class="ei">💼</span>보유 코인이 없습니다</div></div>
+      <div class="sell-panel" id="sellPanel" style="display:none">
+        <div class="sp-title" id="spTitle">—</div>
+        <div class="sp-meta" id="spMeta">—</div>
+        <div class="field" style="margin-bottom:8px"><label>매도 금액 (USDT)</label><input class="inp" id="sellAmt" type="number" placeholder="예: 500" min="0" step="any" inputmode="decimal"></div>
+        <div id="sellPrev" style="display:none;margin-bottom:8px"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+          <button class="btn btn-ghost" id="btnSellPart">입력금액 매도</button>
+          <button class="btn btn-sell" id="btnSellFull">전량 매도</button>
+        </div>
       </div>
     </div>
+
+    <!-- ══ 선물 패널 ══ -->
+    <div id="futPanel" style="display:none">
+
+      <!-- 개념 안내 카드 -->
+      <div class="fut-guide">
+        <div class="fut-guide-head" onclick="const b=this.nextElementSibling;b.style.display=b.style.display==='none'?'grid':'none';this.querySelector('.fg-arr').textContent=b.style.display==='none'?'▼':'▲'">
+          <span class="fut-guide-title">💡 선물 거래란? (처음이라면 읽어보세요)</span>
+          <span class="fg-arr" style="font-size:11px;color:var(--t3)">▼</span>
+        </div>
+        <div class="fut-guide-body" style="display:none">
+          <div class="fut-concept">
+            <div class="fut-concept-head">
+              <span class="fut-concept-icon">📈</span>
+              <span class="fut-concept-label" style="color:var(--G)">롱 (LONG) — 상승에 베팅</span>
+            </div>
+            <div class="fut-concept-desc">가격이 오를 것 같을 때 사용해요. 가격이 오르면 이익, 내리면 손실이에요.</div>
+            <div class="fut-concept-ex">예시) BTC가 지금 75,000달러인데 곧 오를 것 같다 → 롱 진입<br>→ 80,000달러 됐을 때 청산 → 수익 🎉</div>
+          </div>
+          <div class="fut-concept">
+            <div class="fut-concept-head">
+              <span class="fut-concept-icon">📉</span>
+              <span class="fut-concept-label" style="color:var(--R)">숏 (SHORT) — 하락에 베팅</span>
+            </div>
+            <div class="fut-concept-desc">가격이 내릴 것 같을 때 사용해요. 가격이 내리면 이익, 오르면 손실이에요.</div>
+            <div class="fut-concept-ex">예시) BTC가 75,000달러인데 곧 내릴 것 같다 → 숏 진입<br>→ 70,000달러 됐을 때 청산 → 수익 🎉</div>
+          </div>
+          <div class="fut-concept">
+            <div class="fut-concept-head">
+              <span class="fut-concept-icon">⚡</span>
+              <span class="fut-concept-label" style="color:var(--acc)">레버리지 — 증폭 투자</span>
+            </div>
+            <div class="fut-concept-desc">내 돈보다 더 큰 금액으로 투자할 수 있어요. 이익도 크지만 손실도 커요.</div>
+            <div class="fut-concept-ex">예시) 마진 1,000 USDT + 레버리지 10배<br>→ 10,000 USDT어치 포지션. 1% 오르면 +100 USDT (수익률 +10%)<br>⚠️ 반대로 움직이면 마진을 전부 잃을 수도 있어요 (강제청산)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 주문 패널 -->
+      <div class="obody" style="margin-top:10px">
+        <div class="bal-row"><span class="lbl">사용 가능 마진</span><span class="val" id="futBal">— USDT</span></div>
+
+        <!-- 방향 선택 -->
+        <div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">방향 선택</div>
+        <div class="dir-wrap">
+          <div class="dir-btn long on" id="dirLong" onclick="setDir('long')">📈 LONG<div style="font-size:10px;font-weight:400;margin-top:2px;opacity:.8">상승 베팅</div></div>
+          <div class="dir-btn short" id="dirShort" onclick="setDir('short')">📉 SHORT<div style="font-size:10px;font-weight:400;margin-top:2px;opacity:.8">하락 베팅</div></div>
+        </div>
+        <div class="dir-desc long" id="dirDesc">
+          <b>롱 포지션</b> — 가격이 오르면 이익이에요.<br>
+          <span style="opacity:.8">진입가보다 높을 때 청산하면 수익!</span>
+        </div>
+
+        <!-- 레버리지 -->
+        <div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">레버리지 <span id="levDisplay" style="color:var(--acc)">1x</span></div>
+        <div class="lev-wrap" id="levWrap">
+          <button class="lev-btn on" data-lev="1">1x</button>
+          <button class="lev-btn" data-lev="2">2x</button>
+          <button class="lev-btn" data-lev="3">3x</button>
+          <button class="lev-btn" data-lev="5">5x</button>
+          <button class="lev-btn" data-lev="10">10x</button>
+          <button class="lev-btn" data-lev="20">20x</button>
+        </div>
+
+        <!-- 마진 입력 -->
+        <div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">마진 (담보금)</div>
+        <div class="amt-wrap">
+          <input class="amt-inp" id="futAmt" type="number" placeholder="0.00" min="0" step="any" inputmode="decimal">
+          <span class="amt-cur">USDT</span>
+        </div>
+        <div class="pct-row">
+          <button class="pct" data-fp="25">25%</button>
+          <button class="pct" data-fp="50">50%</button>
+          <button class="pct" data-fp="75">75%</button>
+          <button class="pct" data-fp="100">최대</button>
+        </div>
+
+        <!-- 미리보기 -->
+        <div id="futPrev" style="display:none;margin-bottom:8px"></div>
+
+        <button class="btn btn-buy" id="btnFutOrder">코인 선택 후 포지션 열기</button>
+      </div>
+
+      <!-- 보유 포지션 -->
+      <div style="padding:10px 12px 4px;display:flex;align-items:center;justify-content:space-between">
+        <span class="stitle" style="margin:0">보유 포지션</span>
+        <button class="btn btn-ghost btn-sm" id="btnFutRefresh">🔄 PnL 갱신</button>
+      </div>
+      <div id="posList" class="pos-list"><div class="empty"><span class="ei">📊</span>열린 포지션이 없습니다</div></div>
+    </div>
+
     <div style="height:14px"></div>
   </div>
   <!-- RANK -->
@@ -406,33 +576,27 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   </div>
   <!-- LEAGUE -->
   <div class="view" id="v-league">
-    <div class="card ticket" id="ticketCard">
-      <div class="t-label">🎫 리그 초대 티켓</div>
-      <div class="t-code" id="tCode">----</div>
-      <div class="t-link" id="tLink">링크 생성 중...</div>
-      <div class="t-hint">이 티켓으로 참여한 사람만 초기 자금을 받습니다. 리그마다 1회만 지급됩니다.</div>
-    </div>
-    <div class="card" id="joinCard">
-      <div class="stitle" style="display:flex;align-items:center;justify-content:space-between">
-        <span>리그 참여</span>
-        <button id="btnAddMember" class="btn btn-ghost btn-sm" style="display:none">+ 추가</button>
-      </div>
-      <form id="joinForm">
-        <div class="field"><label>닉네임</label><input class="inp" id="joinNick" maxlength="12" placeholder="예: 코인마스터" autocomplete="off"></div>
-        <div class="field"><label>티켓 코드</label><input class="inp" id="joinTicket" maxlength="32" placeholder="TICKET-XXXXX"></div>
-        <button class="btn btn-acc" type="submit" style="margin-top:4px">참여하기 · 자금 수령</button>
-      </form>
-    </div>
-    <div class="spad">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+
+    <!-- ① 리그 상태 카드 -->
+    <div id="lgStatusCard" style="margin:10px 12px 0"></div>
+
+    <!-- ② 참여자 목록 -->
+    <div class="spad" style="margin-top:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <span class="stitle" style="margin:0">참여자</span>
         <span style="font-size:11px;color:var(--t2)" id="ptcCnt">0명</span>
       </div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:8px" id="ptcLeagueName"></div>
       <div id="ptcList" class="ptc-list"><div class="empty"><span class="ei">👥</span>참여자가 없습니다</div></div>
     </div>
+
+    <!-- ③ 종료된 리그 대시보드 -->
+    <div id="closedDiv" style="margin:14px 12px 0"></div>
+
+    <!-- ④ 리그 관리 (맨 아래) -->
     <div style="margin-top:12px">
       <details class="admin">
-        <summary>⚙️ 리그 관리 <span style="font-size:11px;color:var(--t2);font-weight:400">─ 관리</span></summary>
+        <summary>⚙️ 리그 관리 <span style="font-size:11px;color:var(--t2);font-weight:400">─ 관리자 전용</span></summary>
         <div class="admin-body">
           <form id="lgForm">
             <div class="field"><label>리그 이름</label><input class="inp" id="lgName" maxlength="20" value="니가가라 코인왕 리그"></div>
@@ -450,9 +614,15 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           <p class="warn-txt">⚠ 새 리그 시작 시 참여자·거래 기록이 초기화됩니다.</p>
         </div>
       </details>
-      <div id="closedDiv" style="margin:0 12px 12px"></div>
     </div>
-    <div style="height:12px"></div>
+
+    <!-- 숨겨진 참여 폼 (joinLeague 함수가 사용) -->
+    <form id="joinForm" style="display:none">
+      <input id="joinNick" maxlength="12" autocomplete="off">
+      <input id="joinTicket" maxlength="32">
+    </form>
+
+    <div style="height:20px"></div>
   </div>
   <!-- HISTORY -->
   <div class="view" id="v-hist">
@@ -469,6 +639,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   <button class="bnav" data-tab="league"><div class="ico">🏛</div>리그</button>
   <button class="bnav" data-tab="hist"><div class="ico">📋</div>기록</button>
 </nav>
+<div class="liq-flash" id="liqFlash"></div>
 <div class="toast" id="toast"></div>
 </div>
 
@@ -645,12 +816,14 @@ async function fetchData(){
 
     const partIds=(parts||[]).map(p=>p.id);
 
-    let holdings=[], history=[];
+    let holdings=[], history=[], positions=[];
     if(partIds.length){
       const {data:h}=await sb.from('holdings').select('*').in('participant_id',partIds);
       const {data:hi}=await sb.from('trade_history').select('*')
         .in('participant_id',partIds).order('created_at',{ascending:true});
-      holdings=h||[]; history=hi||[];
+      const {data:po}=await sb.from('positions').select('*')
+        .in('participant_id',partIds).eq('status','OPEN');
+      holdings=h||[]; history=hi||[]; positions=po||[];
     }
 
     ST.participants=(parts||[]).map(p=>({
@@ -663,6 +836,7 @@ async function fetchData(){
         qty:h.qty, price:h.price, amount:h.amount,
         profit:h.profit, profitRate:h.profit_rate, date:h.date_str,
       })),
+      positions:positions.filter(po=>po.participant_id===p.id),
     }));
 
     // 내 참여자가 사라졌으면 초기화
@@ -682,9 +856,27 @@ async function fetchData(){
 
 async function fetchClosedLeagues(){
   try{
-    const {data}=await sb.from('leagues').select('id,name,end_date,winner_nickname')
+    const {data:lgs}=await sb.from('leagues').select('id,name,end_date,winner_nickname,initial_cash')
       .eq('status','CLOSED').order('created_at',{ascending:false});
-    return (data||[]).map(l=>({name:l.name,endedAt:l.end_date||'',winner:l.winner_nickname||'-'}));
+    if(!lgs?.length) return [];
+    const lgIds=lgs.map(l=>l.id);
+    const {data:parts}=await sb.from('participants').select('id,league_id,nickname,cash').in('league_id',lgIds);
+    const {data:holds}=await sb.from('holdings').select('participant_id,qty,avg_price').in('league_id',lgIds);
+    return lgs.map(l=>{
+      const myParts=(parts||[]).filter(p=>p.league_id===l.id);
+      const init=l.initial_cash||10000;
+      // 각 참여자의 최종 자산 계산 (holdings avg_price 기준 - 종료 시점 근사값)
+      const ranked=myParts.map(p=>{
+        const hVal=(holds||[]).filter(h=>h.participant_id===p.id).reduce((s,h)=>s+h.qty*h.avg_price,0);
+        const total=p.cash+hVal, rate=init>0?(total-init)/init*100:0;
+        return {nickname:p.nickname,total,rate};
+      }).sort((a,b)=>b.total-a.total);
+      return {
+        id:l.id, name:l.name, endedAt:l.end_date||'',
+        winner:l.winner_nickname||ranked[0]?.nickname||'-',
+        initialCash:init, participantCount:myParts.length, ranked,
+      };
+    });
   }catch(_){ return []; }
 }
 
@@ -956,13 +1148,150 @@ async function loadChart(sym,iv,force=false){
 }
 
 /* ══ 렌더링 ══ */
+/* ══ 선물 상태 ══ */
+let futMode='spot';
+let futDir='long';
+let futLev=1;
+
+function setDir(dir){
+  futDir=dir;
+  document.getElementById('dirLong').className='dir-btn long'+(dir==='long'?' on':'');
+  document.getElementById('dirShort').className='dir-btn short'+(dir==='short'?' on':'');
+  const dd=document.getElementById('dirDesc');
+  if(dir==='long'){
+    dd.className='dir-desc long';
+    dd.innerHTML='<b>롱 포지션</b> — 가격이 오르면 이익이에요.<br><span style="opacity:.8">진입가보다 높을 때 청산하면 수익!</span>';
+  } else {
+    dd.className='dir-desc short';
+    dd.innerHTML='<b>숏 포지션</b> — 가격이 내리면 이익이에요.<br><span style="opacity:.8">진입가보다 낮을 때 청산하면 수익!</span>';
+  }
+  updateFutPrev();
+}
+window.setDir=setDir;
+
+function calcLiqPrice(dir,entry,lev){
+  return dir==='long' ? entry*(1-0.9/lev) : entry*(1+0.9/lev);
+}
+function calcPnL(pos,cur){
+  const pct=pos.direction==='long'?(cur-pos.entry_price)/pos.entry_price:(pos.entry_price-cur)/pos.entry_price;
+  return {pnl:pct*pos.size, rate:pct*pos.leverage*100};
+}
+
+async function doOpenPosition(margin){
+  if(isClosed()) return toast('종료된 리그에서는 거래할 수 없습니다.');
+  const u=getUser(); if(!u) return toast('먼저 리그에 참여해주세요.');
+  const c=getCoin(ST.selSym); if(!c) return toast('코인을 선택해주세요.');
+  if(!c.price||c.price<=0) return toast('가격 정보가 없습니다.');
+  margin=parseFloat(margin)||0;
+  if(margin<1) return toast('최소 1 USDT 이상 입력해주세요.');
+  if(margin>u.cash) return toast('보유 현금이 부족합니다.');
+  const size=margin*futLev, liqPrice=calcLiqPrice(futDir,c.price,futLev);
+  const {error}=await sb.from('positions').insert({
+    id:uid(),participant_id:u.id,league_id:ST.league.id,
+    symbol:c.symbol,base:c.base,name:c.name,
+    direction:futDir,leverage:futLev,
+    margin,size,entry_price:c.price,liq_price:liqPrice,
+    pnl:0,pnl_rate:0,status:'OPEN',
+  });
+  if(error) return toast('포지션 오픈 실패: '+error.message);
+  await sb.from('participants').update({cash:u.cash-margin}).eq('id',u.id);
+  await fetchData(); renderAll();
+  toast(`✅ ${c.base} ${futDir==='long'?'📈 롱':'📉 숏'} ${futLev}x 포지션 오픈`);
+}
+window.doClosePosition=async function(posId){
+  const u=getUser(); if(!u) return;
+  const pos=u.positions?.find(p=>p.id===posId); if(!pos) return;
+  const c=getCoin(pos.symbol);
+  if(!c?.price||c.price<=0) return toast('가격 정보가 없습니다.');
+  const {pnl}=calcPnL(pos,c.price);
+  const ret=Math.max(0, pos.margin+pnl);
+  await sb.from('positions').update({status:'CLOSED',pnl,pnl_rate:pnl/pos.margin*100}).eq('id',posId);
+  await sb.from('participants').update({cash:u.cash+ret}).eq('id',u.id);
+  await fetchData(); renderAll();
+  toast(`✅ 청산 · ${pnl>=0?'+':''}${fU(pnl)} USDT ${pnl>=0?'수익':'손실'}`);
+};
+
+async function checkLiquidations(){
+  for(const u of ST.participants){
+    for(const pos of (u.positions||[]).filter(p=>p.status==='OPEN')){
+      const c=getCoin(pos.symbol); if(!c?.price) continue;
+      const liq=(pos.direction==='long'&&c.price<=pos.liq_price)||(pos.direction==='short'&&c.price>=pos.liq_price);
+      if(!liq) continue;
+      await sb.from('positions').update({status:'LIQUIDATED',pnl:-pos.margin,pnl_rate:-100}).eq('id',pos.id);
+      const fl=document.getElementById('liqFlash');
+      if(fl){fl.classList.add('show');setTimeout(()=>fl.classList.remove('show'),600);}
+      if(u.id===LOCAL.participantId) toast(`💥 ${pos.base} ${pos.direction.toUpperCase()} 강제청산됨!`);
+      await fetchData(); renderAll(); return;
+    }
+  }
+}
+
+function updateFutPrev(){
+  const prev=document.getElementById('futPrev'); if(!prev) return;
+  const margin=parseFloat(document.getElementById('futAmt')?.value)||0;
+  const c=getCoin(ST.selSym);
+  if(!c?.price||margin<=0){prev.style.display='none';return;}
+  const size=margin*futLev, liq=calcLiqPrice(futDir,c.price,futLev);
+  const cl=futDir==='long'?'g':'r';
+  prev.style.display='block';
+  prev.innerHTML=`<div class="preview">
+<div class="prev-row"><span class="prev-lbl">포지션 크기</span><span class="prev-val">${fU(size)} USDT (마진×${futLev}배)</span></div>
+<div class="prev-row"><span class="prev-lbl">진입가</span><span class="prev-val">${fP(c.price)}</span></div>
+<div class="prev-row"><span class="prev-lbl">강제청산가</span><span class="prev-val" style="color:var(--R)">${fP(liq)}</span></div>
+<div class="prev-row"><span class="prev-lbl">1% 변동 시 손익</span><span class="prev-val ${cl}">${futDir==='long'?'+':'−'}${fU(size*0.01)} USDT</span></div>
+</div>`;
+}
+
+function renderPositions(){
+  const u=getUser(), list=document.getElementById('posList'); if(!list) return;
+  const positions=(u?.positions||[]).filter(p=>p.status==='OPEN');
+  const fbEl=document.getElementById('futBal');
+  if(fbEl) fbEl.textContent=u?`${fU(u.cash)} USDT`:'—';
+  if(!positions.length){list.innerHTML='<div class="empty"><span class="ei">📊</span>열린 포지션이 없습니다</div>';return;}
+  list.innerHTML=positions.map(pos=>{
+    const c=getCoin(pos.symbol), cur=c?.price||pos.entry_price;
+    const {pnl,rate}=calcPnL(pos,cur);
+    const cl=pnl>=0?'g':'r', isLong=pos.direction==='long';
+    const liqDist=isLong?((cur-pos.liq_price)/cur*100):((pos.liq_price-cur)/cur*100);
+    const warn=liqDist<15&&liqDist>0;
+    return `<div class="pos-card">
+<div class="pos-head">
+  <span class="pos-dir ${isLong?'pos-long':'pos-short'}">${isLong?'LONG':'SHORT'}</span>
+  <span class="pos-lev">${pos.leverage}x</span>
+  <span class="pos-sym">${pos.base}/USDT</span>
+  <span class="pos-pnl ${cl}">${pnl>=0?'+':''}${fU(pnl)}<small style="font-size:10px"> U</small></span>
+</div>
+<div class="pos-body">
+  ${warn?`<div class="liq-warn">⚠️ 청산가까지 ${liqDist.toFixed(1)}% 남음 — 주의하세요!</div>`:''}
+  <div class="pos-grid">
+    <div class="pos-stat"><div class="pos-stat-l">마진</div><div class="pos-stat-v">${fU(pos.margin)} U</div></div>
+    <div class="pos-stat"><div class="pos-stat-l">포지션</div><div class="pos-stat-v">${fU(pos.size)} U</div></div>
+    <div class="pos-stat"><div class="pos-stat-l">진입가</div><div class="pos-stat-v">${fP(pos.entry_price)}</div></div>
+    <div class="pos-stat"><div class="pos-stat-l">청산가</div><div class="pos-stat-v" style="color:var(--R)">${fP(pos.liq_price)}</div></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+    <span style="font-size:12px;color:var(--t2)">미실현 수익률</span>
+    <span class="${cl}" style="font-size:14px;font-weight:800">${rate>=0?'+':''}${rate.toFixed(2)}%</span>
+  </div>
+  <button class="btn btn-danger" style="height:36px;font-size:13px" onclick="doClosePosition('${pos.id}')">포지션 청산하기</button>
+</div>
+</div>`;
+  }).join('');
+}
+
 function renderAll(){
   renderHeader(); renderHomeRank(); renderHomeMarket();
-  renderLeague(); renderTrade(); renderRank(); renderHistory();
+  renderLeague(); renderTrade(); renderRank(); renderHistory(); renderPositions();
 }
 function renderHeader(){
   const ranks=getRanks(), u=getUser(), cl=isClosed();
-  document.getElementById('tbName').textContent=ST.league?.name||'리그 없음';
+  // 리그 배지 (홈 랭킹 아래)
+  const bn=document.getElementById('leagueBadgeName'), bd=document.getElementById('leagueBadgeDday');
+  if(bn&&ST.league){ bn.textContent=ST.league.name; }
+  if(bd&&ST.league){
+    if(isClosed()){ bd.textContent='🏁 종료'; bd.style.color='var(--R)'; }
+    else{ const d=dLeft(ST.league.endDate); const clr=d<=3?'var(--R)':d<=7?'var(--acc)':'var(--t3)'; bd.textContent=`D-${d}`; bd.style.color=clr; }
+  }
   document.getElementById('tbPill').textContent=cl?'종료됨':'진행 중';
   document.getElementById('tbPill').className='pill '+(cl?'pill-off':'pill-on');
   const myR=u?ranks.findIndex(r=>r.id===u.id)+1:0;
@@ -1020,53 +1349,118 @@ function makeMiniBar(pct){
   return `<svg viewBox="0 0 42 22" xmlns="http://www.w3.org/2000/svg">${rects}</svg>`;
 }
 function renderLeague(){
+  const myId=LOCAL.participantId;
+  const isJoined=!!(myId&&ST.participants.find(p=>p.id===myId));
+
+  // ① 리그 상태 카드
+  const sc=document.getElementById('lgStatusCard');
   if(!ST.league){
-    document.getElementById('tCode').textContent='리그없음';
-    document.getElementById('tLink').textContent='관리자 패널에서 새 리그를 시작하세요';
-    document.getElementById('ptcCnt').textContent='0명';
-    document.getElementById('ptcList').innerHTML='<div class="empty"><span class="ei">👥</span>참여자가 없습니다</div>';
-    document.getElementById('closedDiv').innerHTML='';
-    return;
+    sc.innerHTML=`<div class="lg-status-card"><div style="text-align:center;color:var(--t3);font-size:13px;padding:8px 0">활성 리그가 없습니다</div></div>`;
+  } else {
+    const cl=isClosed();
+    const dday=!cl?(()=>{const d=dLeft(ST.league.endDate);const clr=d<=3?'var(--R)':d<=7?'var(--acc)':'var(--G)';return `<span style="color:${clr};font-weight:800">D-${d}</span> <span style="color:var(--t3);font-size:10px">· ${ST.league.endDate} 종료</span>`;})():`<span style="color:var(--R);font-weight:800">🏁 종료됨</span>`;
+    const t=ST.league.ticket;
+    const url=`${location.origin}${location.pathname}?t=${encodeURIComponent(t)}`;
+
+    if(isJoined){
+      const me=ST.participants.find(p=>p.id===myId);
+      const m=calcUser(me), ranks=getRanks(), myRank=ranks.findIndex(r=>r.id===myId)+1;
+      sc.innerHTML=`<div class="lg-status-card">
+<div class="lg-status-top">
+  <div class="lg-status-name">${ST.league.name}</div>
+  <span class="lg-join-badge lg-join-y">✅ 참여중</span>
+</div>
+<div style="font-size:11px;margin-bottom:10px">${dday}</div>
+<div class="lg-my-info">
+  <span style="font-size:18px">👤</span>
+  <div style="flex:1;min-width:0">
+    <div style="font-weight:800">${me.nickname}</div>
+    <div style="font-size:11px;color:var(--t2)">${fU(m.total)} USDT · ${myRank}위</div>
+  </div>
+  <span class="${m.rate>=0?'g':'r'}">${fPct(m.rate)}</span>
+</div>
+<div style="margin-top:10px;display:flex;gap:7px">
+  <button class="btn btn-ghost btn-sm" style="flex:1" onclick="(()=>{navigator.clipboard?.writeText('${url}').catch(()=>{});toast('📋 초대 링크 복사됨!')})()">🔗 초대 링크 복사</button>
+  <button class="btn btn-ghost btn-sm" style="flex:1" onclick="document.getElementById('lgJoinExtra').style.display=document.getElementById('lgJoinExtra').style.display==='none'?'block':'none'">+ 다른 참여자 추가</button>
+</div>
+<div id="lgJoinExtra" style="display:none" class="lg-join-form">
+  <div class="field" style="margin-bottom:8px"><label>닉네임</label><input class="inp" id="joinNickExtra" maxlength="12" placeholder="예: 코인마스터" autocomplete="off"></div>
+  <button class="btn btn-acc" onclick="(async()=>{await joinLeague(document.getElementById('joinNickExtra').value,'');document.getElementById('joinNickExtra').value='';document.getElementById('lgJoinExtra').style.display='none';})()">참여하기 · 자금 수령</button>
+</div>
+</div>`;
+    } else {
+      sc.innerHTML=`<div class="lg-status-card">
+<div class="lg-status-top">
+  <div class="lg-status-name">${ST.league.name}</div>
+  <span class="lg-join-badge lg-join-n">미참여</span>
+</div>
+<div style="font-size:11px;margin-bottom:12px">${dday}</div>
+<div class="lg-join-form" style="border-top:none;padding-top:0;margin-top:0">
+  <div class="field" style="margin-bottom:8px"><label>닉네임</label><input class="inp" id="joinNickInline" maxlength="12" placeholder="예: 코인마스터" autocomplete="off"></div>
+  <div class="field" style="margin-bottom:10px"><label>티켓 코드</label><input class="inp" id="joinTicketInline" maxlength="32" placeholder="TICKET-XXXXX" value="${document.getElementById('joinTicket')?.value||''}"></div>
+  <button class="btn btn-acc" onclick="(async()=>{await joinLeague(document.getElementById('joinNickInline').value,document.getElementById('joinTicketInline').value.trim());})()">참여하기 · 자금 수령</button>
+</div>
+</div>`;
+    }
   }
-  const t=ST.league.ticket;
-  document.getElementById('tCode').textContent=t;
-  const url=`${location.origin}${location.pathname}?t=${encodeURIComponent(t)}`;
-  const el=document.getElementById('tLink'); el.textContent=url;
-  el.onclick=()=>{ navigator.clipboard?.writeText(url).catch(()=>{}); toast('📋 초대 링크 복사됨!'); };
-  document.getElementById('lgName').value=ST.league.name;
-  document.getElementById('lgEnd').value=ST.league.endDate||'';
-  document.getElementById('lgCash').value=ST.league.initialCash||10000;
+
+  // ② 참여자 목록
   document.getElementById('ptcCnt').textContent=ST.participants.length+'명';
-  const ranks=getRanks(), myId=LOCAL.participantId;
+  const ptcLeagueEl=document.getElementById('ptcLeagueName');
+  if(ptcLeagueEl) ptcLeagueEl.textContent=ST.league?`📌 ${ST.league.name}`:'';
+  const ranks=getRanks(), myId2=LOCAL.participantId;
   document.getElementById('ptcList').innerHTML=!ranks.length
     ?'<div class="empty"><span class="ei">👥</span>참여자가 없습니다</div>'
     :ranks.map((u,i)=>{
       const m=u._m, cl=m.rate>=0?'g':'r', med=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
-      const isMe=myId===u.id;
+      const isMe=myId2===u.id;
       return `<div class="ptc-row"><div><div class="ptc-nick">${med}${u.nickname}${isMe?'<span class="me-badge">나</span>':''}</div><div class="ptc-sub">${fU(m.total)} USDT</div></div><span class="${cl}">${fPct(m.rate)}</span></div>`;
     }).join('');
-  // 티켓/참여 폼 표시 로직
-  const hasMembers=ST.participants.length>0;
-  const ticketCard=document.getElementById('ticketCard');
-  const joinCard=document.getElementById('joinCard');
-  const addBtn=document.getElementById('btnAddMember');
-  if(ticketCard) ticketCard.style.display=hasMembers?'none':'block';
-  if(joinCard){
-    const joinForm=joinCard.querySelector('#joinForm');
-    if(hasMembers){
-      if(addBtn) addBtn.style.display='block';
-      if(joinForm&&!joinCard.dataset.open) joinForm.style.display='none';
-    } else {
-      if(addBtn) addBtn.style.display='none';
-      if(joinForm) joinForm.style.display='block';
-      delete joinCard.dataset.open;
-    }
+
+  // ③ 리그 관리 폼 값 세팅
+  if(ST.league){
+    document.getElementById('lgName').value=ST.league.name;
+    document.getElementById('lgEnd').value=ST.league.endDate||'';
+    document.getElementById('lgCash').value=ST.league.initialCash||10000;
   }
-  // 종료된 리그
+
+  // ④ 종료된 리그 대시보드
   const cd=document.getElementById('closedDiv');
   if(!ST.closedLeagues.length){cd.innerHTML='';return;}
-  cd.innerHTML=`<div style="font-size:11px;color:var(--t2);margin-bottom:6px">📁 종료된 리그 ${ST.closedLeagues.length}개</div>
-<div class="closed-list">${ST.closedLeagues.map(l=>`<div class="citem"><div class="cn">${l.name}</div><div class="cm">${l.endedAt} · 우승 ${l.winner}</div></div>`).join('')}</div>`;
+  cd.innerHTML=`<div class="closed-section-title">📁 종료된 리그 ${ST.closedLeagues.length}개</div>`+
+    ST.closedLeagues.map((l,li)=>{
+      const expanded=cd.querySelector(`[data-lgid="${l.id}"]`)?.classList.contains('open')||li===0;
+      const podium=l.ranked.slice(0,3).map((r,i)=>{
+        const med=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+        const cl=r.rate>=0?'g':'r';
+        return `<div class="closed-podium-row">
+<span style="font-size:14px;flex-shrink:0">${med}</span>
+<span style="font-weight:800;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nickname}</span>
+<span style="font-size:12px;color:var(--t2);margin-right:8px">${fU(r.total)} U</span>
+<span class="${cl}" style="font-size:12px">${fPct(r.rate)}</span>
+</div>`;
+      }).join('');
+      return `<div class="closed-card">
+<div class="closed-card-head" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+  <div>
+    <div class="closed-card-name">${l.name}</div>
+    <div style="font-size:11px;color:var(--t3);margin-top:2px">🏆 우승 ${l.winner} · ${l.participantCount}명 참여</div>
+  </div>
+  <div style="text-align:right;flex-shrink:0">
+    <div class="closed-card-date">${l.endedAt}</div>
+    <div style="font-size:10px;color:var(--t3);margin-top:2px">▼</div>
+  </div>
+</div>
+<div class="closed-card-body" style="display:${li===0?'block':'none'}">
+  <div class="closed-stat-grid">
+    <div class="closed-stat"><div class="closed-stat-l">초기자금</div><div class="closed-stat-v">${fU(l.initialCash)}<small style="font-size:9px;color:var(--t2)"> U</small></div></div>
+    <div class="closed-stat"><div class="closed-stat-l">참여인원</div><div class="closed-stat-v">${l.participantCount}명</div></div>
+    <div class="closed-stat"><div class="closed-stat-l">우승자</div><div class="closed-stat-v" style="color:var(--acc);font-size:11px">${l.winner}</div></div>
+  </div>
+  ${l.ranked.length?`<div style="font-size:11px;font-weight:800;color:var(--t2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">최종 순위</div><div class="closed-podium">${podium}</div>`:''}
+</div>
+</div>`;
+    }).join('');
 }
 function renderTrade(){
   const aid=getActiveUserId();
@@ -1150,6 +1544,14 @@ function updateOrder(){
   document.getElementById('btnOrder').textContent=c?(isBuy?`${c.base} 시장가 매수`:`${c.base} 시장가 매도`):'코인 선택 후 매수';
   document.getElementById('btnOrder').className='btn '+(isBuy?'btn-buy':'btn-sell');
   document.getElementById('btnOrder').disabled=!c||isClosed();
+  // 선물 버튼도 업데이트
+  const fb=document.getElementById('btnFutOrder');
+  if(fb){
+    fb.textContent=c?`${c.base} ${futDir==='long'?'📈 롱':'📉 숏'} ${futLev}x 포지션 열기`:'코인 선택 후 포지션 열기';
+    fb.className='btn '+(futDir==='long'?'btn-buy':'btn-sell');
+    fb.disabled=!c||isClosed();
+  }
+  const fb2=document.getElementById('futBal'); if(fb2) fb2.textContent=u?`${fU(u.cash)} USDT`:'—';
   updateOrderPrev();
 }
 function updateOrderPrev(){
@@ -1243,20 +1645,9 @@ document.querySelectorAll('.bnav').forEach(b=>{
     if(b.dataset.tab==='hist') renderHistory();
   });
 });
-document.addEventListener('click',e=>{
-  if(e.target.id==='btnAddMember'){
-    const jc=document.getElementById('joinCard'), jf=document.getElementById('joinForm');
-    if(!jf) return;
-    const isOpen=jc.dataset.open==='1';
-    if(isOpen){jf.style.display='none';delete jc.dataset.open;e.target.textContent='+ 추가';}
-    else{jf.style.display='block';jc.dataset.open='1';e.target.textContent='✕ 닫기';document.getElementById('joinNick').focus();}
-  }
-});
-document.getElementById('joinForm').addEventListener('submit',async e=>{
-  e.preventDefault();
-  await joinLeague(document.getElementById('joinNick').value, document.getElementById('joinTicket').value.trim());
-  document.getElementById('joinNick').value='';
-});
+// btnAddMember 이벤트 제거됨 (lgStatusCard 인라인 버튼으로 대체)
+document.getElementById('joinForm').addEventListener('submit',async e=>{ e.preventDefault(); });
+window.joinLeague=joinLeague;
 document.getElementById('lgForm').addEventListener('submit',async e=>{
   e.preventDefault();
   if(!ST.league) return toast('리그가 없습니다.');
@@ -1345,22 +1736,79 @@ document.getElementById('btnRRank').addEventListener('click',async()=>{
   renderRank(); renderHeader(); toast('✅ 랭킹 갱신 완료');
 });
 
+/* ══ 현물/선물 탭 전환 ══ */
+document.getElementById('tmodeSpot').addEventListener('click',()=>{
+  futMode='spot';
+  document.getElementById('tmodeSpot').classList.add('on');
+  document.getElementById('tmodeFut').classList.remove('on');
+  document.getElementById('spotPanel').style.display='block';
+  document.getElementById('futPanel').style.display='none';
+});
+document.getElementById('tmodeFut').addEventListener('click',()=>{
+  futMode='futures';
+  document.getElementById('tmodeFut').classList.add('on');
+  document.getElementById('tmodeSpot').classList.remove('on');
+  document.getElementById('spotPanel').style.display='none';
+  document.getElementById('futPanel').style.display='block';
+  renderPositions();
+});
+
+/* ── 레버리지 버튼 ── */
+document.getElementById('levWrap').addEventListener('click',e=>{
+  const b=e.target.closest('.lev-btn'); if(!b) return;
+  document.querySelectorAll('.lev-btn').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+  futLev=parseInt(b.dataset.lev);
+  document.getElementById('levDisplay').textContent=futLev+'x';
+  updateFutPrev();
+});
+
+/* ── 선물 마진 % 버튼 ── */
+document.querySelectorAll('[data-fp]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const u=getUser(), p=parseInt(b.dataset.fp)/100;
+    const max=(u?.cash||0)*p;
+    document.getElementById('futAmt').value=max.toFixed(2); updateFutPrev();
+  });
+});
+
+/* ── 선물 마진 입력 ── */
+document.getElementById('futAmt').addEventListener('input',updateFutPrev);
+
+/* ── 선물 주문 버튼 ── */
+document.getElementById('btnFutOrder').addEventListener('click',async()=>{
+  const amt=parseFloat(document.getElementById('futAmt').value)||0;
+  await doOpenPosition(amt);
+  document.getElementById('futAmt').value=''; updateFutPrev();
+});
+
+/* ── 선물 PnL 갱신 버튼 ── */
+document.getElementById('btnFutRefresh').addEventListener('click',async()=>{
+  const u=getUser(); if(!u||!u.positions?.length) return toast('열린 포지션이 없습니다.');
+  const syms=new Set(u.positions.map(p=>p.symbol));
+  for(const sym of syms){ const t=await fetchTicker(sym); if(t){const c=getCoin(sym);if(c){c.price=+t.lastPrice;}} await new Promise(r=>setTimeout(r,150)); }
+  await checkLiquidations();
+  renderPositions(); toast('✅ PnL 갱신 완료');
+});
+
 /* ══ URL 파라미터 (초대 링크) ══ */
 (()=>{ const t=new URLSearchParams(location.search).get('t'); if(t){document.getElementById('joinTicket').value=t; toast('🎫 초대 티켓 확인! 닉네임을 입력해 참여하세요.');} })();
 
 /* ══ 토스트 ══ */
 let _tt;
-function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),2200); }
+function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),3000); }
 
 /* ══ 30초 자동 가격 갱신 ══ */
 setInterval(async()=>{
-  const syms=new Set([ST.selSym,...ST.participants.flatMap(p=>p.holdings.map(h=>h.symbol))]);
+  const posSyms=new Set(ST.participants.flatMap(p=>(p.positions||[]).map(h=>h.symbol)));
+  const syms=new Set([ST.selSym,...ST.participants.flatMap(p=>p.holdings.map(h=>h.symbol)),...posSyms]);
   for(const sym of syms){
     const t=await fetchTicker(sym);
     if(t){const c=getCoin(sym);if(c){c.price=+t.lastPrice;c.change=+t.priceChangePercent;}}
     await new Promise(r=>setTimeout(r,200));
   }
+  await checkLiquidations();
   renderCoinList(); renderHoldings(); renderHeader(); renderHomeRank(); renderHomeMarket();
+  if(futMode==='futures') renderPositions();
 },30000);
 
 /* ══ 초기화 ══ */
