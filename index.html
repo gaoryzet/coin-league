@@ -1208,7 +1208,7 @@ function renderFuturePreview(){
   }
   const valid = validateFuture(margin);
   if(!margin){
-    prev.innerHTML = `<div class="warn">레버리지는 수익과 손실을 모두 키웁니다. 청산가를 먼저 확인하세요.</div>`;
+    prev.innerHTML = `<div class="warn">마진을 입력하면 포지션 크기와 청산가가 표시됩니다.</div>`;
     document.getElementById("futSubmit").disabled = false;
     return;
   }
