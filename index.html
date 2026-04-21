@@ -558,12 +558,20 @@ async function initAuth(){
     currentUser = user || null;
     cloudAdmin = false;
     if(currentUser && !isFileMode){
-      const {data} = await sb.from("league_admins")
+      const {data: appAdmin} = await sb.from("app_admins")
         .select("role")
-        .eq("league_id", state.league.id)
         .eq("user_id", currentUser.id)
         .limit(1);
-      cloudAdmin = !!data?.length;
+      if(appAdmin?.length){
+        cloudAdmin = true;
+      }else{
+        const {data: leagueAdmin} = await sb.from("league_admins")
+          .select("role")
+          .eq("league_id", state.league.id)
+          .eq("user_id", currentUser.id)
+          .limit(1);
+        cloudAdmin = !!leagueAdmin?.length;
+      }
     }
     authWho.textContent = currentUser?.email || (isFileMode ? "로컬 모드" : "로그인 필요");
     authBtn.textContent = currentUser ? "로그아웃" : (isFileMode ? "배포 열기" : "Google");
