@@ -1208,7 +1208,7 @@ function renderFuturePreview(){
   }
   const valid = validateFuture(margin);
   if(!margin){
-    prev.innerHTML = `<div class="warn">마진을 입력하면 포지션 크기와 청산가가 표시됩니다.</div>`;
+    prev.innerHTML = "";
     document.getElementById("futSubmit").disabled = false;
     return;
   }
