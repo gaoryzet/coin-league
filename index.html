@@ -905,9 +905,14 @@ async function fetchData(){
       const {data:h}=await sb.from('holdings').select('*').in('participant_id',partIds);
       const {data:hi}=await sb.from('trade_history').select('*')
         .in('participant_id',partIds).order('created_at',{ascending:true});
-      const {data:po}=await sb.from('positions').select('*')
-        .in('participant_id',partIds).eq('status','OPEN');
-      holdings=h||[]; history=hi||[]; positions=po||[];
+      // positions 테이블이 없어도 오류 무시
+      let po=[];
+      try{
+        const {data:poData}=await sb.from('positions').select('*')
+          .in('participant_id',partIds).eq('status','OPEN');
+        po=poData||[];
+      }catch(_){ po=[]; }
+      holdings=h||[]; history=hi||[]; positions=po;
     }
 
     ST.participants=(parts||[]).map(p=>({
@@ -1970,53 +1975,58 @@ document.getElementById('btnLogout').addEventListener('click', async()=>{
 });
 
 async function init(){
-  sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
-  setApiStatus('loading','DB 연결 중...');
+  try{
+    // 1. Supabase 초기화
+    if(!window.supabase){ setApiStatus('err','Supabase 로드 실패'); return; }
+    sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+    setApiStatus('loading','연결 중...');
 
-  // ── 인증 상태 변화 감지 (로그인 후 자동 처리)
-  sb.auth.onAuthStateChange(async(event, session)=>{
-    if(event==='SIGNED_IN'){
-      hideLoginOverlay();
-      await handleAuthUser(session.user);
-      await fetchData();
-      if(!ST.league){ await createDefaultLeague(); await fetchData(); }
-      setupRealtime();
-      renderAll();
-      // Binance 시세
-      const all = await fetchAll24hr();
+    // 2. Binance 시세 먼저 로드 (DB와 무관하게)
+    fetchAll24hr().then(all=>{
       if(all){ parseTickers(all); renderCoinList(); renderHomeMarket(); }
-      selectCoin(ST.selSym);
-    } else if(event==='SIGNED_OUT'){
-      setApiStatus('loading','로그인 필요');
+    });
+    // 차트도 바로 로드 시작
+    loadChart(ST.selSym, ST.chartInterval, true);
+
+    // 3. 인증 상태 변화 감지
+    sb.auth.onAuthStateChange(async(event, session)=>{
+      if(event==='SIGNED_IN'){
+        hideLoginOverlay();
+        await handleAuthUser(session.user);
+        await fetchData();
+        if(!ST.league){ await createDefaultLeague(); await fetchData(); }
+        setupRealtime();
+        renderAll();
+        selectCoin(ST.selSym);
+      } else if(event==='SIGNED_OUT'){
+        showLoginOverlay();
+        setApiStatus('err','로그인 필요');
+      }
+    });
+
+    // 4. 현재 세션 확인
+    const {data:{session}, error:sessErr} = await sb.auth.getSession();
+    if(sessErr){ setApiStatus('err','세션 오류: '+sessErr.message); showLoginOverlay(); return; }
+
+    if(!session?.user){
+      setApiStatus('err','로그인 필요');
       showLoginOverlay();
+      return;
     }
-  });
 
-  // ── 현재 세션 확인
-  const {data:{session}} = await sb.auth.getSession();
-  if(!session?.user){
-    // 로그인 안 된 상태 → 로그인 화면 표시
-    setApiStatus('err','로그인 필요');
-    document.getElementById('sDot').className='status-dot s-err';
-    document.getElementById('sTxt').textContent='로그인 필요';
-    showLoginOverlay();
-    return;
+    // 5. 로그인된 상태 — 데이터 로드
+    hideLoginOverlay();
+    await handleAuthUser(session.user);
+    await fetchData();
+    if(!ST.league){ await createDefaultLeague(); await fetchData(); }
+    setupRealtime();
+    renderAll();
+    selectCoin(ST.selSym);
+
+  }catch(e){
+    console.error('init error:', e);
+    setApiStatus('err','초기화 실패: '+e.message);
   }
-
-  // ── 로그인된 상태
-  await handleAuthUser(session.user);
-  await fetchData();
-  if(!ST.league){ await createDefaultLeague(); await fetchData(); }
-  setupRealtime();
-  renderAll();
-
-  // Binance 시세 로드
-  setApiStatus('loading','시세 로딩 중...');
-  const all = await fetchAll24hr();
-  if(all){ parseTickers(all); renderCoinList(); renderHomeMarket(); }
-  else{ setApiStatus('err','Binance 연결 실패'); }
-
-  selectCoin(ST.selSym);
 }
 
 init();
