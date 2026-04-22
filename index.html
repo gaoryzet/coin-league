@@ -1015,6 +1015,7 @@ function tickMarket(force=1){
     c.change = (c.price - c.prev) / c.prev * 100;
   });
   if(sb && currentUser && !isFileMode){
+    if(isEditingAdminForm()) return;
     render();
     return;
   }
@@ -1436,8 +1437,8 @@ function renderAdmin(){
         <label class="switch"><span>선물 거래</span><input id="lgFut" type="checkbox" ${form.allowFutures?"checked":""}></label>
       </div>
       <div class="field"><label>최대 레버리지</label><select id="lgLev"><option>1</option><option>3</option><option>5</option><option>10</option><option>25</option></select></div>
-      <div class="row"><button class="btn gold grow" id="saveLeague">리그 수정 저장</button><button class="btn blue" id="newLeague">새 리그 생성</button></div>
-      <div class="row"><button class="btn ghost grow" id="closeLeague">리그 종료</button><button class="btn red" id="deleteLeague">리그 삭제</button></div>
+      <div class="row"><button type="button" class="btn gold grow" id="saveLeague">리그 수정 저장</button><button type="button" class="btn blue" id="newLeague">새 리그 생성</button></div>
+      <div class="row"><button type="button" class="btn ghost grow" id="closeLeague">리그 종료</button><button type="button" class="btn red" id="deleteLeague">리그 삭제</button></div>
     </div>`;
   document.getElementById("lgLev").value = String(form.maxLeverage);
   box.querySelectorAll("input,select").forEach(el=>{
@@ -1448,6 +1449,11 @@ function renderAdmin(){
   document.getElementById("newLeague").addEventListener("click",createNewLeague);
   document.getElementById("closeLeague").addEventListener("click",()=>{if(!requireAdminAction()) return; confirmAction({title:"리그 종료",text:"현재 리그를 종료하고 거래를 막습니다.",detail:"종료 후에는 랭킹과 기록만 확인할 수 있습니다.",action:closeLeague})});
   document.getElementById("deleteLeague").addEventListener("click",()=>{if(!requireAdminAction()) return; confirmAction({title:"리그 삭제 경고",text:"현재 리그의 참가자, 거래 기록, 지급 상태가 모두 초기화됩니다.",detail:"되돌릴 수 없습니다. 정말 삭제하시려면 실행을 누르세요.",action:deleteLeague})});
+}
+function isEditingAdminForm(){
+  const box = document.getElementById("adminPanel");
+  const el = document.activeElement;
+  return !!(box && el && box.contains(el) && ["INPUT","SELECT","TEXTAREA"].includes(el.tagName));
 }
 function adminFormDefaults(){
   const today = new Date().toISOString().slice(0,10);
@@ -1784,6 +1790,7 @@ setInterval(()=>tickMarket(.35),15000);
 setInterval(async()=>{
   if(!sb || isFileMode) return;
   await loadCloudLeagueAndParticipants();
+  if(isEditingAdminForm()) return;
   render();
 },30000);
 render();
