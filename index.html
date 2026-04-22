@@ -116,6 +116,8 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
 .table th,.table td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
 .table th{color:var(--muted);font-size:11px;text-transform:uppercase}
 .table td:last-child,.table th:last-child{text-align:right}
+.table tr[data-holding-symbol]{cursor:pointer}
+.table tr[data-holding-symbol]:active{background:rgba(240,185,11,.08)}
 .empty{padding:32px 16px;text-align:center;color:var(--muted)}
 .seg{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
 .seg button,.lev button{height:38px;border-radius:var(--radius);border:1px solid var(--line);background:#0f1620;color:var(--muted);font-weight:950}
@@ -1573,7 +1575,7 @@ function renderDashboard(){
     rows.map(([sym,h])=>{
       const c = state.market.find(x=>x.symbol===sym);
       const val = h.qty * c.price, pnl = val - h.qty*h.avg;
-      return `<tr><td>${sym}<div class="small">평균 ${price(h.avg)}</div></td><td>${h.qty.toFixed(6)}</td><td>${money(val)} U <span class="${pnl>=0?"g":"r"}">${pnl>=0?"+":""}${money(pnl)}</span></td></tr>`;
+      return `<tr data-holding-symbol="${sym}"><td>${sym}<div class="small">평균 ${price(h.avg)} · 거래하기</div></td><td>${h.qty.toFixed(6)}</td><td>${money(val)} U <span class="${pnl>=0?"g":"r"}">${pnl>=0?"+":""}${money(pnl)}</span></td></tr>`;
     }).join("")+"</tbody></table>" : `<div class="empty">보유 현물이 없습니다.</div>`;
 }
 function renderLeague(){
@@ -1951,6 +1953,13 @@ document.getElementById("resetGame").addEventListener("click",()=>confirmAction(
 document.getElementById("market").addEventListener("click",e=>{
   const b = e.target.closest("[data-symbol]"); if(!b) return;
   selected = b.dataset.symbol; save(); render();
+});
+document.getElementById("holdingBox").addEventListener("click",e=>{
+  const row = e.target.closest("[data-holding-symbol]"); if(!row) return;
+  selected = row.dataset.holdingSymbol;
+  save();
+  setView("trade");
+  render();
 });
 document.getElementById("search").addEventListener("input",renderMarket);
 document.getElementById("chartIntervals").addEventListener("click",e=>{
