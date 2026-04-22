@@ -833,6 +833,28 @@ function profitRate(p){
   const seed = seedMoney();
   return seed > 0 ? (totalAssets(p)-seed)/seed*100 : 0;
 }
+function leagueRanks(){
+  return [...rankingPlayers()].sort((a,b)=>profitRate(b)-profitRate(a));
+}
+function renderLeagueResultCard(ranks=leagueRanks()){
+  if(state.league.status !== "CLOSED") return "";
+  const winner = ranks[0];
+  if(!winner){
+    return `<div class="nickname-card locked"><h2>리그 종료</h2><p>참가자가 없어 최종 랭킹이 없습니다.</p></div>`;
+  }
+  const finalAssets = totalAssets(winner);
+  const gain = finalAssets - seedMoney();
+  return `<div class="nickname-card locked result-card">
+    <h2>리그 종료 · 코인왕 확정</h2>
+    <p><b>${escapeHtml(displayName(winner))}</b> 님이 최종 1위입니다.</p>
+    <div class="preview">
+      <div class="pline"><span>우승 수익률</span><b class="${profitRate(winner)>=0?"g":"r"}">${pct(profitRate(winner))}</b></div>
+      <div class="pline"><span>최종 자산</span><b>${money(finalAssets)} USDT</b></div>
+      <div class="pline"><span>최종 손익</span><b class="${gain>=0?"g":"r"}">${gain>=0?"+":""}${money(gain)} USDT</b></div>
+      <div class="pline"><span>초기 투자금</span><b>${money(seedMoney())} USDT</b></div>
+    </div>
+  </div>`;
+}
 function liqPrice(dir, entry, lev){return dir === "long" ? entry * (1 - .9 / lev) : entry * (1 + .9 / lev)}
 function liqDistance(pos){
   const c = state.market.find(x=>x.symbol===pos.symbol);
@@ -1433,10 +1455,12 @@ function renderLeague(){
     renderAdmin();
     return;
   }
+  const ranks = leagueRanks();
   const canClaim = !hasReward(p) && !leagueClosed();
   document.getElementById("claimRewardLeague").style.display = canClaim ? "block" : "none";
   document.getElementById("leagueInfo").innerHTML = `
-    ${renderNicknameCard(p)}
+    ${renderLeagueResultCard(ranks)}
+    ${state.league.status === "CLOSED" ? "" : renderNicknameCard(p)}
     <div class="preview">
       <div class="pline"><span>내 닉네임</span><b>${escapeHtml(displayName(p))}</b></div>
       <div class="pline"><span>리그명</span><b>${escapeHtml(state.league.name)}</b></div>
@@ -1448,7 +1472,6 @@ function renderLeague(){
       <div class="pline"><span>거래 설정</span><b>현물 ${state.league.allowSpot?"ON":"OFF"} · 선물 ${state.league.allowFutures?"ON":"OFF"} · 최대 ${state.league.maxLeverage}x</b></div>
       <div class="pline"><span>초대 코드</span><b>${state.league.inviteCode}</b></div>
     </div>`;
-  const ranks = [...rankingPlayers()].sort((a,b)=>profitRate(b)-profitRate(a));
   document.getElementById("leagueRankMeta").textContent = `${ranks.length}명`;
   document.getElementById("leagueRankBox").innerHTML = ranks.length ? `<table class="table"><thead><tr><th>순위</th><th>참가자</th><th>자산</th></tr></thead><tbody>`+
     ranks.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(displayName(r))}<div class="small">${hasReward(r)?"지급 완료":"미수령"}</div></td><td>${money(totalAssets(r))} U<br><span class="${profitRate(r)>=0?"g":"r"}">${pct(profitRate(r))}</span></td></tr>`).join("")+
