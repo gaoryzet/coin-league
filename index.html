@@ -556,7 +556,7 @@ function mergeCloudPortfolio({holdings=[],positions=[],history=[]}={}){
       id:row.id,
       symbol:row.symbol,
       name:row.name || row.symbol,
-      dir:row.dir,
+      dir:row.dir || row.direction,
       lev:Number(row.lev) || 1,
       margin:Number(row.margin) || 0,
       size:Number(row.size) || 0,

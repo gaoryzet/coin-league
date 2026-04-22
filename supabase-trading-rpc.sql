@@ -115,6 +115,7 @@ alter table public.positions add column if not exists league_id text references 
 alter table public.positions add column if not exists symbol text;
 alter table public.positions add column if not exists name text;
 alter table public.positions add column if not exists dir text;
+alter table public.positions add column if not exists direction text;
 alter table public.positions add column if not exists lev numeric not null default 1;
 alter table public.positions add column if not exists margin numeric not null default 0;
 alter table public.positions add column if not exists size numeric not null default 0;
@@ -339,8 +340,8 @@ begin
 
   update public.participants set cash = cash - p_margin where id = p_participant_id;
   v_id := public.new_text_id();
-  insert into public.positions(id, participant_id, league_id, symbol, name, dir, lev, margin, size, entry_price, liq_price, status)
-  values (v_id, p_participant_id, v_participant.league_id, p_symbol, p_name, p_dir, p_lev, p_margin, p_margin * p_lev, p_entry, p_liq, 'OPEN');
+  insert into public.positions(id, participant_id, league_id, symbol, name, dir, direction, lev, margin, size, entry_price, liq_price, status)
+  values (v_id, p_participant_id, v_participant.league_id, p_symbol, p_name, p_dir, p_dir, p_lev, p_margin, p_margin * p_lev, p_entry, p_liq, 'OPEN');
   insert into public.trade_history(id, participant_id, league_id, type, symbol, name, price, amount, date_str, note)
   values (public.new_text_id(), p_participant_id, v_participant.league_id, '포지션 오픈', p_symbol, p_name, p_entry, p_margin, to_char(now(), 'MM-DD HH24:MI'), p_lev || 'x ' || upper(p_dir));
   return v_id;
