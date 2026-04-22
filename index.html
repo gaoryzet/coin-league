@@ -1421,6 +1421,9 @@ function renderAdmin(){
       : `<div class="danger">관리자 권한이 없습니다. 리그 생성자 또는 관리자 계정으로 Google 로그인해야 합니다.</div>`;
     return;
   }
+  if(adminDraft && box.querySelector(".admin-grid")){
+    return;
+  }
   const form = adminDraft || adminFormDefaults();
   box.innerHTML = `
     <div class="admin-grid">
@@ -1441,6 +1444,9 @@ function renderAdmin(){
       <div class="row"><button type="button" class="btn ghost grow" id="closeLeague">리그 종료</button><button type="button" class="btn red" id="deleteLeague">리그 삭제</button></div>
     </div>`;
   document.getElementById("lgLev").value = String(form.maxLeverage);
+  box.querySelectorAll("input,select").forEach(el=>{
+    el.addEventListener("focusin",()=>{adminDraft = readLeagueForm()});
+  });
   box.querySelectorAll("input,select").forEach(el=>{
     el.addEventListener("input",()=>{adminDraft = readLeagueForm()});
     el.addEventListener("change",()=>{adminDraft = readLeagueForm()});
