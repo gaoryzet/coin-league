@@ -402,6 +402,7 @@ let chartKey = "";
 let chartSeq = 0;
 const chartCache = {};
 const isFileMode = location.protocol === "file:";
+let cloudInitialLoaded = isFileMode;
 const authBtnInit = document.getElementById("authBtn");
 const authWhoInit = document.getElementById("authWho");
 if(isFileMode && authBtnInit){
@@ -727,6 +728,7 @@ async function loadCloudLeagueAndParticipants(options={}){
       state.players = state.players.map(p=>({...p,cash:0,rewards:{},holdings:{},positions:[],history:[]}));
       cloudMode = true;
       cloudSyncFailCount = 0;
+      cloudInitialLoaded = true;
       save();
       return;
     }
@@ -741,6 +743,7 @@ async function loadCloudLeagueAndParticipants(options={}){
     mergeCloudParticipants(participants || []);
     await loadCloudPortfolio();
     cloudSyncFailCount = 0;
+    cloudInitialLoaded = true;
     save();
   }catch(e){
     cloudSyncFailCount += 1;
@@ -845,6 +848,7 @@ function positionValue(p){
 function totalAssets(p){return p.cash + holdingValue(p) + positionValue(p)}
 function seedMoney(){return state.league?.initialCash || START_CASH}
 function hasActiveLeague(){return !!state.league?.id && state.league.status === "ACTIVE"}
+function cloudBooting(){return !isFileMode && !cloudInitialLoaded}
 function rankingPlayers(){return state.players.filter(p=>hasReward(p))}
 function profitRate(p){
   const seed = seedMoney();
@@ -1412,6 +1416,18 @@ async function syncChart(force=false){
 }
 function renderDashboard(){
   const p = active();
+  if(cloudBooting()){
+    document.getElementById("mTotal").textContent = "-";
+    document.getElementById("mRate").innerHTML = `<span class="y">불러오는 중</span>`;
+    document.getElementById("mCash").textContent = "-";
+    document.getElementById("mRisk").textContent = "-";
+    document.getElementById("mRiskNote").textContent = "서버 리그 확인 중";
+    document.getElementById("leagueStrip").innerHTML = `<div><b>리그 정보 불러오는 중</b><span>Supabase에서 진행 중인 리그를 확인하고 있습니다.</span></div><strong class="y">...</strong>`;
+    document.getElementById("rewardBox").innerHTML = `<div class="reward claimed"><h2>잠시만 기다려주세요</h2><p>활성 리그와 참가자 랭킹을 불러오는 중입니다.</p></div>`;
+    document.getElementById("rankBox").innerHTML = `<div class="empty">랭킹을 불러오는 중입니다.</div>`;
+    document.getElementById("holdingBox").innerHTML = `<div class="empty">보유 현물을 불러오는 중입니다.</div>`;
+    return;
+  }
   if(!hasActiveLeague()){
     document.getElementById("mTotal").textContent = "0.00 U";
     document.getElementById("mRate").innerHTML = `<span class="r">-</span> / 지급 대기`;
@@ -1459,6 +1475,19 @@ function renderDashboard(){
 }
 function renderLeague(){
   const p = active();
+  if(cloudBooting()){
+    document.getElementById("claimRewardLeague").style.display = "none";
+    document.getElementById("leagueInfo").innerHTML = `
+      <div class="nickname-card locked"><h2>리그 정보 불러오는 중</h2><p>Supabase에서 진행 중인 리그를 확인하고 있습니다. 잠시 후 자동으로 표시됩니다.</p></div>
+      <div class="preview">
+        <div class="pline"><span>상태</span><b>확인 중</b></div>
+        <div class="pline"><span>참가</span><b>대기 중</b></div>
+      </div>`;
+    document.getElementById("leagueRankMeta").textContent = "-";
+    document.getElementById("leagueRankBox").innerHTML = `<div class="empty">랭킹을 불러오는 중입니다.</div>`;
+    renderAdmin();
+    return;
+  }
   if(!hasActiveLeague()){
     document.getElementById("claimRewardLeague").style.display = "none";
     document.getElementById("leagueInfo").innerHTML = `
