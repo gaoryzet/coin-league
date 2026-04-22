@@ -88,9 +88,8 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
 .chart-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-bottom:1px solid rgba(39,50,65,.72)}
 .chart-title{font-weight:950;font-size:12px;white-space:nowrap}
 .chart-status{color:var(--muted);font-size:11px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chart-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:10px 12px 0}
-.chart-tabs button{height:30px;border-radius:6px;background:#111821;border:1px solid var(--line);color:var(--muted);font-size:11px;font-weight:900}
-.chart-tabs button.on{border-color:var(--gold);color:var(--gold);background:rgba(240,185,11,.1)}
+.chart-control{padding:10px 12px 0}
+.chart-control select{width:100%;height:34px;border-radius:6px;background:#111821;border:1px solid var(--line);color:var(--text);font-size:12px;font-weight:900}
 .chart-box{height:210px;padding:8px 10px 12px;display:grid;place-items:center}
 .chart-box svg{width:100%;height:100%;display:block}
 .chart-empty{color:var(--muted);font-size:12px;text-align:center;padding:24px}
@@ -263,11 +262,15 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
                 <div class="chart-title" id="chartTitle">BTC/USDT 차트</div>
                 <div class="chart-status" id="chartStatus">API 대기</div>
               </div>
-              <div class="chart-tabs" id="chartIntervals">
-                <button class="on" data-interval="1m">1분</button>
-                <button data-interval="5m">5분</button>
-                <button data-interval="15m">15분</button>
-                <button data-interval="1h">1시간</button>
+              <div class="chart-control">
+                <select id="chartIntervalSelect" aria-label="차트 봉 선택">
+                  <option value="1m">1분봉</option>
+                  <option value="5m">5분봉</option>
+                  <option value="15m">15분봉</option>
+                  <option value="1h">1시간봉</option>
+                  <option value="1d">일봉</option>
+                  <option value="1w">주봉</option>
+                </select>
               </div>
               <div class="chart-box" id="chartBox"><div class="chart-empty">코인을 선택하면 차트를 불러옵니다.</div></div>
             </div>
@@ -1410,6 +1413,9 @@ function chartCacheTtl(interval){
   if(interval.endsWith("m")) return 25000;
   return 60000;
 }
+function chartIntervalLabel(interval){
+  return ({ "1m":"1분봉", "5m":"5분봉", "15m":"15분봉", "1h":"1시간봉", "1d":"일봉", "1w":"주봉" })[interval] || interval;
+}
 function fallbackCandles(sym, count=60){
   const c = state.market.find(x=>x.symbol===sym) || coin();
   const candles = [];
@@ -1471,7 +1477,7 @@ function drawChart(sym, candles, source){
     return `<line class="chart-wick" style="stroke:${color}" x1="${cx.toFixed(1)}" y1="${wickTop.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${wickBottom.toFixed(1)}"></line><rect class="chart-body" style="fill:${color}" x="${(cx-bodyW/2).toFixed(1)}" y="${bodyY.toFixed(1)}" width="${bodyW.toFixed(1)}" height="${bodyH.toFixed(1)}"></rect>`;
   }).join("");
   title.textContent = `${sym}/USDT 차트`;
-  status.innerHTML = `${source} ${chartInterval} 캔들 · <span class="${change>=0?"g":"r"}">${pct(change)}</span>`;
+  status.innerHTML = `${source} ${chartIntervalLabel(chartInterval)} · <span class="${change>=0?"g":"r"}">${pct(change)}</span>`;
   box.innerHTML = `
     <svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${sym} price chart">
       <line class="chart-grid" x1="${pad}" y1="${pad}" x2="${w-pad}" y2="${pad}"></line>
@@ -1486,7 +1492,8 @@ function drawChart(sym, candles, source){
 async function syncChart(force=false){
   const c = coin();
   const key = `${c.symbol}:${chartInterval}`;
-  document.getElementById("chartIntervals")?.querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.interval===chartInterval));
+  const chartSelect = document.getElementById("chartIntervalSelect");
+  if(chartSelect) chartSelect.value = chartInterval;
   if(!force && chartKey === key) return;
   chartKey = key;
   const status = document.getElementById("chartStatus");
@@ -1947,9 +1954,8 @@ document.getElementById("market").addEventListener("click",e=>{
   selected = b.dataset.symbol; save(); render();
 });
 document.getElementById("search").addEventListener("input",renderMarket);
-document.getElementById("chartIntervals").addEventListener("click",e=>{
-  const b = e.target.closest("[data-interval]"); if(!b) return;
-  chartInterval = b.dataset.interval;
+document.getElementById("chartIntervalSelect").addEventListener("change",e=>{
+  chartInterval = e.target.value;
   chartKey = "";
   syncChart(true);
 });
