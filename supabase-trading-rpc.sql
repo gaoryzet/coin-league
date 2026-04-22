@@ -44,6 +44,26 @@ create unique index if not exists participants_league_user_uidx
   on public.participants(league_id, user_id)
   where user_id is not null;
 
+-- Keep only one visible active league. Older active leagues are closed automatically.
+with ranked_active as (
+  select id, row_number() over (
+    order by
+      case when name = '리그 없음' then 1 else 0 end,
+      created_at desc
+  ) as rn
+  from public.leagues
+  where status = 'ACTIVE'
+)
+update public.leagues l
+set status = 'CLOSED'
+from ranked_active r
+where l.id = r.id
+  and r.rn > 1;
+
+create unique index if not exists leagues_single_active_uidx
+  on public.leagues((status))
+  where status = 'ACTIVE';
+
 create table if not exists public.holdings (
   id text primary key,
   participant_id text not null references public.participants(id) on delete cascade,
@@ -379,9 +399,8 @@ where p.league_id = l.id
   and p.reward_claimed = true
   and coalesce(p.cash, 0) = 0;
 
--- Remove accidental placeholder leagues if they have no participants.
-delete from public.leagues l
-where l.name = '리그 없음'
-  and not exists (select 1 from public.participants p where p.league_id = l.id);
+-- Remove accidental placeholder leagues that were created from the empty local state.
+delete from public.leagues
+where name = '리그 없음';
 
 notify pgrst, 'reload schema';

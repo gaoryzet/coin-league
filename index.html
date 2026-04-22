@@ -1470,6 +1470,13 @@ function leagueRowPayload(league){
     status:league.status
   };
 }
+async function closeOtherActiveLeagues(keepId){
+  if(!sb || !currentUser || isFileMode || !keepId) return {error:null};
+  return sb.from("leagues")
+    .update({status:"CLOSED"})
+    .eq("status","ACTIVE")
+    .neq("id", keepId);
+}
 async function saveLeagueSettings(){
   if(!requireAdminAction()) return;
   const next = readLeagueForm();
@@ -1478,6 +1485,10 @@ async function saveLeagueSettings(){
   if(sb && currentUser && !isFileMode && state.league.id){
     const write = await sb.from("leagues").update(leagueRowPayload(state.league)).eq("id", state.league.id);
     if(write.error) return toast("공유 리그 저장 실패: Supabase 권한을 확인하세요.");
+    if(state.league.status === "ACTIVE"){
+      const closed = await closeOtherActiveLeagues(state.league.id);
+      if(closed.error) return toast("다른 활성 리그 정리 실패: Supabase 권한을 확인하세요.");
+    }
   }
   save();
   render();
@@ -1534,6 +1545,8 @@ function createNewLeague(){
     action:async()=>{
       const league = {...defaultLeague(),...next,id:uid(),status:"ACTIVE",inviteCode:"KING-"+Math.floor(1000+Math.random()*9000)};
       if(sb && currentUser && !isFileMode){
+        const old = await sb.from("leagues").update({status:"CLOSED"}).eq("status","ACTIVE");
+        if(old.error) return toast("기존 활성 리그 종료 실패: Supabase 권한을 확인하세요.");
         const write = await sb.from("leagues").insert(leagueRowPayload(league));
         if(write.error) return toast("공유 리그 생성 실패: Supabase 권한을 확인하세요.");
       }
