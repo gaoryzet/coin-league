@@ -626,7 +626,7 @@ async function loadCloudPortfolio(){
   const [holdRes,posRes,histRes] = await Promise.all([
     sb.from("holdings").select("*").eq("league_id", state.league.id),
     sb.from("positions").select("*").eq("league_id", state.league.id),
-    active()?.id
+    currentUser && active()?.id
       ? sb.from("trade_history").select("*").eq("participant_id", active().id).order("created_at",{ascending:true}).limit(100)
       : Promise.resolve({data:[],error:null})
   ]);
@@ -639,7 +639,7 @@ async function loadCloudPortfolio(){
 }
 async function loadCloudLeagueAndParticipants(options={}){
   const notify = options.notify === true;
-  if(!sb || !currentUser || isFileMode) return;
+  if(!sb || isFileMode) return;
   try{
     let {data: leagues, error: leagueErr} = await sb.from("leagues")
       .select("*")
@@ -912,8 +912,10 @@ async function initAuth(){
   const applyUser = async(user)=>{
     currentUser = user || null;
     cloudAdmin = false;
-    if(currentUser && !isFileMode){
+    if(!isFileMode){
       await loadCloudLeagueAndParticipants();
+    }
+    if(currentUser && !isFileMode){
       const {data: appAdmin} = await sb.from("app_admins")
         .select("role")
         .eq("user_id", currentUser.id)
@@ -977,6 +979,7 @@ function requireTradable(){
 async function claimReward(){
   const p = active();
   if(!hasActiveLeague()) return toast("아직 진행 중인 리그가 없습니다.");
+  if(!currentUser || !sb || isFileMode) return toast("Google 로그인 후 참가할 수 있습니다.");
   if(leagueClosed()) return toast("종료된 리그에서는 지급받을 수 없습니다.");
   if(!p.nicknameSet || !p.name) return toast("먼저 리그에서 사용할 닉네임을 설정하세요.");
   if(hasReward(p)) return toast("이미 이번 리그 투자금을 받았습니다.");
@@ -1754,7 +1757,7 @@ document.getElementById("okConfirm").addEventListener("click",()=>{const fn=pend
 document.getElementById("confirmModal").addEventListener("click",e=>{if(e.target.id==="confirmModal") closeConfirm()});
 setInterval(()=>tickMarket(.35),15000);
 setInterval(async()=>{
-  if(!currentUser || !sb || isFileMode) return;
+  if(!sb || isFileMode) return;
   await loadCloudLeagueAndParticipants();
   render();
 },30000);
