@@ -319,7 +319,7 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
 
       <section class="view" id="view-risk">
         <div class="card">
-          <div class="head"><h2>열린 포지션</h2><button class="btn" id="checkLiq">청산 검사</button></div>
+          <div class="head"><h2>열린 포지션</h2><button class="btn" id="checkLiq">포지션 새로고침</button></div>
           <div class="body"><div class="positions" id="positionBox"></div></div>
         </div>
       </section>
@@ -1972,7 +1972,7 @@ document.getElementById("tickMarket").addEventListener("click",()=>tickMarket(1.
 document.getElementById("checkLiq").addEventListener("click",async()=>{
   if(sb && currentUser && !isFileMode){
     await refreshCloudAfterTrade();
-    toast("서버 포지션을 새로고침했습니다.");
+    toast("포지션 상태를 최신으로 확인했습니다.");
     return;
   }
   const n=liquidateAll(); save(); render(); toast(n?`${n}개 포지션 청산`:"청산 대상 없음");
