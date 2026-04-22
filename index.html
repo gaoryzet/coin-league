@@ -527,6 +527,23 @@ function mergeCloudParticipants(rows=[]){
   const me = currentUser ? cloudPlayers.find(p=>p.userId === currentUser.id) : null;
   if(me){
     state.activePlayerId = me.id;
+  }else if(currentUser){
+    const reusableLocal = localActive && (!localActive.userId || localActive.userId === currentUser.id) && !hasReward(localActive)
+      ? localActive
+      : null;
+    const draft = {
+      id:reusableLocal?.id || uid(),
+      userId:currentUser.id,
+      name:reusableLocal?.name || "",
+      nicknameSet:!!reusableLocal?.nicknameSet,
+      cash:0,
+      rewards:{[state.league.id]:false},
+      holdings:{},
+      positions:[],
+      history:[]
+    };
+    cloudPlayers.unshift(draft);
+    state.activePlayerId = draft.id;
   }else if(localActive && cloudPlayers.find(p=>p.id === localActive.id)){
     state.activePlayerId = localActive.id;
   }else{
