@@ -206,10 +206,10 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
   <div class="shell">
     <aside class="side">
       <div class="nav" id="nav">
-        <button class="on" data-view="dash">대시보드</button>
+        <button data-view="dash">대시보드</button>
         <button data-view="trade">거래</button>
         <button data-view="risk">포지션</button>
-        <button data-view="league">리그</button>
+        <button class="on" data-view="league">리그</button>
         <button data-view="history">기록</button>
       </div>
       <div class="userbox">
@@ -226,7 +226,7 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
     </aside>
 
     <main class="main">
-      <section class="view on" id="view-dash">
+      <section class="view" id="view-dash">
         <div class="grid">
           <div class="league-strip" id="leagueStrip"></div>
           <div id="rewardBox"></div>
@@ -325,7 +325,7 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
         </div>
       </section>
 
-      <section class="view" id="view-league">
+      <section class="view on" id="view-league">
         <div class="grid">
           <div class="card">
             <div class="head"><h2>리그 정보</h2><button class="btn gold" id="claimRewardLeague">현금 받기</button></div>
@@ -1088,6 +1088,7 @@ async function claimReward(){
       const rpc = await sb.rpc("claim_league_reward", {p_league_id:state.league.id, p_nickname:p.name});
       if(rpc.error) throw rpc.error;
       await loadCloudLeagueAndParticipants();
+      syncEntryView.done = false;
       render();
       toast(`${money(seedMoney())} USDT 지급 완료`);
       return;
@@ -1102,6 +1103,7 @@ async function claimReward(){
   p.rewards[state.league.id] = true;
   log(p,"현금 지급",{amount:seedMoney(),note:state.league.name});
   save();
+  syncEntryView.done = false;
   render();
   toast(`${money(seedMoney())} USDT 지급 완료`);
 }
@@ -1283,7 +1285,27 @@ function confirmAction(cfg){
 }
 function closeConfirm(){document.getElementById("confirmModal").classList.remove("show"); pendingConfirm = null}
 
+function setView(view){
+  document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("on", x.dataset.view === view));
+  document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on", x.id === `view-${view}`));
+}
+function currentView(){
+  return document.querySelector("#nav button.on")?.dataset.view || "league";
+}
+function preferredEntryView(){
+  if(cloudBooting()) return "league";
+  if(!hasActiveLeague()) return "league";
+  return hasReward(active()) ? "dash" : "league";
+}
+function syncEntryView(force=false){
+  if(force || !syncEntryView.done){
+    setView(preferredEntryView());
+    if(!cloudBooting()) syncEntryView.done = true;
+  }
+}
+
 function render(){
+  syncEntryView();
   renderPlayers();
   renderMarket();
   renderDashboard();
@@ -1828,10 +1850,8 @@ function renderHistory(){
 
 document.getElementById("nav").addEventListener("click",e=>{
   const b = e.target.closest("button[data-view]"); if(!b) return;
-  document.querySelectorAll("#nav button").forEach(x=>x.classList.remove("on"));
-  document.querySelectorAll(".view").forEach(x=>x.classList.remove("on"));
-  b.classList.add("on");
-  document.getElementById("view-"+b.dataset.view).classList.add("on");
+  setView(b.dataset.view);
+  syncEntryView.done = true;
 });
 document.getElementById("playerSelect").addEventListener("change",e=>{state.activePlayerId=e.target.value; save(); render()});
 document.getElementById("addPlayer").addEventListener("click",()=>{
