@@ -401,6 +401,7 @@ let chartInterval = "1h";
 let chartKey = "";
 let chartSeq = 0;
 const chartCache = {};
+let marketSyncedAt = 0;
 const isFileMode = location.protocol === "file:";
 let cloudInitialLoaded = isFileMode;
 const authBtnInit = document.getElementById("authBtn");
@@ -1127,6 +1128,7 @@ async function syncMarketPrices(renderAfter=false){
       const change = Number(row.priceChangePercent);
       c.change = Number.isFinite(change) ? change : (c.price - c.prev) / c.prev * 100;
     });
+    marketSyncedAt = Date.now();
     if(renderAfter && !isEditingAdminForm()) render();
     return true;
   }catch(e){
@@ -1136,7 +1138,7 @@ async function syncMarketPrices(renderAfter=false){
   }
 }
 async function tickMarket(force=1){
-  if(sb && !isFileMode){
+  if(!isFileMode){
     await syncMarketPrices(true);
     return;
   }
@@ -1415,12 +1417,6 @@ function drawChart(sym, candles, source){
   const area = `${line} L${x(candles.length-1).toFixed(1)},${h-pad} L${pad},${h-pad} Z`;
   const first = closes[0], last = closes[closes.length-1];
   const change = first ? (last - first) / first * 100 : 0;
-  const selectedCoin = state.market.find(c=>c.symbol===sym);
-  if(selectedCoin && Number.isFinite(last)){
-    selectedCoin.prev = selectedCoin.price;
-    selectedCoin.price = last;
-    selectedCoin.change = change;
-  }
   title.textContent = `${sym}/USDT 차트`;
   status.innerHTML = `${source} · <span class="${change>=0?"g":"r"}">${pct(change)}</span>`;
   box.innerHTML = `
@@ -1500,7 +1496,8 @@ function renderDashboard(){
   document.getElementById("mRiskNote").textContent = nearest === null ? "열린 포지션 없음" : `가장 가까운 청산가 ${nearest.toFixed(2)}%`;
 
   const rankSource = rankingPlayers();
-  document.getElementById("leagueStrip").innerHTML = `<div><b>${escapeHtml(state.league.name)}</b><span>${state.league.status==="ACTIVE"?"진행 중":"종료"} · ${dday()} · ${rankSource.length}명</span></div><strong class="y">${state.league.inviteCode}</strong>`;
+  const priceStamp = marketSyncedAt ? ` · 시세 ${new Date(marketSyncedAt).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"})}` : "";
+  document.getElementById("leagueStrip").innerHTML = `<div><b>${escapeHtml(state.league.name)}</b><span>${state.league.status==="ACTIVE"?"진행 중":"종료"} · ${dday()} · ${rankSource.length}명${priceStamp}</span></div><strong class="y">${state.league.inviteCode}</strong>`;
   document.getElementById("rewardBox").innerHTML = hasReward(p)
     ? `<div class="reward claimed"><h2>투자금 지급 완료</h2><p>이번 리그에서는 1회만 지급됩니다. 이제 거래로 수익률을 겨뤄보세요.</p></div>`
     : `<div class="reward"><h2>🎟 ${escapeHtml(state.league.rewardTitle)}</h2><p>${escapeHtml(state.league.rewardText)} ${money(seedMoney())} USDT를 1회 받을 수 있어요.</p><button class="btn gold" id="claimRewardHome">가상 현금 받기</button></div>`;
