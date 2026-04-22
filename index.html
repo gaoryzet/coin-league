@@ -1010,7 +1010,9 @@ async function initAuth(){
   }
   sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
   const applyUser = async(user)=>{
+    const prevUserId = currentUser?.id || "";
     currentUser = user || null;
+    if((currentUser?.id || "") !== prevUserId) syncEntryView.done = false;
     cloudAdmin = false;
     if(!isFileMode){
       await loadCloudLeagueAndParticipants();
