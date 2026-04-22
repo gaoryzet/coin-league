@@ -393,6 +393,7 @@ let cloudSyncFailCount = 0;
 let lastCloudSyncToastAt = 0;
 let cloudParticipantSchema = "unknown";
 let cloudTradingReady = false;
+let adminDraft = null;
 let chartInterval = "1h";
 let chartKey = "";
 let chartSeq = 0;
@@ -1419,29 +1420,49 @@ function renderAdmin(){
       : `<div class="danger">관리자 권한이 없습니다. 리그 생성자 또는 관리자 계정으로 Google 로그인해야 합니다.</div>`;
     return;
   }
+  const form = adminDraft || adminFormDefaults();
   box.innerHTML = `
     <div class="admin-grid">
-      <div class="field"><label>리그명</label><input id="lgName" value="${escapeHtml(state.league.name)}"></div>
+      <div class="field"><label>리그명</label><input id="lgName" value="${escapeHtml(form.name)}"></div>
       <div class="form2">
-        <div class="field"><label>시작일</label><input id="lgStart" type="date" value="${state.league.startDate}"></div>
-        <div class="field"><label>종료일</label><input id="lgEnd" type="date" value="${state.league.endDate}"></div>
+        <div class="field"><label>시작일</label><input id="lgStart" type="date" value="${form.startDate}"></div>
+        <div class="field"><label>종료일</label><input id="lgEnd" type="date" value="${form.endDate}"></div>
       </div>
-      <div class="field"><label>초기 가상 현금</label><input id="lgCash" type="number" min="1" step="100" value="${seedMoney()}"></div>
-      <div class="field"><label>보상 배너 제목</label><input id="lgRewardTitle" value="${escapeHtml(state.league.rewardTitle)}"></div>
-      <div class="field"><label>보상 배너 문구</label><input id="lgRewardText" value="${escapeHtml(state.league.rewardText)}"></div>
+      <div class="field"><label>초기 가상 현금</label><input id="lgCash" type="number" min="1" step="100" value="${form.initialCash}"></div>
+      <div class="field"><label>보상 배너 제목</label><input id="lgRewardTitle" value="${escapeHtml(form.rewardTitle)}"></div>
+      <div class="field"><label>보상 배너 문구</label><input id="lgRewardText" value="${escapeHtml(form.rewardText)}"></div>
       <div class="form2">
-        <label class="switch"><span>현물 거래</span><input id="lgSpot" type="checkbox" ${state.league.allowSpot?"checked":""}></label>
-        <label class="switch"><span>선물 거래</span><input id="lgFut" type="checkbox" ${state.league.allowFutures?"checked":""}></label>
+        <label class="switch"><span>현물 거래</span><input id="lgSpot" type="checkbox" ${form.allowSpot?"checked":""}></label>
+        <label class="switch"><span>선물 거래</span><input id="lgFut" type="checkbox" ${form.allowFutures?"checked":""}></label>
       </div>
       <div class="field"><label>최대 레버리지</label><select id="lgLev"><option>1</option><option>3</option><option>5</option><option>10</option><option>25</option></select></div>
       <div class="row"><button class="btn gold grow" id="saveLeague">리그 수정 저장</button><button class="btn blue" id="newLeague">새 리그 생성</button></div>
       <div class="row"><button class="btn ghost grow" id="closeLeague">리그 종료</button><button class="btn red" id="deleteLeague">리그 삭제</button></div>
     </div>`;
-  document.getElementById("lgLev").value = String(state.league.maxLeverage);
+  document.getElementById("lgLev").value = String(form.maxLeverage);
+  box.querySelectorAll("input,select").forEach(el=>{
+    el.addEventListener("input",()=>{adminDraft = readLeagueForm()});
+    el.addEventListener("change",()=>{adminDraft = readLeagueForm()});
+  });
   document.getElementById("saveLeague").addEventListener("click",saveLeagueSettings);
   document.getElementById("newLeague").addEventListener("click",createNewLeague);
   document.getElementById("closeLeague").addEventListener("click",()=>{if(!requireAdminAction()) return; confirmAction({title:"리그 종료",text:"현재 리그를 종료하고 거래를 막습니다.",detail:"종료 후에는 랭킹과 기록만 확인할 수 있습니다.",action:closeLeague})});
   document.getElementById("deleteLeague").addEventListener("click",()=>{if(!requireAdminAction()) return; confirmAction({title:"리그 삭제 경고",text:"현재 리그의 참가자, 거래 기록, 지급 상태가 모두 초기화됩니다.",detail:"되돌릴 수 없습니다. 정말 삭제하시려면 실행을 누르세요.",action:deleteLeague})});
+}
+function adminFormDefaults(){
+  const today = new Date().toISOString().slice(0,10);
+  const base = hasActiveLeague() ? state.league : defaultLeague();
+  return {
+    name:base.name && base.name !== "리그 없음" ? base.name : "새 코인왕 리그",
+    startDate:hasActiveLeague() ? (base.startDate || today) : today,
+    endDate:base.endDate && base.endDate >= today ? base.endDate : addDays(14),
+    initialCash:base.initialCash || START_CASH,
+    rewardTitle:base.rewardTitle || "리그 참가 보상 도착",
+    rewardText:base.rewardText || "이번 리그 투자금이 준비됐어요.",
+    allowSpot:base.allowSpot !== false,
+    allowFutures:base.allowFutures !== false,
+    maxLeverage:base.maxLeverage || 25
+  };
 }
 function readLeagueForm(){
   const rawName = document.getElementById("lgName").value.trim();
@@ -1494,6 +1515,7 @@ async function saveLeagueSettings(){
     }
   }
   save();
+  adminDraft = null;
   render();
   toast("리그 설정 저장 완료");
 }
@@ -1505,6 +1527,7 @@ async function closeLeague(){
     if(write.error) return toast("공유 리그 종료 실패: Supabase 권한을 확인하세요.");
   }
   save();
+  adminDraft = null;
   render();
   toast("리그 종료 완료");
 }
@@ -1519,6 +1542,7 @@ async function deleteLeague(){
   state.players = state.players.map(p=>({...p,cash:0,rewards:{},holdings:{},positions:[],history:[]}));
   selected="BTC";
   save();
+  adminDraft = null;
   render();
   toast("리그 삭제 완료");
 }
@@ -1535,6 +1559,7 @@ function applyNewLeague(league){
   resetPlayersForLeague(league);
   selected="BTC";
   save();
+  adminDraft = null;
   render();
 }
 function createNewLeague(){
