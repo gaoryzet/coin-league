@@ -237,7 +237,7 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
           </div>
           <div class="grid two">
             <div class="card">
-              <div class="head"><h2>리그 랭킹</h2><button class="btn" id="tickMarket">가격 변동</button></div>
+              <div class="head"><h2>리그 랭킹</h2><button class="btn" id="tickMarket">시세 새로고침</button></div>
               <div id="rankBox"></div>
             </div>
             <div class="card">
@@ -742,6 +742,7 @@ async function loadCloudLeagueAndParticipants(options={}){
     if(partErr) throw partErr;
     mergeCloudParticipants(participants || []);
     await loadCloudPortfolio();
+    await syncMarketPrices(false);
     cloudSyncFailCount = 0;
     cloudInitialLoaded = true;
     save();
@@ -1110,18 +1111,41 @@ async function claimReward(){
   toast(`${money(seedMoney())} USDT 지급 완료`);
 }
 
-function tickMarket(force=1){
+async function syncMarketPrices(renderAfter=false){
+  const byTicker = new Map(state.market.map(c=>[binanceSymbol(c.symbol), c]));
+  try{
+    const symbols = encodeURIComponent(JSON.stringify([...byTicker.keys()]));
+    const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${symbols}`);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const rows = await res.json();
+    rows.forEach(row=>{
+      const c = byTicker.get(row.symbol);
+      const last = Number(row.lastPrice);
+      if(!c || !Number.isFinite(last) || last <= 0) return;
+      c.prev = c.price;
+      c.price = last;
+      const change = Number(row.priceChangePercent);
+      c.change = Number.isFinite(change) ? change : (c.price - c.prev) / c.prev * 100;
+    });
+    if(renderAfter && !isEditingAdminForm()) render();
+    return true;
+  }catch(e){
+    console.warn("market price sync failed", e);
+    if(renderAfter) toast("실시간 시세를 불러오지 못했습니다. 잠시 후 다시 시도하세요.");
+    return false;
+  }
+}
+async function tickMarket(force=1){
+  if(sb && !isFileMode){
+    await syncMarketPrices(true);
+    return;
+  }
   state.market.forEach(c=>{
     c.prev = c.price;
     const drift = (Math.random() - .48) * c.vol * force;
     c.price = Math.max(.000001, c.price * (1 + drift));
     c.change = (c.price - c.prev) / c.prev * 100;
   });
-  if(sb && currentUser && !isFileMode){
-    if(isEditingAdminForm()) return;
-    render();
-    return;
-  }
   const liquidated = liquidateAll();
   save();
   render();
@@ -1836,7 +1860,7 @@ function renderPositions(){
         <div class="mini"><span>청산가</span><b class="r">${price(pos.liq)}</b></div>
         <div class="mini"><span>수익률</span><b class="${rate>=0?"g":"r"}">${pct(rate)}</b></div>
         <div class="mini"><span>청산까지</span><b class="${danger?"r":"y"}">${dist.toFixed(2)}%</b></div>
-        <button class="btn" data-move="${pos.symbol}">가격 변동</button>
+        <button class="btn" data-move="${pos.symbol}">시세 새로고침</button>
         <button class="btn red" data-close="${pos.id}">청산하기</button>
       </div>
     </div>`;
@@ -1939,7 +1963,7 @@ document.getElementById("positionBox").addEventListener("click",e=>{
 document.getElementById("cancelConfirm").addEventListener("click",closeConfirm);
 document.getElementById("okConfirm").addEventListener("click",()=>{const fn=pendingConfirm; closeConfirm(); if(fn) fn()});
 document.getElementById("confirmModal").addEventListener("click",e=>{if(e.target.id==="confirmModal") closeConfirm()});
-setInterval(()=>tickMarket(.35),15000);
+setInterval(()=>tickMarket(.35),30000);
 setInterval(async()=>{
   if(isFileMode) return;
   await loadCloudLeagueAndParticipants();
