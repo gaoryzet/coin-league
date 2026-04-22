@@ -225,6 +225,10 @@ begin
   on conflict (league_id, user_id) where user_id is not null
   do update set
     nickname = coalesce(nullif(trim(excluded.nickname), ''), participants.nickname),
+    cash = case
+      when participants.reward_claimed then participants.cash
+      else coalesce(v_league.initial_cash, 10000)
+    end,
     reward_claimed = true,
     reward_claimed_at = coalesce(participants.reward_claimed_at, now())
   returning id into v_id;
@@ -366,3 +370,18 @@ grant execute on function public.claim_league_reward(text,text) to authenticated
 grant execute on function public.place_spot_order(text,text,text,text,numeric,numeric) to authenticated;
 grant execute on function public.open_future_position(text,text,text,text,numeric,numeric,numeric,numeric) to authenticated;
 grant execute on function public.close_future_position(text,numeric) to authenticated;
+
+-- Repair participants that were marked as claimed before cash was assigned.
+update public.participants p
+set cash = coalesce(l.initial_cash, 10000)
+from public.leagues l
+where p.league_id = l.id
+  and p.reward_claimed = true
+  and coalesce(p.cash, 0) = 0;
+
+-- Remove accidental placeholder leagues if they have no participants.
+delete from public.leagues l
+where l.name = '리그 없음'
+  and not exists (select 1 from public.participants p where p.league_id = l.id);
+
+notify pgrst, 'reload schema';

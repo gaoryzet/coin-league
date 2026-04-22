@@ -644,10 +644,11 @@ async function loadCloudLeagueAndParticipants(options={}){
     let {data: leagues, error: leagueErr} = await sb.from("leagues")
       .select("*")
       .eq("status","ACTIVE")
-      .limit(1);
+      .order("created_at",{ascending:false})
+      .limit(10);
     if(leagueErr) throw leagueErr;
     if(!leagues?.length){
-      const res = await sb.from("leagues").select("*").limit(1);
+      const res = await sb.from("leagues").select("*").order("created_at",{ascending:false}).limit(1);
       if(res.error) throw res.error;
       leagues = res.data;
     }
@@ -659,7 +660,8 @@ async function loadCloudLeagueAndParticipants(options={}){
       save();
       return;
     }
-    const cloudLeague = mapCloudLeague(leagues?.[0]);
+    const selectedLeague = (leagues || []).find(l=>l.name !== "리그 없음") || leagues?.[0];
+    const cloudLeague = mapCloudLeague(selectedLeague);
     if(cloudLeague){
       state.league = cloudLeague;
       cloudMode = true;
@@ -1439,8 +1441,9 @@ function renderAdmin(){
   document.getElementById("deleteLeague").addEventListener("click",()=>{if(!requireAdminAction()) return; confirmAction({title:"리그 삭제 경고",text:"현재 리그의 참가자, 거래 기록, 지급 상태가 모두 초기화됩니다.",detail:"되돌릴 수 없습니다. 정말 삭제하시려면 실행을 누르세요.",action:deleteLeague})});
 }
 function readLeagueForm(){
+  const rawName = document.getElementById("lgName").value.trim();
   return {
-    name:document.getElementById("lgName").value.trim() || "새 코인왕 리그",
+    name:rawName && rawName !== "리그 없음" ? rawName : "새 코인왕 리그",
     startDate:document.getElementById("lgStart").value || new Date().toISOString().slice(0,10),
     endDate:document.getElementById("lgEnd").value || addDays(14),
     initialCash:Math.max(1,Number(document.getElementById("lgCash").value)||START_CASH),
