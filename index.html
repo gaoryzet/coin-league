@@ -1197,6 +1197,16 @@ function requireCloudTrading(){
   }
   return true;
 }
+async function requireFreshMarketPrice(){
+  if(isFileMode) return true;
+  toast("최신 시세 확인 중...");
+  const ok = await syncMarketPrices(false);
+  if(!ok){
+    toast("최신 시세 확인 실패. 다시 시도해주세요.");
+    return false;
+  }
+  return true;
+}
 async function refreshCloudAfterTrade(){
   await loadCloudLeagueAndParticipants({notify:true});
   render();
@@ -1208,6 +1218,13 @@ async function executeSpot(amount){
   if(!requireCloudTrading()) return;
   orderBusy = true;
   try{
+    if(!await requireFreshMarketPrice()) return;
+    const freshValid = validateSpot(amount);
+    if(!freshValid.ok){
+      renderSpotPreview();
+      toast(freshValid.msg);
+      return;
+    }
     const p = active(), c = coin();
     const res = await sb.rpc("place_spot_order", {
       p_participant_id:p.id,
@@ -1220,7 +1237,7 @@ async function executeSpot(amount){
     if(res.error) throw res.error;
     document.getElementById("spotAmount").value = "";
     await refreshCloudAfterTrade();
-    toast(`${c.symbol} ${side === "buy" ? "매수" : "매도"} 체결`);
+    toast(`${c.symbol} ${side === "buy" ? "매수" : "매도"} 체결 · ${price(c.price)}`);
   } catch(e){
     console.warn("spot order failed", e);
     toast(e?.message || "주문 처리 실패");
@@ -1261,6 +1278,13 @@ async function executeFuture(margin, valid){
   if(!requireCloudTrading()) return;
   orderBusy = true;
   try{
+    if(!await requireFreshMarketPrice()) return;
+    valid = validateFuture(margin);
+    if(!valid.ok){
+      renderFuturePreview();
+      toast(valid.msg);
+      return;
+    }
     const p = active(), c = coin();
     const res = await sb.rpc("open_future_position", {
       p_participant_id:p.id,
@@ -1275,7 +1299,7 @@ async function executeFuture(margin, valid){
     if(res.error) throw res.error;
     document.getElementById("futMargin").value = "";
     await refreshCloudAfterTrade();
-    toast(`${c.symbol} ${leverage}x 포지션 오픈`);
+    toast(`${c.symbol} ${leverage}x 포지션 오픈 · ${price(c.price)}`);
   } catch(e){
     console.warn("future open failed", e);
     toast(e?.message || "포지션 오픈 실패");
@@ -1288,8 +1312,10 @@ async function closePosition(id){
   const pos = p.positions.find(x=>x.id===id && x.status==="OPEN");
   if(!pos) return;
   if(!requireCloudTrading()) return;
-  const c = state.market.find(x=>x.symbol===pos.symbol);
   try{
+    if(!await requireFreshMarketPrice()) return;
+    const c = state.market.find(x=>x.symbol===pos.symbol);
+    if(!c) throw new Error("시세 정보를 찾을 수 없습니다.");
     const res = await sb.rpc("close_future_position", {
       p_position_id:id,
       p_exit:c.price
@@ -1793,7 +1819,7 @@ function renderSpotPreview(){
   } else {
     const qty = amount / c.price;
     const after = side === "buy" ? p.cash - amount : p.cash + amount;
-    prev.innerHTML = `<div class="preview"><div class="pline"><span>예상 수량</span><b>${qty.toFixed(6)} ${c.symbol}</b></div><div class="pline"><span>체결가</span><b>${price(c.price)}</b></div><div class="pline"><span>체결 후 현금</span><b>${money(after)} USDT</b></div></div>`;
+    prev.innerHTML = `<div class="preview"><div class="pline"><span>예상 수량</span><b>${qty.toFixed(6)} ${c.symbol}</b></div><div class="pline"><span>예상 체결가</span><b>${price(c.price)}</b></div><div class="pline"><span>체결 후 현금</span><b>${money(after)} USDT</b></div></div>`;
     document.getElementById("spotSubmit").disabled = false;
   }
   document.getElementById("spotSubmit").textContent = side === "buy" ? `${c.symbol} 시장가 매수` : `${c.symbol} 시장가 매도`;
@@ -1832,7 +1858,7 @@ function renderFuturePreview(){
     return;
   }
   const riskClass = valid.dist < 8 || leverage >= 10 ? "danger" : "preview";
-  prev.innerHTML = `<div class="${riskClass}"><div class="pline"><span>포지션 크기</span><b>${money(valid.size)} USDT</b></div><div class="pline"><span>진입가</span><b>${price(coin().price)}</b></div><div class="pline"><span>강제청산가</span><b>${price(valid.liq)}</b></div><div class="pline"><span>청산까지</span><b>${valid.dist.toFixed(2)}%</b></div><div class="pline"><span>1% 변동 손익</span><b>${money(valid.size*.01)} USDT</b></div></div>`;
+  prev.innerHTML = `<div class="${riskClass}"><div class="pline"><span>포지션 크기</span><b>${money(valid.size)} USDT</b></div><div class="pline"><span>예상 진입가</span><b>${price(coin().price)}</b></div><div class="pline"><span>강제청산가</span><b>${price(valid.liq)}</b></div><div class="pline"><span>청산까지</span><b>${valid.dist.toFixed(2)}%</b></div><div class="pline"><span>1% 변동 손익</span><b>${money(valid.size*.01)} USDT</b></div></div>`;
   document.getElementById("futSubmit").disabled = false;
 }
 function renderPositions(){
@@ -1855,7 +1881,7 @@ function renderPositions(){
         <div class="mini"><span>포지션</span><b>${money(pos.size)} U</b></div>
         <div class="mini"><span>진입 / 현재</span><b>${price(pos.entry)} / ${price(c.price)}</b></div>
         <div class="mini"><span>청산가</span><b class="r">${price(pos.liq)}</b></div>
-        <div class="mini"><span>수익률</span><b class="${rate>=0?"g":"r"}">${pct(rate)}</b></div>
+        <div class="mini"><span>포지션 수익률</span><b class="${rate>=0?"g":"r"}">${pct(rate)}</b></div>
         <div class="mini"><span>청산까지</span><b class="${danger?"r":"y"}">${dist.toFixed(2)}%</b></div>
         <button class="btn" data-move="${pos.symbol}">시세 새로고침</button>
         <button class="btn red" data-close="${pos.id}">청산하기</button>
