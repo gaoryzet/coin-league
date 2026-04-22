@@ -195,7 +195,7 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
     </div>
     <div class="auth">
       <span class="admin-badge" id="adminBadge" title="관리자" aria-label="관리자" style="display:none">A</span>
-      <span class="who" id="authWho">로컬 모드</span>
+      <span class="who" id="authWho">확인 중</span>
       <a id="authBtn" href="https://abwitqdxagdbcogsscsk.supabase.co/auth/v1/authorize?provider=google&redirect_to=https%3A%2F%2Fgaoryzet.github.io%2Fcoin-league%2F">로그인 확인</a>
     </div>
   </header>
@@ -601,10 +601,38 @@ function notifyCloudSyncFailure(e){
     toast("공유 동기화가 잠시 지연됐습니다. 자동으로 다시 시도합니다.");
   }
 }
+async function restRows(table, query){
+  const res = await fetch(`${SUPA_URL}/rest/v1/${table}?${query}`, {
+    headers:{
+      apikey:SUPA_KEY,
+      Authorization:`Bearer ${SUPA_KEY}`,
+      Accept:"application/json"
+    }
+  });
+  if(!res.ok){
+    const text = await res.text();
+    throw new Error(text || `${table} fetch failed`);
+  }
+  return res.json();
+}
 async function fetchCloudParticipants(){
   const baseColumns = "id, league_id, nickname, cash, created_at";
   const fullColumns = `${baseColumns}, user_id, reward_claimed`;
   const columns = cloudParticipantSchema === "base" ? baseColumns : fullColumns;
+  if(!sb){
+    try{
+      const data = await restRows("participants", `select=${encodeURIComponent(columns)}&league_id=eq.${encodeURIComponent(state.league.id)}&order=created_at.asc`);
+      if(cloudParticipantSchema === "unknown") cloudParticipantSchema = "full";
+      return {data,error:null};
+    }catch(e){
+      if(cloudParticipantSchema !== "base" && isMissingParticipantColumn(e)){
+        cloudParticipantSchema = "base";
+        const data = await restRows("participants", `select=${encodeURIComponent(baseColumns)}&league_id=eq.${encodeURIComponent(state.league.id)}&order=created_at.asc`);
+        return {data,error:null};
+      }
+      return {data:null,error:e};
+    }
+  }
   let res = await sb.from("participants")
     .select(columns)
     .eq("league_id", state.league.id)
@@ -624,6 +652,15 @@ async function loadCloudPortfolio(){
   if(!hasActiveLeague()) return;
   const participantIds = state.players.map(p=>p.id).filter(Boolean);
   if(!participantIds.length) return;
+  if(!sb){
+    const [holdings,positions] = await Promise.all([
+      restRows("holdings", `select=*&league_id=eq.${encodeURIComponent(state.league.id)}`),
+      restRows("positions", `select=*&league_id=eq.${encodeURIComponent(state.league.id)}`)
+    ]);
+    cloudTradingReady = false;
+    mergeCloudPortfolio({holdings, positions, history:[]});
+    return;
+  }
   const [holdRes,posRes,histRes] = await Promise.all([
     sb.from("holdings").select("*").eq("league_id", state.league.id),
     sb.from("positions").select("*").eq("league_id", state.league.id),
@@ -640,18 +677,30 @@ async function loadCloudPortfolio(){
 }
 async function loadCloudLeagueAndParticipants(options={}){
   const notify = options.notify === true;
-  if(!sb || isFileMode) return;
+  if(isFileMode) return;
   try{
-    let {data: leagues, error: leagueErr} = await sb.from("leagues")
-      .select("*")
-      .eq("status","ACTIVE")
-      .order("created_at",{ascending:false})
-      .limit(10);
+    let leagues = [];
+    let leagueErr = null;
+    if(sb){
+      const res = await sb.from("leagues")
+        .select("*")
+        .eq("status","ACTIVE")
+        .order("created_at",{ascending:false})
+        .limit(10);
+      leagues = res.data;
+      leagueErr = res.error;
+    }else{
+      leagues = await restRows("leagues", "select=*&status=eq.ACTIVE&order=created_at.desc&limit=10");
+    }
     if(leagueErr) throw leagueErr;
     if(!leagues?.length){
-      const res = await sb.from("leagues").select("*").order("created_at",{ascending:false}).limit(1);
-      if(res.error) throw res.error;
-      leagues = res.data;
+      if(sb){
+        const res = await sb.from("leagues").select("*").order("created_at",{ascending:false}).limit(1);
+        if(res.error) throw res.error;
+        leagues = res.data;
+      }else{
+        leagues = await restRows("leagues", "select=*&order=created_at.desc&limit=1");
+      }
     }
     if(!leagues?.length){
       state.league = emptyLeague();
@@ -903,10 +952,14 @@ async function initAuth(){
   const authBtn = document.getElementById("authBtn");
   const authWho = document.getElementById("authWho");
   if(!window.supabase){
-    authWho.textContent = "로컬 모드";
-    authBtn.textContent = "배포 열기";
-    authBtn.href = PROD_URL;
+    authWho.textContent = isFileMode ? "로컬 미리보기" : "로그인 필요";
+    authBtn.textContent = isFileMode ? "배포 열기" : "로그인";
+    authBtn.href = isFileMode ? PROD_URL : directGoogleOAuthUrl();
     authBtn.onclick = goGoogleDirect;
+    if(!isFileMode){
+      await loadCloudLeagueAndParticipants({notify:true});
+      render();
+    }
     return;
   }
   sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
@@ -1794,7 +1847,7 @@ document.getElementById("okConfirm").addEventListener("click",()=>{const fn=pend
 document.getElementById("confirmModal").addEventListener("click",e=>{if(e.target.id==="confirmModal") closeConfirm()});
 setInterval(()=>tickMarket(.35),15000);
 setInterval(async()=>{
-  if(!sb || isFileMode) return;
+  if(isFileMode) return;
   await loadCloudLeagueAndParticipants();
   if(isEditingAdminForm()) return;
   render();
