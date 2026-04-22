@@ -98,6 +98,8 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
 .chart-grid{stroke:rgba(143,161,179,.16);stroke-width:1}
 .chart-area{fill:rgba(240,185,11,.08)}
 .chart-axis{fill:var(--muted);font-size:10px}
+.chart-wick{stroke-width:1.15;stroke-linecap:round}
+.chart-body{rx:1.3}
 .tabs{display:grid;grid-template-columns:repeat(2,1fr);background:#0e151e}
 .tab{height:46px;background:transparent;border-bottom:2px solid transparent;font-weight:950;color:var(--muted)}
 .tab.on.buy{color:var(--green);border-color:var(--green)}.tab.on.sell{color:var(--red);border-color:var(--red)}
@@ -262,10 +264,10 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,
                 <div class="chart-status" id="chartStatus">API 대기</div>
               </div>
               <div class="chart-tabs" id="chartIntervals">
-                <button class="on" data-interval="1h">1H</button>
-                <button data-interval="4h">4H</button>
-                <button data-interval="1d">1D</button>
-                <button data-interval="1w">1W</button>
+                <button class="on" data-interval="1m">1분</button>
+                <button data-interval="5m">5분</button>
+                <button data-interval="15m">15분</button>
+                <button data-interval="1h">1시간</button>
               </div>
               <div class="chart-box" id="chartBox"><div class="chart-empty">코인을 선택하면 차트를 불러옵니다.</div></div>
             </div>
@@ -397,7 +399,7 @@ let lastCloudSyncToastAt = 0;
 let cloudParticipantSchema = "unknown";
 let cloudTradingReady = false;
 let adminDraft = null;
-let chartInterval = "1h";
+let chartInterval = "1m";
 let chartKey = "";
 let chartSeq = 0;
 const chartCache = {};
@@ -1395,6 +1397,19 @@ function binanceSymbol(sym){
   const map = {TON:"TONUSDT"};
   return map[sym] || `${sym}USDT`;
 }
+function chartIntervalMs(interval){
+  const n = parseInt(interval, 10) || 1;
+  if(interval.endsWith("m")) return n * 60000;
+  if(interval.endsWith("h")) return n * 3600000;
+  if(interval.endsWith("d")) return n * 86400000;
+  if(interval.endsWith("w")) return n * 604800000;
+  return 60000;
+}
+function chartCacheTtl(interval){
+  if(interval === "1m") return 12000;
+  if(interval.endsWith("m")) return 25000;
+  return 60000;
+}
 function fallbackCandles(sym, count=60){
   const c = state.market.find(x=>x.symbol===sym) || coin();
   const candles = [];
@@ -1406,14 +1421,14 @@ function fallbackCandles(sym, count=60){
     const open = Math.max(.000001, close * (1 + (Math.random() - .5) * c.vol));
     const high = Math.max(open, close) * (1 + c.vol * .25);
     const low = Math.min(open, close) * (1 - c.vol * .25);
-    candles.push({time:Date.now() - i * 3600000, open, high, low, close});
+    candles.push({time:Date.now() - i * chartIntervalMs(chartInterval), open, high, low, close});
   }
   return candles;
 }
 async function fetchChartCandles(sym, interval){
   const key = `${sym}:${interval}`;
   const cached = chartCache[key];
-  if(cached && Date.now() - cached.at < 120000) return cached;
+  if(cached && Date.now() - cached.at < chartCacheTtl(interval)) return cached;
   const url = `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol(sym)}&interval=${interval}&limit=72`;
   const res = await fetch(url);
   if(!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1437,21 +1452,32 @@ function drawChart(sym, candles, source){
   const lows = candles.map(x=>x.low);
   const min = Math.min(...lows), max = Math.max(...highs);
   const span = Math.max(max - min, max * .001);
-  const x = i=>pad + (i / Math.max(1,candles.length-1)) * (w-pad*2);
+  const innerW = w - pad * 2;
+  const step = innerW / Math.max(1, candles.length);
+  const bodyW = Math.max(2, Math.min(7, step * .58));
+  const x = i=>pad + step * i + step / 2;
   const y = v=>h - pad - ((v - min) / span) * (h-pad*2);
-  const line = candles.map((d,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(d.close).toFixed(1)}`).join(" ");
-  const area = `${line} L${x(candles.length-1).toFixed(1)},${h-pad} L${pad},${h-pad} Z`;
   const first = closes[0], last = closes[closes.length-1];
   const change = first ? (last - first) / first * 100 : 0;
+  const candleNodes = candles.map((d,i)=>{
+    const up = d.close >= d.open;
+    const color = up ? "var(--green)" : "var(--red)";
+    const cx = x(i);
+    const wickTop = y(d.high), wickBottom = y(d.low);
+    const bodyTop = y(Math.max(d.open, d.close));
+    const bodyBottom = y(Math.min(d.open, d.close));
+    const bodyH = Math.max(1.4, bodyBottom - bodyTop);
+    const bodyY = bodyH <= 1.5 ? bodyTop - .7 : bodyTop;
+    return `<line class="chart-wick" style="stroke:${color}" x1="${cx.toFixed(1)}" y1="${wickTop.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${wickBottom.toFixed(1)}"></line><rect class="chart-body" style="fill:${color}" x="${(cx-bodyW/2).toFixed(1)}" y="${bodyY.toFixed(1)}" width="${bodyW.toFixed(1)}" height="${bodyH.toFixed(1)}"></rect>`;
+  }).join("");
   title.textContent = `${sym}/USDT 차트`;
-  status.innerHTML = `${source} · <span class="${change>=0?"g":"r"}">${pct(change)}</span>`;
+  status.innerHTML = `${source} ${chartInterval} 캔들 · <span class="${change>=0?"g":"r"}">${pct(change)}</span>`;
   box.innerHTML = `
     <svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${sym} price chart">
       <line class="chart-grid" x1="${pad}" y1="${pad}" x2="${w-pad}" y2="${pad}"></line>
       <line class="chart-grid" x1="${pad}" y1="${h/2}" x2="${w-pad}" y2="${h/2}"></line>
       <line class="chart-grid" x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}"></line>
-      <path class="chart-area" d="${area}"></path>
-      <path class="chart-price-line" style="stroke:${change>=0?"var(--green)":"var(--red)"}" d="${line}"></path>
+      ${candleNodes}
       <text class="chart-axis" x="${pad}" y="${pad-7}">${price(max)}</text>
       <text class="chart-axis" x="${pad}" y="${h-pad+15}">${price(min)}</text>
       <text class="chart-axis" text-anchor="end" x="${w-pad}" y="${pad-7}">${price(last)}</text>
